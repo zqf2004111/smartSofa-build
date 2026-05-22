@@ -7,7 +7,7 @@ import { VentilationTab } from './HomeTabs/VentilationTab';
 import { ChevronLeft, ChevronRight, LineChart, Thermometer, Wind, Activity, PawPrint, MousePointerClick, Hand } from 'lucide-react';
 import { useTranslation } from '../i18n';
 import massageSofaImg from '../assets/massage-sofa.png';
-import waveSuspendImg from '../assets/suspend-icon/wave.png';
+import waveSuspendImg from '../assets/suspend-icon/Wave.png';
 import catwalkSuspendImg from '../assets/suspend-icon/catwalk.png';
 import butterflySuspendImg from '../assets/suspend-icon/butterfly.png';
 import acupressureSuspendImg from '../assets/suspend-icon/acupressure.png';
