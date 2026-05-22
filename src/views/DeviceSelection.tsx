@@ -2,7 +2,7 @@ import React from 'react';
 import { Plus } from 'lucide-react';
 import { useTranslation } from '../i18n';
 import { useDevice } from '../context';
-import reclinerImg from '../assets/Recliner.png';
+import reclinerImg from '../assets/recliner.png';
 
 interface DeviceData {
   id: string;
