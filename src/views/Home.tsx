@@ -6,6 +6,17 @@ import { HeatingTab } from './HomeTabs/HeatingTab';
 import { VentilationTab } from './HomeTabs/VentilationTab';
 import { ChevronLeft, ChevronRight, LineChart, Thermometer, Wind, Activity, PawPrint, MousePointerClick, Hand } from 'lucide-react';
 import { useTranslation } from '../i18n';
+import massageSofaImg from '../assets/massage-sofa.png';
+import waveSuspendImg from '../assets/suspend-icon/wave.png';
+import catwalkSuspendImg from '../assets/suspend-icon/catwalk.png';
+import butterflySuspendImg from '../assets/suspend-icon/butterfly.png';
+import acupressureSuspendImg from '../assets/suspend-icon/acupressure.png';
+import patSuspendImg from '../assets/suspend-icon/pat.png';
+import gentleSofaImg from '../assets/gentle-sofa.png';
+import rapidSofaImg from '../assets/rapid-sofa.png';
+import gentleVentilationSofaImg from '../assets/ventilation-icon/gentle-sofa.png';
+import rapidVentilationSofaImg from '../assets/ventilation-icon/rapid-sofa.png';
+import reclinerImg from '../assets/recliner.png';
 
 // Custom Waves icon to match the squiggly lines for massage
 const WavesIcon = ({ size = 24, className = "" }) => (
@@ -29,32 +40,32 @@ export function HomeView({ onBackToDevices }: { onBackToDevices?: () => void }) 
   ];
 
   const getMassageSuspendIconSrc = () => {
-    if (!state.massageOn) return './massage-sofa.png';
+    if (!state.massageOn) return massageSofaImg;
     switch (state.massageMode) {
-      case 'wave': return './suspend-icon/wave.png';
-      case 'catwalk': return './suspend-icon/catwalk.png';
-      case 'butterfly': return './suspend-icon/butterfly.png';
-      case 'acupressure': return './suspend-icon/acupressure.png';
-      case 'pat': return './suspend-icon/pat.png';
-      default: return './suspend-icon/wave.png';
+      case 'wave': return waveSuspendImg;
+      case 'catwalk': return catwalkSuspendImg;
+      case 'butterfly': return butterflySuspendImg;
+      case 'acupressure': return acupressureSuspendImg;
+      case 'pat': return patSuspendImg;
+      default: return waveSuspendImg;
     }
   };
   const massageSuspendIconSrc = getMassageSuspendIconSrc();
 
   const getHeatingSuspendIconSrc = () => {
     switch (state.heatingMode) {
-      case 'gentle': return './gentle-sofa.png';
-      case 'rapid': return './rapid-sofa.png';
-      default: return './gentle-sofa.png';
+      case 'gentle': return gentleSofaImg;
+      case 'rapid': return rapidSofaImg;
+      default: return gentleSofaImg;
     }
   };
   const heatingSuspendIconSrc = getHeatingSuspendIconSrc();
 
   const getVentilationSuspendIconSrc = () => {
     switch (state.ventilationMode) {
-      case 'gentle': return './ventilation-icon/gentle-sofa.png';
-      case 'rapid': return './ventilation-icon/rapid-sofa.png';
-      default: return './ventilation-icon/gentle-sofa.png';
+      case 'gentle': return gentleVentilationSofaImg;
+      case 'rapid': return rapidVentilationSofaImg;
+      default: return gentleVentilationSofaImg;
     }
   };
   const ventilationSuspendIconSrc = getVentilationSuspendIconSrc();
@@ -74,7 +85,7 @@ export function HomeView({ onBackToDevices }: { onBackToDevices?: () => void }) 
       <div className="w-full relative px-5 mb-6 mt-2 h-56 flex items-center justify-center">
         {/* Recliner Image Area */}
         <div className="relative w-full max-w-[280px] mx-auto h-[220px] flex justify-center items-center">
-          <img src="./recliner.png" alt="Recliner Chair" className="w-[85%] h-full object-contain mix-blend-multiply opacity-90 ml-[3%]" onError={(e) => {
+          <img src={reclinerImg} alt="Recliner Chair" className="w-[85%] h-full object-contain mix-blend-multiply opacity-90 ml-[3%]" onError={(e) => {
             // Fallback SVG if image not uploaded yet
             (e.target as HTMLImageElement).style.display = 'none';
             const fallback = document.getElementById('sofa-fallback-svg');

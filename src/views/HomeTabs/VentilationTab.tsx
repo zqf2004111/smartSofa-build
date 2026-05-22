@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { useDevice } from '../../context';
 import { TimerModal } from '../../components/TimerModal';
 import { useTranslation } from '../../i18n';
+import gentleIcon from '../../assets/ventilation-icon/gentle.png';
+import gentleSelectedIcon from '../../assets/ventilation-icon/gentle-selected.png';
+import rapidIcon from '../../assets/ventilation-icon/rapid.png';
+import rapidSelectedIcon from '../../assets/ventilation-icon/rapid-selected.png';
 
 export function VentilationTab() {
   const { state, updateState, language } = useDevice();
@@ -14,8 +18,8 @@ export function VentilationTab() {
   };
   
   const modes = [
-    { id: 'gentle', label: t('gentle'), icon: './ventilation-icon/gentle.png', iconSelected: './ventilation-icon/gentle-selected.png' },
-    { id: 'rapid', label: t('rapid'), icon: './ventilation-icon/rapid.png', iconSelected: './ventilation-icon/rapid-selected.png' },
+    { id: 'gentle', label: t('gentle'), icon: gentleIcon, iconSelected: gentleSelectedIcon },
+    { id: 'rapid', label: t('rapid'), icon: rapidIcon, iconSelected: rapidSelectedIcon },
   ];
 
   return (

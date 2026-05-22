@@ -3,6 +3,16 @@ import { useDevice } from '../../context';
 import { Activity, PawPrint, Wind, MousePointerClick, Hand, Power, Clock } from 'lucide-react';
 import { TimerModal } from '../../components/TimerModal';
 import { useTranslation } from '../../i18n';
+import waveIcon from '../../assets/massage-icon/Wave.png';
+import waveSelectedIcon from '../../assets/massage-icon/Wave-selected.png';
+import catwalkIcon from '../../assets/massage-icon/catwalk.png';
+import catwalkSelectedIcon from '../../assets/massage-icon/catwalk-selected.png';
+import butterflyIcon from '../../assets/massage-icon/butterfly.png';
+import butterflySelectedIcon from '../../assets/massage-icon/butterfly-selected.png';
+import acupressureIcon from '../../assets/massage-icon/acupressure.png';
+import acupressureSelectedIcon from '../../assets/massage-icon/acrpressure-selected.png';
+import patIcon from '../../assets/massage-icon/pat.png';
+import patSelectedIcon from '../../assets/massage-icon/pat-selected.png';
 
 export function MassageTab() {
   const { state, updateState, language } = useDevice();
@@ -15,11 +25,11 @@ export function MassageTab() {
   };
 
   const modes = [
-    { id: 'wave', label: t('wave'), icon: './massage-icon/Wave.png', iconSelected: './massage-icon/Wave-selected.png' },
-    { id: 'catwalk', label: t('catwalk'), icon: './massage-icon/catwalk.png', iconSelected: './massage-icon/catwalk-selected.png' },
-    { id: 'butterfly', label: t('butterfly'), icon: './massage-icon/butterfly.png', iconSelected: './massage-icon/butterfly-selected.png' },
-    { id: 'acupressure', label: t('acupressure'), icon: './massage-icon/acupressure.png', iconSelected: './massage-icon/acrpressure-selected.png' },
-    { id: 'pat', label: t('pat'), icon: './massage-icon/pat.png', iconSelected: './massage-icon/pat-selected.png' },
+    { id: 'wave', label: t('wave'), icon: waveIcon, iconSelected: waveSelectedIcon },
+    { id: 'catwalk', label: t('catwalk'), icon: catwalkIcon, iconSelected: catwalkSelectedIcon },
+    { id: 'butterfly', label: t('butterfly'), icon: butterflyIcon, iconSelected: butterflySelectedIcon },
+    { id: 'acupressure', label: t('acupressure'), icon: acupressureIcon, iconSelected: acupressureSelectedIcon },
+    { id: 'pat', label: t('pat'), icon: patIcon, iconSelected: patSelectedIcon },
   ];
 
   const times = [5, 10, 15, 20, 25, 30];

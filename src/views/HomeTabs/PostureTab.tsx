@@ -2,6 +2,14 @@ import React, { useState } from 'react';
 import { useDevice } from '../../context';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { useTranslation } from '../../i18n';
+import homeIcon from '../../assets/posture-icon/home.png';
+import homeSelectedIcon from '../../assets/posture-icon/home-selected.png';
+import tvIcon from '../../assets/posture-icon/tv.png';
+import tvSelectedIcon from '../../assets/posture-icon/tv-selected.png';
+import zgIcon from '../../assets/posture-icon/zg.png';
+import zgSelectedIcon from '../../assets/posture-icon/zg-selected.png';
+import memoryIcon from '../../assets/posture-icon/memory.png';
+import memorySelectedIcon from '../../assets/posture-icon/memory-selected.png';
 
 export function PostureTab() {
   const { sendPositionCommand, sendMotorCommand, language } = useDevice();
@@ -9,10 +17,10 @@ export function PostureTab() {
   const [activePreset, setActivePreset] = useState('zg');
 
   const presets = [
-    { id: 'home', label: t('home'), icon: './posture-icon/home.png', iconSelected: './posture-icon/home-selected.png', code: 'home' },
-    { id: 'tv', label: t('tv'), icon: './posture-icon/tv.png', iconSelected: './posture-icon/tv-selected.png', code: 'tv' },
-    { id: 'zg', label: t('zg'), icon: './posture-icon/zg.png', iconSelected: './posture-icon/zg-selected.png', code: 'zg' },
-    { id: 'memory', label: t('memory'), icon: './posture-icon/memory.png', iconSelected: './posture-icon/memory-selected.png', code: 'memory' },
+    { id: 'home', label: t('home'), icon: homeIcon, iconSelected: homeSelectedIcon, code: 'home' },
+    { id: 'tv', label: t('tv'), icon: tvIcon, iconSelected: tvSelectedIcon, code: 'tv' },
+    { id: 'zg', label: t('zg'), icon: zgIcon, iconSelected: zgSelectedIcon, code: 'zg' },
+    { id: 'memory', label: t('memory'), icon: memoryIcon, iconSelected: memorySelectedIcon, code: 'memory' },
   ];
 
   const motors = [

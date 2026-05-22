@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { useDevice } from '../../context';
 import { TimerModal } from '../../components/TimerModal';
 import { useTranslation } from '../../i18n';
+import gentleIcon from '../../assets/heating-icon/gentle.png';
+import gentleSelectedIcon from '../../assets/heating-icon/gentle-selected.png';
+import rapidIcon from '../../assets/heating-icon/rapid.png';
+import rapidSelectedIcon from '../../assets/heating-icon/rapid-selected.png';
 
 export function HeatingTab() {
   const { state, updateState, language } = useDevice();
@@ -14,8 +18,8 @@ export function HeatingTab() {
   };
   
   const modes = [
-    { id: 'gentle', label: t('gentle'), icon: './heating-icon/gentle.png', iconSelected: './heating-icon/gentle-selected.png' },
-    { id: 'rapid', label: t('rapid'), icon: './heating-icon/rapid.png', iconSelected: './heating-icon/rapid-selected.png' },
+    { id: 'gentle', label: t('gentle'), icon: gentleIcon, iconSelected: gentleSelectedIcon },
+    { id: 'rapid', label: t('rapid'), icon: rapidIcon, iconSelected: rapidSelectedIcon },
   ];
 
   return (

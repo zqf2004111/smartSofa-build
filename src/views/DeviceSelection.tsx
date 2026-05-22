@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus } from 'lucide-react';
 import { useTranslation } from '../i18n';
 import { useDevice } from '../context';
+import reclinerImg from '../assets/Recliner.png';
 
 interface DeviceData {
   id: string;
@@ -46,7 +47,7 @@ export function DeviceSelectionView({ onSelectDevice, onAddDevice }: DeviceSelec
               {/* Note: In reality they are images, but since we don't have them, I'll put a fallback */}
               <div className="w-[120px] h-[80px] flex items-center justify-center mb-2">
                 <img 
-                  src="./Recliner.png" 
+                  src={reclinerImg} 
                   alt={device.name} 
                   className="w-[100px] h-full object-contain mix-blend-multiply" 
                 />
