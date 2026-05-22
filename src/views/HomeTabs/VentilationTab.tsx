@@ -14,8 +14,8 @@ export function VentilationTab() {
   };
   
   const modes = [
-    { id: 'gentle', label: t('gentle'), icon: '/ventilation-icon/gentle.png', iconSelected: '/ventilation-icon/gentle-selected.png' },
-    { id: 'rapid', label: t('rapid'), icon: '/ventilation-icon/rapid.png', iconSelected: '/ventilation-icon/rapid-selected.png' },
+    { id: 'gentle', label: t('gentle'), icon: './ventilation-icon/gentle.png', iconSelected: './ventilation-icon/gentle-selected.png' },
+    { id: 'rapid', label: t('rapid'), icon: './ventilation-icon/rapid.png', iconSelected: './ventilation-icon/rapid-selected.png' },
   ];
 
   return (

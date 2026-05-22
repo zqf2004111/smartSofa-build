@@ -29,32 +29,32 @@ export function HomeView({ onBackToDevices }: { onBackToDevices?: () => void }) 
   ];
 
   const getMassageSuspendIconSrc = () => {
-    if (!state.massageOn) return '/massage-sofa.png';
+    if (!state.massageOn) return './massage-sofa.png';
     switch (state.massageMode) {
-      case 'wave': return '/suspend-icon/wave.png';
-      case 'catwalk': return '/suspend-icon/catwalk.png';
-      case 'butterfly': return '/suspend-icon/butterfly.png';
-      case 'acupressure': return '/suspend-icon/acupressure.png';
-      case 'pat': return '/suspend-icon/pat.png';
-      default: return '/suspend-icon/wave.png';
+      case 'wave': return './suspend-icon/wave.png';
+      case 'catwalk': return './suspend-icon/catwalk.png';
+      case 'butterfly': return './suspend-icon/butterfly.png';
+      case 'acupressure': return './suspend-icon/acupressure.png';
+      case 'pat': return './suspend-icon/pat.png';
+      default: return './suspend-icon/wave.png';
     }
   };
   const massageSuspendIconSrc = getMassageSuspendIconSrc();
 
   const getHeatingSuspendIconSrc = () => {
     switch (state.heatingMode) {
-      case 'gentle': return '/gentle-sofa.png';
-      case 'rapid': return '/rapid-sofa.png';
-      default: return '/gentle-sofa.png';
+      case 'gentle': return './gentle-sofa.png';
+      case 'rapid': return './rapid-sofa.png';
+      default: return './gentle-sofa.png';
     }
   };
   const heatingSuspendIconSrc = getHeatingSuspendIconSrc();
 
   const getVentilationSuspendIconSrc = () => {
     switch (state.ventilationMode) {
-      case 'gentle': return '/ventilation-icon/gentle-sofa.png';
-      case 'rapid': return '/ventilation-icon/rapid-sofa.png';
-      default: return '/ventilation-icon/gentle-sofa.png';
+      case 'gentle': return './ventilation-icon/gentle-sofa.png';
+      case 'rapid': return './ventilation-icon/rapid-sofa.png';
+      default: return './ventilation-icon/gentle-sofa.png';
     }
   };
   const ventilationSuspendIconSrc = getVentilationSuspendIconSrc();
@@ -74,7 +74,7 @@ export function HomeView({ onBackToDevices }: { onBackToDevices?: () => void }) 
       <div className="w-full relative px-5 mb-6 mt-2 h-56 flex items-center justify-center">
         {/* Recliner Image Area */}
         <div className="relative w-full max-w-[280px] mx-auto h-[220px] flex justify-center items-center">
-          <img src="/recliner.png" alt="Recliner Chair" className="w-[85%] h-full object-contain mix-blend-multiply opacity-90 ml-[3%]" onError={(e) => {
+          <img src="./recliner.png" alt="Recliner Chair" className="w-[85%] h-full object-contain mix-blend-multiply opacity-90 ml-[3%]" onError={(e) => {
             // Fallback SVG if image not uploaded yet
             (e.target as HTMLImageElement).style.display = 'none';
             const fallback = document.getElementById('sofa-fallback-svg');

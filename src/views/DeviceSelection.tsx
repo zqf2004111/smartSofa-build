@@ -46,7 +46,7 @@ export function DeviceSelectionView({ onSelectDevice, onAddDevice }: DeviceSelec
               {/* Note: In reality they are images, but since we don't have them, I'll put a fallback */}
               <div className="w-[120px] h-[80px] flex items-center justify-center mb-2">
                 <img 
-                  src="/Recliner.png" 
+                  src="./Recliner.png" 
                   alt={device.name} 
                   className="w-[100px] h-full object-contain mix-blend-multiply" 
                 />

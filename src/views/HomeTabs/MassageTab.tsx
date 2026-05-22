@@ -15,11 +15,11 @@ export function MassageTab() {
   };
 
   const modes = [
-    { id: 'wave', label: t('wave'), icon: '/massage-icon/Wave.png', iconSelected: '/massage-icon/Wave-selected.png' },
-    { id: 'catwalk', label: t('catwalk'), icon: '/massage-icon/catwalk.png', iconSelected: '/massage-icon/catwalk-selected.png' },
-    { id: 'butterfly', label: t('butterfly'), icon: '/massage-icon/butterfly.png', iconSelected: '/massage-icon/butterfly-selected.png' },
-    { id: 'acupressure', label: t('acupressure'), icon: '/massage-icon/acupressure.png', iconSelected: '/massage-icon/acrpressure-selected.png' },
-    { id: 'pat', label: t('pat'), icon: '/massage-icon/pat.png', iconSelected: '/massage-icon/pat-selected.png' },
+    { id: 'wave', label: t('wave'), icon: './massage-icon/Wave.png', iconSelected: './massage-icon/Wave-selected.png' },
+    { id: 'catwalk', label: t('catwalk'), icon: './massage-icon/catwalk.png', iconSelected: './massage-icon/catwalk-selected.png' },
+    { id: 'butterfly', label: t('butterfly'), icon: './massage-icon/butterfly.png', iconSelected: './massage-icon/butterfly-selected.png' },
+    { id: 'acupressure', label: t('acupressure'), icon: './massage-icon/acupressure.png', iconSelected: './massage-icon/acrpressure-selected.png' },
+    { id: 'pat', label: t('pat'), icon: './massage-icon/pat.png', iconSelected: './massage-icon/pat-selected.png' },
   ];
 
   const times = [5, 10, 15, 20, 25, 30];

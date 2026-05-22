@@ -14,8 +14,8 @@ export function HeatingTab() {
   };
   
   const modes = [
-    { id: 'gentle', label: t('gentle'), icon: '/heating-icon/gentle.png', iconSelected: '/heating-icon/gentle-selected.png' },
-    { id: 'rapid', label: t('rapid'), icon: '/heating-icon/rapid.png', iconSelected: '/heating-icon/rapid-selected.png' },
+    { id: 'gentle', label: t('gentle'), icon: './heating-icon/gentle.png', iconSelected: './heating-icon/gentle-selected.png' },
+    { id: 'rapid', label: t('rapid'), icon: './heating-icon/rapid.png', iconSelected: './heating-icon/rapid-selected.png' },
   ];
 
   return (
