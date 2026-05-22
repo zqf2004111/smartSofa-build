@@ -17,7 +17,7 @@ const WavesIcon = ({ size = 24, className = "" }) => (
 );
 
 export function HomeView({ onBackToDevices }: { onBackToDevices?: () => void }) {
-  const { state, language } = useDevice();
+  const { state, language, sendMotorCommand } = useDevice();
   const t = useTranslation(language);
   const [activeTab, setActiveTab] = useState('posture');
 
@@ -91,22 +91,42 @@ export function HomeView({ onBackToDevices }: { onBackToDevices?: () => void }) 
           {/* Faux control circles typical of the recliner interface */}
           {activeTab === 'posture' && (
             <>
-              {/* Top Left (Headrest) */}
-              <div className="absolute top-[8%] left-[26%] w-[28px] h-[28px] bg-white border border-[#0A5BC4] rounded-full flex items-center justify-center shadow-sm text-black">
+              {/* Top Left (Headrest Down) */}
+              <button 
+                onPointerDown={() => sendMotorCommand('head', 'down')}
+                onPointerUp={() => sendMotorCommand('head', 'stop')}
+                onPointerLeave={() => sendMotorCommand('head', 'stop')}
+                className="absolute top-[8%] left-[26%] w-[28px] h-[28px] bg-white border border-[#0A5BC4] rounded-full flex items-center justify-center shadow-sm text-black active:scale-95 active:bg-gray-100 transition-all select-none"
+              >
                 <ChevronLeft size={16} strokeWidth={2.5} />
-              </div>
-              {/* Center Left (Seat) */}
-              <div className="absolute top-[38%] left-[2%] w-[28px] h-[28px] bg-white border border-[#0A5BC4] rounded-full flex items-center justify-center shadow-sm text-black">
+              </button>
+              {/* Center Left (Seat Down) */}
+              <button 
+                onPointerDown={() => sendMotorCommand('seat', 'down')}
+                onPointerUp={() => sendMotorCommand('seat', 'stop')}
+                onPointerLeave={() => sendMotorCommand('seat', 'stop')}
+                className="absolute top-[38%] left-[2%] w-[28px] h-[28px] bg-white border border-[#0A5BC4] rounded-full flex items-center justify-center shadow-sm text-black active:scale-95 active:bg-gray-100 transition-all select-none"
+              >
                 <ChevronLeft size={16} strokeWidth={2.5} />
-              </div>
-              {/* Top Right (Backrest) */}
-              <div className="absolute top-[28%] right-[4%] w-[28px] h-[28px] bg-[#EEF5FD] border border-[#0A5BC4] rounded-full flex items-center justify-center shadow-sm text-[#0A5BC4]">
+              </button>
+              {/* Top Right (Headrest Up) */}
+              <button 
+                onPointerDown={() => sendMotorCommand('head', 'up')}
+                onPointerUp={() => sendMotorCommand('head', 'stop')}
+                onPointerLeave={() => sendMotorCommand('head', 'stop')}
+                className="absolute top-[28%] right-[4%] w-[28px] h-[28px] bg-[#EEF5FD] border border-[#0A5BC4] rounded-full flex items-center justify-center shadow-sm text-[#0A5BC4] active:scale-95 active:bg-blue-100 transition-all select-none"
+              >
                  <ChevronRight size={16} strokeWidth={2.5} />
-              </div>
-              {/* Bottom Right (Legrest) */}
-              <div className="absolute bottom-[20%] right-[25%] w-[28px] h-[28px] bg-white border border-[#0A5BC4] rounded-full flex items-center justify-center shadow-sm text-black">
+              </button>
+              {/* Bottom Right (Seat Up) */}
+              <button 
+                onPointerDown={() => sendMotorCommand('seat', 'up')}
+                onPointerUp={() => sendMotorCommand('seat', 'stop')}
+                onPointerLeave={() => sendMotorCommand('seat', 'stop')}
+                className="absolute bottom-[20%] right-[25%] w-[28px] h-[28px] bg-white border border-[#0A5BC4] rounded-full flex items-center justify-center shadow-sm text-black active:scale-95 active:bg-gray-100 transition-all select-none"
+              >
                  <ChevronRight size={16} strokeWidth={2.5} />
-              </div>
+              </button>
             </>
           )}
 

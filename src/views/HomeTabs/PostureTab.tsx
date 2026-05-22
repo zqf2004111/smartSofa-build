@@ -12,7 +12,7 @@ export function PostureTab() {
     { id: 'home', label: t('home'), icon: '/posture-icon/home.png', iconSelected: '/posture-icon/home-selected.png', code: 'home' },
     { id: 'tv', label: t('tv'), icon: '/posture-icon/tv.png', iconSelected: '/posture-icon/tv-selected.png', code: 'tv' },
     { id: 'zg', label: t('zg'), icon: '/posture-icon/zg.png', iconSelected: '/posture-icon/zg-selected.png', code: 'zg' },
-    { id: 'memory', label: t('memory'), icon: '/posture-icon/memory-selected.png', iconSelected: '/posture-icon/memory.png', code: 'memory' },
+    { id: 'memory', label: t('memory'), icon: '/posture-icon/memory.png', iconSelected: '/posture-icon/memory-selected.png', code: 'memory' },
   ];
 
   const motors = [
