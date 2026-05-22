@@ -1,0 +1,1618 @@
+
+.scroll-container {
+        height: 100%;
+width: 100%;
+overflow: auto;
+      }
+.Pixso-frame-49_331 {
+        width: 100%;
+height: 874px;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+background-color: rgba(255, 255, 255, 1);
+background-image: linear-gradient(90deg, rgba(247, 249, 251, 1) 0%, rgba(247, 249, 251, 1) 100%);
+      }
+.frame-content-49_331 {
+        display: flex;
+flex-direction: column;
+align-items: flex-start;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-frame-49_332 {
+        width: 402px;
+height: 874px;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+max-width: 672px;
+      }
+.frame-content-49_332 {
+        display: flex;
+flex-direction: column;
+gap: 32px;
+align-items: flex-start;
+max-width: 672px;
+padding: 96px 24px 128px 24px;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-frame-49_333 {
+        width: 100%;
+height: 100%;
+position: relative;
+display: flex;
+flex-direction: row;
+align-items: center;
+border-radius: 24px 24px 0px 0px;
+box-shadow: 0px -4px 20px 0px rgba(0, 0, 0, 0.03999999925202014) ;
+backdrop-filter: blur(8px);
+background-color: rgba(255, 255, 255, 0.800000011920929);
+      }
+.frame-content-49_333 {
+        display: flex;
+flex-direction: row;
+gap: 42.20000076293945px;
+align-items: center;
+padding: 12px 37.13999938964844px 24px 37.09000015258789px;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.stroke-wrapper-49_333 {
+        position: absolute;
+left: 0px;
+bottom: 0px;
+width: 402px;
+height: 90px;
+display: flex;
+padding: 1px 0px 0px 0px;
+      }
+.stroke-49_333 {
+        position: absolute;
+inset: 0px;
+border-radius: 24px 24px 0px 0px;
+pointer-events: none;
+border-width: 1px 0px 0px 0px;
+border-style: solid;
+box-sizing: border-box;
+border-color: rgba(226, 232, 240, 0.5);
+      }
+.Pixso-frame-49_334 {
+        width: auto;
+height: auto;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+padding: 8px 20px 8px 20px;
+      }
+.Pixso-vector-49_335 {
+        width: 16px;
+height: 18px;
+background-image: url(@/assets/images/Container97.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+      }
+.Pixso-frame-49_337 {
+        width: auto;
+height: auto;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 4px 0px 0px 0px;
+      }
+.Pixso-paragraph-49_338 {
+        font-size: 10px;
+font-family: "Source Han Sans CN-Regular";
+font-weight: 400;
+display: flex;
+flex-direction: column;
+justify-content: center;
+letter-spacing: 0.5px;
+line-height: 15px;
+text-transform: uppercase;
+color: rgba(148, 163, 184, 1);
+width: auto;
+height: auto;
+position: relative;
+flex-shrink: 0;
+white-space: pre;
+flex-grow: 0;
+      }
+.Pixso-frame-49_339 {
+        width: auto;
+height: auto;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+padding: 8px 20px 8px 20px;
+      }
+.Pixso-frame-99_1384 {
+        width: 71px;
+height: 53px;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+border-radius: 16px 16px 16px 16px;
+      }
+.frame-content-99_1384 {
+        display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+padding: 6px 19px 0px 20px;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-frame-99_1385 {
+        width: auto;
+height: auto;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 4px 0px 0px 0px;
+      }
+.Pixso-vector-99_1386 {
+        width: 30px;
+height: 30px;
+background-image: url(@/assets/images/tvmusicnotem8.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: relative;
+flex-shrink: 0;
+margin-bottom: -1px;
+      }
+.Pixso-paragraph-99_1388 {
+        font-size: 10px;
+font-family: "Source Han Sans CN-Regular";
+font-weight: 400;
+text-align: center;
+display: flex;
+flex-direction: column;
+justify-content: center;
+letter-spacing: 0.5px;
+line-height: 15px;
+text-transform: uppercase;
+color: rgba(148, 163, 184, 1);
+margin-top: -1px;
+width: 32.34000015258789px;
+height: 15px;
+position: relative;
+flex-shrink: 0;
+margin-bottom: -1px;
+      }
+.Pixso-frame-99_1389 {
+        width: 32.34000015258789px;
+height: 15px;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: center;
+      }
+.Pixso-frame-49_344 {
+        width: 71px;
+height: 53px;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+border-radius: 16px 16px 16px 16px;
+background-color: rgba(239, 246, 255, 1);
+      }
+.frame-content-49_344 {
+        display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+padding: 8px 20px 8px 20px;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-frame-49_345 {
+        width: auto;
+height: auto;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 4px 0px 0px 0px;
+      }
+.Pixso-frame-49_346 {
+        width: 25px;
+height: 25px;
+position: relative;
+flex-shrink: 0;
+background-color: transparent;
+      }
+.Pixso-group-49_347 {
+        width: 100%;
+height: 100%;
+position: absolute;
+left: 0%;
+right: 0%;
+top: 0%;
+bottom: 0%;
+      }
+.Pixso-rectangle-49_348 {
+        width: 100%;
+height: 100%;
+position: absolute;
+left: 0%;
+right: 0%;
+top: 0%;
+bottom: 0%;
+background-color: transparent;
+      }
+.Pixso-vector-49_349 {
+        width: 87.5%;
+height: 87.5%;
+background-image: url(@/assets/images/usercircle8.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 6.25%;
+right: 6.25%;
+top: 6.25%;
+bottom: 6.25%;
+      }
+.Pixso-frame-49_355 {
+        width: auto;
+height: auto;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 4px 0px 0px 0px;
+      }
+.Pixso-paragraph-49_356 {
+        font-size: 10px;
+font-family: "Source Han Sans CN-Regular";
+font-weight: 400;
+display: flex;
+flex-direction: column;
+justify-content: center;
+letter-spacing: 0.5px;
+line-height: 15px;
+text-transform: uppercase;
+color: rgba(37, 99, 235, 1);
+width: auto;
+height: auto;
+position: relative;
+flex-shrink: 0;
+white-space: pre;
+flex-grow: 0;
+      }
+.Pixso-frame-49_412 {
+        width: 354px;
+height: 96px;
+position: absolute;
+left: 24px;
+top: 53px;
+display: flex;
+flex-direction: column;
+align-items: center;
+      }
+.frame-content-49_412 {
+        display: flex;
+flex-direction: column;
+align-items: center;
+width: 100%;
+position: relative;
+      }
+.Pixso-frame-49_413 {
+        width: 172.66000366210938px;
+height: 44px;
+position: absolute;
+left: 91px;
+top: 96px;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 16px 0px 0px 0px;
+      }
+.Pixso-frame-49_424 {
+        width: 96px;
+height: 96px;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+      }
+.Pixso-frame-49_425 {
+        width: 96px;
+height: 96px;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: flex-start;
+border-radius: 9999px 9999px 9999px 9999px;
+background-repeat: no-repeat;
+background-size: 100% 100%;
+background-position: center;
+background-image: url("data:image/svg+xml;utf8,%3Csvg%20viewBox%3D'0%200%2096%2096'%20preserveAspectRatio%3D'none'%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%3E%0A%20%20%20%20%20%20%3Cdefs%3E%0A%20%20%20%20%20%20%20%20%3ClinearGradient%20id%3D'grad'%20gradientUnits%3D'objectBoundingBox'%20x1%3D'0'%20y1%3D'0.5'%20x2%3D'1'%20y2%3D'0.5'%20gradientTransform%3D'matrix(1.0000%2C%20-1.0000%2C%200.7071%2C%200.7071%2C%20-0.3536%2C%200.6464)'%3E%0A%20%20%20%20%20%20%20%20%20%20%3Cstop%20stop-color%3D'rgba(0%2C88%2C188%2C1)'%20offset%3D'0'%2F%3E%3Cstop%20stop-color%3D'rgba(87%2C250%2C233%2C1)'%20offset%3D'1'%2F%3E%0A%20%20%20%20%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%20%20%3C%2Fdefs%3E%0A%20%20%20%20%20%20%3Crect%20width%3D'100%25'%20height%3D'100%25'%20fill%3D'url(%23grad)'%2F%3E%0A%20%20%20%20%3C%2Fsvg%3E");
+      }
+.frame-content-49_425 {
+        display: flex;
+flex-direction: column;
+align-items: flex-start;
+justify-content: center;
+padding: 4px 4px 4px 4px;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-rectangle-49_426 {
+        width: 96px;
+height: 96px;
+position: absolute;
+left: 0px;
+top: 0px;
+border-radius: 9999px 9999px 9999px 9999px;
+box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1) , 0px 4px 6px -4px rgba(0, 0, 0, 0.1) ;
+background-color: rgba(255, 255, 255, 0.0020000000949949026);
+      }
+.Pixso-frame-49_427 {
+        width: 100%;
+height: auto;
+overflow: hidden;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: flex-start;
+flex-grow: 1;
+border-radius: 9999px 9999px 9999px 9999px;
+background-color: rgba(255, 255, 255, 1);
+      }
+.frame-content-49_427 {
+        display: flex;
+flex-direction: column;
+align-items: flex-start;
+justify-content: center;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-frame-49_428 {
+        width: 100%;
+height: auto;
+overflow: hidden;
+position: relative;
+flex-shrink: 0;
+flex-grow: 1;
+background-size: 100% 100%;
+background-position: center;
+background-repeat: no-repeat;
+background-image: url(@/assets/images/bcd1233766f3bcde1a5c2e3051c6b9cadbd1ac3c.png);
+      }
+.Pixso-frame-49_429 {
+        width: 29.5px;
+height: 29.5px;
+position: absolute;
+right: 0px;
+bottom: 0px;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+padding: 8px 8px 8px 8px;
+border-radius: 9999px 9999px 9999px 9999px;
+background-color: rgba(0, 88, 188, 1);
+      }
+.Pixso-rectangle-49_430 {
+        width: calc(100% - -0.5px);
+height: calc(100% - -0.5px);
+position: absolute;
+left: 0px;
+right: -0.5px;
+top: 0px;
+bottom: -0.5px;
+border-radius: 9999px 9999px 9999px 9999px;
+box-shadow: 0px 4px 6px -1px rgba(0, 0, 0, 0.1) , 0px 2px 4px -2px rgba(0, 0, 0, 0.1) ;
+background-color: rgba(255, 255, 255, 0.0020000000949949026);
+      }
+.Pixso-vector-49_431 {
+        width: 13.5px;
+height: 13.5px;
+background-image: url(@/assets/images/Container103.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: flex-start;
+      }
+.Pixso-frame-49_525 {
+        width: 354px;
+height: 331px;
+position: absolute;
+left: 24px;
+top: 378px;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+      }
+.frame-content-49_525 {
+        display: flex;
+flex-direction: column;
+gap: 16px;
+align-items: flex-start;
+padding: 0px 0px 72px 0px;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-frame-49_526 {
+        width: 100%;
+height: auto;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+      }
+.frame-content-49_526 {
+        display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px 8px 0px 8px;
+width: 100%;
+position: relative;
+      }
+.Pixso-paragraph-49_527 {
+        font-size: 12px;
+font-family: "Source Han Sans CN-Regular";
+font-weight: 400;
+display: flex;
+flex-direction: column;
+justify-content: center;
+letter-spacing: 0.6000000238418579px;
+line-height: 12px;
+text-transform: uppercase;
+color: rgba(113, 119, 134, 1);
+width: 100%;
+height: auto;
+position: relative;
+flex-shrink: 0;
+flex-grow: 0;
+      }
+.Pixso-frame-49_528 {
+        width: 100%;
+height: 100%;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+border-radius: 24px 24px 24px 24px;
+box-shadow: 0px 4px 20px 0px rgba(0, 0, 0, 0.03999999925202014) ;
+background-color: rgba(255, 255, 255, 1);
+      }
+.frame-content-49_528 {
+        display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px 0px 53px 0px;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.stroke-wrapper-49_528 {
+        position: relative;
+width: 354px;
+height: 294px;
+display: flex;
+flex-shrink: 0;
+padding: 1px 1px 1px 1px;
+      }
+.stroke-49_528 {
+        position: absolute;
+inset: 0px;
+border-radius: 24px 24px 24px 24px;
+pointer-events: none;
+border-width: 1px;
+border-style: solid;
+box-sizing: border-box;
+border-color: rgba(241, 245, 249, 1);
+      }
+.Pixso-frame-49_529 {
+        width: 100%;
+height: 64px;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: row;
+justify-content: flex-start;
+align-items: center;
+      }
+.frame-content-49_529 {
+        display: flex;
+flex-direction: row;
+gap: 150.7100067138672px;
+align-items: center;
+justify-content: flex-start;
+padding: 16px 16px 16px 16px;
+width: 100%;
+position: relative;
+      }
+.Pixso-frame-49_415 {
+        width: 111px;
+height: 32px;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: center;
+      }
+.frame-content-49_415 {
+        display: flex;
+flex-direction: column;
+align-items: center;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-frame-49_417 {
+        width: 20px;
+height: 20px;
+position: absolute;
+left: -2px;
+top: 6px;
+background-color: transparent;
+      }
+.Pixso-rectangle-49_418 {
+        width: 100%;
+height: 100%;
+position: absolute;
+left: 0%;
+right: 0%;
+top: 0%;
+bottom: 0%;
+background-color: rgba(196, 196, 196, 0);
+      }
+.Pixso-vector-49_419 {
+        width: 81.24%;
+height: 81.24%;
+background-image: url(@/assets/images/Union1.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 9.38%;
+right: 9.38%;
+top: 9.38%;
+bottom: 9.38%;
+      }
+.Pixso-frame-49_414 {
+        width: 111px;
+height: 32px;
+position: absolute;
+left: 14px;
+top: -4px;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+      }
+.Pixso-frame-49_533 {
+        width: 97.25px;
+height: 24px;
+position: absolute;
+left: 14px;
+top: 8px;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+      }
+.Pixso-paragraph-49_534 {
+        font-size: 16px;
+font-family: "Source Han Sans CN-Regular";
+font-weight: 400;
+display: flex;
+flex-direction: column;
+justify-content: center;
+line-height: 24px;
+color: rgba(25, 28, 30, 1);
+width: 97.25px;
+height: 24px;
+position: absolute;
+left: 0px;
+top: 0px;
+      }
+.Pixso-paragraph-49_416 {
+        font-size: 14px;
+font-family: "Source Han Sans CN-Regular";
+font-weight: 400;
+text-align: center;
+display: flex;
+flex-direction: column;
+justify-content: center;
+letter-spacing: -0.23999999463558197px;
+line-height: 31.200000762939453px;
+color: rgba(113, 119, 134, 1);
+width: 172.66000366210938px;
+height: 32px;
+position: absolute;
+left: 134px;
+top: 16px;
+      }
+.Pixso-frame-49_530 {
+        width: 45px;
+height: 22px;
+position: absolute;
+left: 278px;
+top: 21px;
+display: flex;
+flex-direction: row;
+align-items: center;
+      }
+.frame-content-49_530 {
+        display: flex;
+flex-direction: row;
+gap: 12px;
+align-items: center;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-vector-49_553 {
+        width: 13.5px;
+height: 13.5px;
+background-image: url(@/assets/images/Container102.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 13.2900390625px;
+top: 5px;
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: flex-start;
+      }
+.Pixso-frame-49_537 {
+        width: 100%;
+height: 100%;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: row;
+justify-content: flex-start;
+align-items: center;
+      }
+.frame-content-49_537 {
+        display: flex;
+flex-direction: row;
+gap: 108.13999938964844px;
+align-items: center;
+justify-content: flex-start;
+padding: 16px 16px 16px 16px;
+width: 100%;
+position: relative;
+      }
+.stroke-wrapper-49_537 {
+        position: relative;
+width: 354px;
+height: 53px;
+display: flex;
+flex-shrink: 0;
+padding: 1px 0px 0px 0px;
+      }
+.stroke-49_537 {
+        position: absolute;
+inset: 0px;
+border-radius: 0px 0px 0px 0px;
+pointer-events: none;
+border-width: 1px 0px 0px 0px;
+border-style: solid;
+box-sizing: border-box;
+border-color: rgba(248, 250, 252, 1);
+      }
+.Pixso-frame-49_538 {
+        width: 16px;
+height: 20px;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: row;
+gap: 12px;
+align-items: center;
+      }
+.Pixso-frame-49_541 {
+        width: auto;
+height: auto;
+position: absolute;
+left: 28px;
+top: 0px;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+      }
+.Pixso-paragraph-49_542 {
+        font-size: 16px;
+font-family: "Source Han Sans CN-Regular";
+font-weight: 400;
+display: flex;
+flex-direction: column;
+justify-content: center;
+line-height: 24px;
+color: rgba(25, 28, 30, 1);
+width: 139.8300018310547px;
+height: 24px;
+position: relative;
+flex-shrink: 0;
+      }
+.Pixso-vector-49_543 {
+        width: 7.39990234375px;
+height: 12px;
+background-image: url(@/assets/images/Container100.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 294px;
+top: 21px;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+      }
+.Pixso-frame-49_469 {
+        width: 16px;
+height: 16px;
+position: absolute;
+left: 23px;
+top: 21px;
+background-color: transparent;
+      }
+.Pixso-rectangle-49_470 {
+        width: 100%;
+height: 100%;
+position: absolute;
+left: 0%;
+right: 0%;
+top: 0%;
+bottom: 0%;
+background-color: transparent;
+      }
+.Pixso-vector-49_471 {
+        width: 68.59%;
+height: 68.59%;
+background-image: url(@/assets/images/gendermale.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 12.66%;
+right: 18.75%;
+top: 18.75%;
+bottom: 12.66%;
+      }
+.Pixso-frame-49_454 {
+        width: 16px;
+height: 16px;
+position: absolute;
+left: 9px;
+top: 21px;
+background-color: transparent;
+      }
+.Pixso-rectangle-49_455 {
+        width: 100%;
+height: 100%;
+position: absolute;
+left: 0%;
+right: 0%;
+top: 0%;
+bottom: 0%;
+background-color: transparent;
+      }
+.Pixso-vector-49_456 {
+        width: 43.74%;
+height: 80.15%;
+background-image: url(@/assets/images/genderfemale.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 28.13%;
+right: 28.13%;
+top: 10.49%;
+bottom: 9.36%;
+      }
+.Pixso-paragraph-49_555 {
+        font-size: 14px;
+font-family: "Source Han Sans CN-Regular";
+font-weight: 400;
+text-align: center;
+display: flex;
+flex-direction: column;
+justify-content: center;
+letter-spacing: -0.23999999463558197px;
+line-height: 31.200000762939453px;
+color: rgba(113, 119, 134, 1);
+width: 172.66000366210938px;
+height: 32px;
+position: absolute;
+left: 142.0000762939453px;
+top: 9px;
+      }
+.Pixso-frame-49_545 {
+        width: 100%;
+height: 100%;
+position: relative;
+display: flex;
+flex-direction: row;
+justify-content: flex-start;
+align-items: center;
+      }
+.frame-content-49_545 {
+        display: flex;
+flex-direction: row;
+gap: 130.75px;
+align-items: center;
+justify-content: flex-start;
+padding: 16px 16px 16px 16px;
+width: 100%;
+position: relative;
+      }
+.stroke-wrapper-49_545 {
+        position: absolute;
+left: 0px;
+top: 113px;
+width: 354px;
+height: 57px;
+display: flex;
+padding: 1px 0px 0px 0px;
+      }
+.stroke-49_545 {
+        position: absolute;
+inset: 0px;
+border-radius: 0px 0px 0px 0px;
+pointer-events: none;
+border-width: 1px 0px 0px 0px;
+border-style: solid;
+box-sizing: border-box;
+border-color: rgba(248, 250, 252, 1);
+      }
+.Pixso-frame-49_546 {
+        width: 75px;
+height: 23px;
+position: absolute;
+left: 45px;
+top: 17px;
+display: flex;
+flex-direction: row;
+align-items: center;
+      }
+.frame-content-49_546 {
+        display: flex;
+flex-direction: row;
+gap: 12px;
+align-items: center;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-frame-49_549 {
+        width: 117.22000122070312px;
+height: 24px;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+      }
+.Pixso-paragraph-49_550 {
+        font-size: 16px;
+font-family: "Source Han Sans CN-Regular";
+font-weight: 400;
+display: flex;
+flex-direction: column;
+justify-content: center;
+line-height: 24px;
+color: rgba(25, 28, 30, 1);
+width: 117.22000122070312px;
+height: 24px;
+position: absolute;
+left: 0px;
+top: 0px;
+      }
+.Pixso-vector-49_488 {
+        width: 24px;
+height: 24px;
+background-image: url(@/assets/images/brightness_auto.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 10px;
+top: 17px;
+      }
+.Pixso-paragraph-49_576 {
+        font-size: 14px;
+font-family: "Source Han Sans CN-Regular";
+font-weight: 400;
+text-align: center;
+display: flex;
+flex-direction: column;
+justify-content: center;
+letter-spacing: -0.23999999463558197px;
+line-height: 31.200000762939453px;
+color: rgba(113, 119, 134, 1);
+width: 55px;
+height: 36px;
+position: absolute;
+left: 204px;
+top: 11px;
+      }
+.Pixso-frame-49_577 {
+        width: 45px;
+height: 22px;
+position: absolute;
+left: 274px;
+top: 17px;
+display: flex;
+flex-direction: row;
+align-items: center;
+      }
+.frame-content-49_577 {
+        display: flex;
+flex-direction: row;
+gap: 12px;
+align-items: center;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-vector-49_578 {
+        width: 13.5px;
+height: 13.5px;
+background-image: url(@/assets/images/Container98.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 13.2900390625px;
+top: 5px;
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: flex-start;
+      }
+.Pixso-frame-49_556 {
+        width: 100%;
+height: 100%;
+position: relative;
+display: flex;
+flex-direction: row;
+justify-content: flex-start;
+align-items: center;
+      }
+.frame-content-49_556 {
+        display: flex;
+flex-direction: row;
+gap: 130.75px;
+align-items: center;
+justify-content: flex-start;
+padding: 16px 16px 16px 16px;
+width: 100%;
+position: relative;
+      }
+.stroke-wrapper-49_556 {
+        position: absolute;
+left: 0px;
+top: 170px;
+width: 354px;
+height: 57px;
+display: flex;
+padding: 1px 0px 0px 0px;
+      }
+.stroke-49_556 {
+        position: absolute;
+inset: 0px;
+border-radius: 0px 0px 0px 0px;
+pointer-events: none;
+border-width: 1px 0px 0px 0px;
+border-style: solid;
+box-sizing: border-box;
+border-color: rgba(248, 250, 252, 1);
+      }
+.Pixso-frame-49_557 {
+        width: 75px;
+height: 23px;
+position: absolute;
+left: 45px;
+top: 17px;
+display: flex;
+flex-direction: row;
+align-items: center;
+      }
+.frame-content-49_557 {
+        display: flex;
+flex-direction: row;
+gap: 12px;
+align-items: center;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-frame-49_558 {
+        width: 117.22000122070312px;
+height: 24px;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+      }
+.Pixso-paragraph-49_559 {
+        font-size: 16px;
+font-family: "Source Han Sans CN-Regular";
+font-weight: 400;
+display: flex;
+flex-direction: column;
+justify-content: center;
+line-height: 24px;
+color: rgba(25, 28, 30, 1);
+width: 117.22000122070312px;
+height: 24px;
+position: absolute;
+left: 0px;
+top: 0px;
+      }
+.Pixso-vector-49_562 {
+        width: 24px;
+height: 24px;
+background-image: url(@/assets/images/call_merge.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 9px;
+top: 16px;
+      }
+.Pixso-paragraph-49_495 {
+        font-size: 14px;
+font-family: "Source Han Sans CN-Regular";
+font-weight: 400;
+text-align: center;
+display: flex;
+flex-direction: column;
+justify-content: center;
+letter-spacing: -0.23999999463558197px;
+line-height: 31.200000762939453px;
+color: rgba(113, 119, 134, 1);
+width: 55px;
+height: 36px;
+position: absolute;
+left: 205px;
+top: 11px;
+      }
+.Pixso-frame-49_564 {
+        width: 45px;
+height: 22px;
+position: absolute;
+left: 274px;
+top: 18px;
+display: flex;
+flex-direction: row;
+align-items: center;
+      }
+.frame-content-49_564 {
+        display: flex;
+flex-direction: row;
+gap: 12px;
+align-items: center;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-vector-49_565 {
+        width: 13.5px;
+height: 13.5px;
+background-image: url(@/assets/images/Container99.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 13.2900390625px;
+top: 5px;
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: flex-start;
+      }
+.Pixso-frame-49_567 {
+        width: 100%;
+height: 100%;
+position: relative;
+display: flex;
+flex-direction: row;
+justify-content: flex-start;
+align-items: center;
+      }
+.frame-content-49_567 {
+        display: flex;
+flex-direction: row;
+gap: 130.75px;
+align-items: center;
+justify-content: flex-start;
+padding: 16px 16px 16px 16px;
+width: 100%;
+position: relative;
+      }
+.stroke-wrapper-49_567 {
+        position: absolute;
+left: 0px;
+top: 227px;
+width: 354px;
+height: 57px;
+display: flex;
+padding: 1px 0px 0px 0px;
+      }
+.stroke-49_567 {
+        position: absolute;
+inset: 0px;
+border-radius: 0px 0px 0px 0px;
+pointer-events: none;
+border-width: 1px 0px 0px 0px;
+border-style: solid;
+box-sizing: border-box;
+border-color: rgba(248, 250, 252, 1);
+      }
+.Pixso-frame-49_568 {
+        width: 75px;
+height: 23px;
+position: absolute;
+left: 45px;
+top: 17px;
+display: flex;
+flex-direction: row;
+align-items: center;
+      }
+.frame-content-49_568 {
+        display: flex;
+flex-direction: row;
+gap: 12px;
+align-items: center;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-frame-49_569 {
+        width: 117.22000122070312px;
+height: 24px;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+      }
+.Pixso-frame-49_571 {
+        width: 24px;
+height: 24px;
+overflow: hidden;
+position: absolute;
+left: 10px;
+top: 17px;
+background-color: transparent;
+      }
+.Pixso-frame-49_510 {
+        width: 24px;
+height: 24px;
+overflow: hidden;
+position: absolute;
+left: 0px;
+top: 0px;
+background-color: transparent;
+      }
+.Pixso-vector-49_523 {
+        width: 24px;
+height: 24px;
+background-image: url(@/assets/images/nfc.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 0px;
+top: 0px;
+      }
+.Pixso-frame-49_505 {
+        width: 318px;
+height: 46px;
+position: absolute;
+left: 45px;
+top: 6px;
+display: flex;
+flex-direction: row;
+align-items: center;
+      }
+.frame-content-49_505 {
+        display: flex;
+flex-direction: row;
+gap: 16px;
+align-items: center;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-frame-49_506 {
+        width: auto;
+height: auto;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+      }
+.Pixso-frame-49_507 {
+        width: 221px;
+height: 26px;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+      }
+.frame-content-49_507 {
+        display: flex;
+flex-direction: column;
+align-items: flex-start;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-paragraph-49_508 {
+        font-size: 18px;
+font-family: "Source Han Sans CN-Regular";
+font-weight: 400;
+display: flex;
+flex-direction: column;
+justify-content: center;
+line-height: 25.200000762939453px;
+color: rgba(25, 28, 30, 1);
+width: 203px;
+height: 26px;
+position: relative;
+flex-shrink: 0;
+      }
+.Pixso-paragraph-49_509 {
+        font-size: 14px;
+font-family: "Source Han Sans CN-Regular";
+font-weight: 400;
+text-align: center;
+display: flex;
+flex-direction: column;
+justify-content: center;
+letter-spacing: -0.23999999463558197px;
+line-height: 31.200000762939453px;
+color: rgba(113, 119, 134, 1);
+width: 55px;
+height: 36px;
+position: absolute;
+left: 159px;
+top: 5px;
+      }
+.Pixso-frame-49_573 {
+        width: 45px;
+height: 22px;
+position: absolute;
+left: 228px;
+top: 12px;
+display: flex;
+flex-direction: row;
+align-items: center;
+      }
+.frame-content-49_573 {
+        display: flex;
+flex-direction: row;
+gap: 12px;
+align-items: center;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-vector-49_574 {
+        width: 13.5px;
+height: 13.5px;
+background-image: url(@/assets/images/Container101.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 13.2900390625px;
+top: 5px;
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: flex-start;
+      }
+.Pixso-frame-49_580 {
+        width: 100%;
+height: 100%;
+position: relative;
+display: flex;
+flex-direction: row;
+justify-content: flex-start;
+align-items: center;
+border-radius: 24px 24px 24px 24px;
+box-shadow: 0px 4px 20px 0px rgba(0, 0, 0, 0.03999999925202014) ;
+background-color: rgba(255, 255, 255, 1);
+      }
+.frame-content-49_580 {
+        display: flex;
+flex-direction: row;
+gap: 25.010000228881836px;
+align-items: center;
+justify-content: flex-start;
+padding: 20px 20px 20px 20px;
+width: 100%;
+position: relative;
+      }
+.stroke-wrapper-49_580 {
+        position: absolute;
+left: 24px;
+top: 211px;
+width: 354px;
+height: 60px;
+display: flex;
+padding: 1px 1px 1px 1px;
+      }
+.stroke-49_580 {
+        position: absolute;
+inset: 0px;
+border-radius: 24px 24px 24px 24px;
+pointer-events: none;
+border-width: 1px;
+border-style: solid;
+box-sizing: border-box;
+border-color: rgba(241, 245, 249, 1);
+      }
+.Pixso-frame-49_581 {
+        width: 318px;
+height: 38px;
+position: absolute;
+left: 47px;
+top: 11px;
+display: flex;
+flex-direction: row;
+align-items: center;
+      }
+.frame-content-49_581 {
+        display: flex;
+flex-direction: row;
+gap: 16px;
+align-items: center;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-frame-49_582 {
+        width: auto;
+height: auto;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+      }
+.Pixso-frame-49_583 {
+        width: 100%;
+height: auto;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+      }
+.frame-content-49_583 {
+        display: flex;
+flex-direction: column;
+align-items: flex-start;
+width: 100%;
+position: relative;
+      }
+.Pixso-paragraph-49_584 {
+        font-size: 18px;
+font-family: "Source Han Sans CN-Regular";
+font-weight: 400;
+display: flex;
+flex-direction: column;
+justify-content: center;
+line-height: 25.200000762939453px;
+color: rgba(25, 28, 30, 1);
+width: 140px;
+height: 26px;
+position: relative;
+flex-shrink: 0;
+      }
+.Pixso-paragraph-49_595 {
+        font-size: 14px;
+font-family: "Source Han Sans CN-Regular";
+font-weight: 400;
+text-align: center;
+display: flex;
+flex-direction: column;
+justify-content: center;
+letter-spacing: -0.23999999463558197px;
+line-height: 31.200000762939453px;
+color: rgba(113, 119, 134, 1);
+width: 172.66000366210938px;
+height: 32px;
+position: absolute;
+left: 80px;
+top: 3px;
+      }
+.Pixso-frame-49_588 {
+        width: 20px;
+height: 20px;
+position: absolute;
+left: 17px;
+top: 20px;
+background-color: transparent;
+      }
+.Pixso-rectangle-49_589 {
+        width: 100%;
+height: 100%;
+position: absolute;
+left: 0%;
+right: 0%;
+top: 0%;
+bottom: 0%;
+background-color: rgba(196, 196, 196, 0);
+      }
+.Pixso-vector-49_590 {
+        width: 81.24%;
+height: 81.24%;
+background-image: url(@/assets/images/Union0.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 9.38%;
+right: 9.38%;
+top: 9.38%;
+bottom: 9.38%;
+      }
+.Pixso-frame-49_596 {
+        width: 100%;
+height: 100%;
+position: relative;
+display: flex;
+flex-direction: row;
+justify-content: flex-start;
+align-items: center;
+border-radius: 24px 24px 24px 24px;
+box-shadow: 0px 4px 20px 0px rgba(0, 0, 0, 0.03999999925202014) ;
+background-color: rgba(255, 255, 255, 1);
+      }
+.frame-content-49_596 {
+        display: flex;
+flex-direction: row;
+gap: 25.010000228881836px;
+align-items: center;
+justify-content: flex-start;
+padding: 20px 20px 20px 20px;
+width: 100%;
+position: relative;
+      }
+.stroke-wrapper-49_596 {
+        position: absolute;
+left: 24px;
+top: 279px;
+width: 354px;
+height: 60px;
+display: flex;
+padding: 1px 1px 1px 1px;
+      }
+.stroke-49_596 {
+        position: absolute;
+inset: 0px;
+border-radius: 24px 24px 24px 24px;
+pointer-events: none;
+border-width: 1px;
+border-style: solid;
+box-sizing: border-box;
+border-color: rgba(241, 245, 249, 1);
+      }
+.Pixso-frame-49_597 {
+        width: 208px;
+height: 38px;
+position: absolute;
+left: 102px;
+top: 11px;
+display: flex;
+flex-direction: row;
+align-items: center;
+      }
+.frame-content-49_597 {
+        display: flex;
+flex-direction: row;
+gap: 16px;
+align-items: center;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-frame-49_598 {
+        width: auto;
+height: auto;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+      }
+.Pixso-frame-49_599 {
+        width: 100%;
+height: auto;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+      }
+.frame-content-49_599 {
+        display: flex;
+flex-direction: column;
+align-items: flex-start;
+width: 100%;
+position: relative;
+      }
+.Pixso-paragraph-49_600 {
+        font-size: 18px;
+font-family: "Source Han Sans CN-Regular";
+font-weight: 400;
+display: flex;
+flex-direction: column;
+justify-content: center;
+line-height: 25.200000762939453px;
+color: rgba(1, 89, 188, 1);
+width: 170px;
+height: 26px;
+position: relative;
+flex-shrink: 0;
+      }
+.Pixso-frame-49_602 {
+        width: 20px;
+height: 20px;
+position: absolute;
+left: 17px;
+top: 20px;
+background-color: transparent;
+      }
+.Pixso-rectangle-49_603 {
+        width: 100%;
+height: 100%;
+position: absolute;
+left: 0%;
+right: 0%;
+top: 0%;
+bottom: 0%;
+background-color: rgba(196, 196, 196, 0);
+      }
+

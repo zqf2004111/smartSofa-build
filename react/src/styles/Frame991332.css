@@ -1,0 +1,108 @@
+
+.scroll-container {
+        height: 100%;
+width: 100%;
+overflow: auto;
+      }
+.Pixso-frame-99_1332 {
+        width: 100%;
+height: 53px;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+border-radius: 16px 16px 16px 16px;
+      }
+.frame-content-99_1332 {
+        display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+padding: 8px 20px 8px 20px;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-frame-99_1343 {
+        width: auto;
+height: auto;
+position: absolute;
+left: 50%;
+top: 27px;
+transform: translateX(calc(-50% + 0.599853515625px));
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 4px 0px 0px 0px;
+      }
+.Pixso-paragraph-99_1344 {
+        font-size: 10px;
+font-family: "Source Han Sans CN-Regular";
+font-weight: 400;
+display: flex;
+flex-direction: column;
+justify-content: center;
+letter-spacing: 0.5px;
+line-height: 15px;
+text-transform: uppercase;
+color: rgba(148, 163, 184, 1);
+width: auto;
+height: auto;
+position: relative;
+flex-shrink: 0;
+white-space: pre;
+flex-grow: 0;
+      }
+.Pixso-frame-99_1333 {
+        width: auto;
+height: auto;
+position: absolute;
+left: 50%;
+top: 1px;
+transform: translateX(calc(-50% + 0.599853515625px));
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 4px 0px 0px 0px;
+      }
+.Pixso-frame-99_1334 {
+        width: 25px;
+height: 25px;
+position: relative;
+flex-shrink: 0;
+background-color: transparent;
+      }
+.Pixso-group-99_1335 {
+        width: 100%;
+height: 100%;
+position: absolute;
+left: 0%;
+right: 0%;
+top: 0%;
+bottom: 0%;
+      }
+.Pixso-rectangle-99_1336 {
+        width: 100%;
+height: 100%;
+position: absolute;
+left: 0%;
+right: 0%;
+top: 0%;
+bottom: 0%;
+background-color: transparent;
+      }
+.Pixso-vector-99_1337 {
+        width: 87.5%;
+height: 87.5%;
+background-image: url(@/assets/images/usercircle4.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 6.25%;
+right: 6.25%;
+top: 6.25%;
+bottom: 6.25%;
+      }
+

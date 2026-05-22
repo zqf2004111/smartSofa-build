@@ -1,0 +1,71 @@
+
+.scroll-container {
+        height: 100%;
+width: 100%;
+overflow: auto;
+      }
+.Pixso-frame-99_1305 {
+        width: 100%;
+height: 18px;
+position: relative;
+flex-shrink: 0;
+      }
+.Pixso-group-99_1270 {
+        width: 100%;
+height: 100%;
+position: absolute;
+left: 0%;
+right: 0%;
+top: 0%;
+bottom: 0%;
+      }
+.Pixso-vector-99_1271 {
+        width: 100%;
+height: 100%;
+background-image: url(@/assets/images/Vector_99_1271.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 0%;
+right: 0%;
+top: 0%;
+bottom: 0%;
+      }
+.Pixso-vector-99_1272 {
+        width: 25.73%;
+height: 47.57%;
+background-image: url(@/assets/images/Vector_99_1272.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 31.89%;
+right: 42.38%;
+top: 25.07%;
+bottom: 27.36%;
+      }
+.Pixso-rectangle-99_1273 {
+        width: 100%;
+height: 100%;
+position: relative;
+background-color: rgba(1, 89, 188, 1);
+      }
+.stroke-wrapper-99_1273 {
+        position: absolute;
+left: 31.33%;
+top: 67.43%;
+right: 26.57%;
+bottom: 27.14%;
+width: 42.1%;
+height: 5.43%;
+      }
+.stroke-99_1273 {
+        position: absolute;
+inset: -0.37321868538856506px -0.37321868538856506px -0.37321868538856506px -0.37321868538856506px;
+border-radius: 0px 0px 0px 0px;
+pointer-events: none;
+border-width: 0.7464373707771301px 0.7464373707771301px 0.7464373707771301px 0.7464373707771301px;
+border-style: solid;
+box-sizing: border-box;
+border-color: rgba(1, 89, 188, 1);
+      }
+

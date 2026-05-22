@@ -1,0 +1,24 @@
+@font-face {
+                font-family: "Noto Sans SC-Regular"; font-style: normal; src: url('../fonts/NotoSansSC-VariableFont_wght_2.ttf')
+            }
+@font-face {
+                font-family: "Inter-Regular"; font-style: normal; src: url('../fonts/Inter-Regular_1.otf'); font-weight: 400
+            }
+@font-face {
+                font-family: "Source Han Sans CN-Regular"; font-style: normal; src: url('../fonts/SourceHanSansCN-Regular_1.otf'); font-weight: 400
+            }
+@font-face {
+                font-family: "Source Han Sans CN-Medium"; font-style: normal; src: url('../fonts/SourceHanSansCN-Medium_1.otf'); font-weight: 500
+            }
+@font-face {
+                font-family: "OPPOSans-Bold"; font-style: normal; src: url('../fonts/OPPOSans-B_1.ttf'); font-weight: 400
+            }
+@font-face {
+                font-family: "OPPOSans-Medium"; font-style: normal; src: url('../fonts/OPPOSans-M_1.ttf'); font-weight: 400
+            }
+@font-face {
+                font-family: "Inter-Medium"; font-style: normal; src: url('../fonts/Inter-Medium_1.otf'); font-weight: 500
+            }
+@font-face {
+                font-family: "Source Han Sans CN-Bold"; font-style: normal; src: url('../fonts/SourceHanSansCN-Bold_1.otf'); font-weight: 700
+            }

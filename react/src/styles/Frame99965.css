@@ -1,0 +1,35 @@
+
+.scroll-container {
+        height: 100%;
+width: 100%;
+overflow: auto;
+      }
+.Pixso-frame-99_965 {
+        width: 100%;
+height: 70px;
+position: relative;
+flex-shrink: 0;
+      }
+.Pixso-vector-99_938 {
+        width: 70px;
+height: 70px;
+background-image: url(@/assets/images/Ellipse_99_938.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 50%;
+top: 0px;
+transform: translateX(calc(-50% + 0px));
+      }
+.Pixso-vector-99_966 {
+        width: 27.1278076171875px;
+height: 27px;
+background-image: url(@/assets/images/_x0020_10.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 50%;
+top: 21px;
+transform: translateX(calc(-50% + -0.4361000061035156px));
+      }
+

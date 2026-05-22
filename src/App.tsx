@@ -1,0 +1,78 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState } from 'react';
+import { DeviceProvider } from './context';
+import { BottomNav } from './components/BottomNav';
+import { HomeView } from './views/Home';
+import { MediaView } from './views/Media';
+import { YouView } from './views/You';
+import { AddDeviceModal } from './components/AddDeviceModal';
+import { DeviceSelectionView } from './views/DeviceSelection';
+
+export default function App() {
+  const [currentScreen, setCurrentScreen] = useState<'main' | 'devices'>('main');
+  const [currentTab, setCurrentTab] = useState('home');
+  const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
+
+  if (currentScreen === 'devices') {
+    return (
+      <div className="w-full max-w-md mx-auto min-h-screen bg-gray-50 flex flex-col relative shadow-xl overflow-hidden">
+        <DeviceSelectionView 
+          onSelectDevice={() => setCurrentScreen('main')} 
+          onAddDevice={() => setIsAddDeviceModalOpen(true)}
+        />
+        <AddDeviceModal 
+          isOpen={isAddDeviceModalOpen} 
+          onClose={() => setIsAddDeviceModalOpen(false)} 
+        />
+      </div>
+    );
+  }
+
+  return (
+    <DeviceProvider>
+      <div className="w-full max-w-md mx-auto min-h-screen bg-gray-50 flex flex-col relative pb-20 shadow-xl overflow-hidden">
+        
+        {/* Top Header */}
+        <div className={`px-5 pt-4 pb-3 bg-white sticky top-0 z-40 flex items-center justify-between ${currentTab === 'media' ? '' : 'border-b border-gray-100/50 shadow-[0_4px_12px_rgba(0,0,0,0.02)]'}`}>
+          <div 
+            className="flex items-center space-x-1 cursor-pointer"
+            onClick={() => setCurrentScreen('devices')}
+          >
+            <span className="text-base font-medium text-gray-900">Recliner Plus</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-900">
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </div>
+          <button 
+            className="flex items-center justify-center hover:opacity-70 transition-opacity" 
+            aria-label="Add device"
+            onClick={() => setIsAddDeviceModalOpen(true)}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 5V19M5 12H19" stroke="#333" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-y-auto scroll-smooth">
+          {currentTab === 'home' && <HomeView onBackToDevices={() => setCurrentScreen('devices')} />}
+          {currentTab === 'media' && <MediaView />}
+          {currentTab === 'you' && <YouView />}
+        </main>
+
+        <BottomNav currentTab={currentTab} onTabChange={setCurrentTab} />
+
+        <AddDeviceModal 
+          isOpen={isAddDeviceModalOpen} 
+          onClose={() => setIsAddDeviceModalOpen(false)} 
+        />
+      </div>
+    </DeviceProvider>
+  );
+}
+

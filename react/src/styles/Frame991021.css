@@ -1,0 +1,51 @@
+
+.scroll-container {
+        height: 100%;
+width: 100%;
+overflow: auto;
+      }
+.Pixso-frame-99_1021 {
+        width: 100%;
+height: 75px;
+position: relative;
+flex-shrink: 0;
+      }
+.Pixso-rectangle-99_1022 {
+        width: 75px;
+height: 75px;
+position: absolute;
+left: 0px;
+top: 0px;
+border-radius: 15px 15px 15px 15px;
+background-color: rgba(255, 255, 255, 1);
+      }
+.Pixso-vector-99_1023 {
+        width: 17.33331298828125px;
+height: 22px;
+background-image: url(@/assets/images/Container96.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 50%;
+top: 50%;
+transform: translateX(calc(-50% + -0.33333396911621094px)) translateY(calc(-50% + -9px));
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+      }
+.Pixso-paragraph-99_1025 {
+        font-size: 12px;
+font-family: "Source Han Sans CN-Regular";
+font-weight: 400;
+display: flex;
+flex-direction: column;
+justify-content: center;
+line-height: 24px;
+color: rgba(115, 116, 117, 1);
+width: 48px;
+height: auto;
+position: absolute;
+left: 13px;
+top: 45px;
+      }
+

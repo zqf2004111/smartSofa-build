@@ -1,0 +1,37 @@
+
+.scroll-container {
+        height: 100%;
+width: 100%;
+overflow: auto;
+      }
+.Pixso-frame-99_958 {
+        width: 100%;
+height: 70px;
+position: relative;
+flex-shrink: 0;
+      }
+.Pixso-vector-99_959 {
+        width: 70px;
+height: 70px;
+background-image: url(@/assets/images/Ellipse_99_959.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 0px;
+top: 0px;
+      }
+.Pixso-vector-99_960 {
+        width: 24.375px;
+height: 14px;
+background-image: url(@/assets/images/Margin0.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 23px;
+top: 28px;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px 0px 4px 0px;
+      }
+

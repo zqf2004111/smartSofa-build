@@ -1,0 +1,57 @@
+
+.scroll-container {
+        height: 100%;
+width: 100%;
+overflow: auto;
+      }
+.Pixso-frame-99_1046 {
+        width: 100%;
+height: 75px;
+position: relative;
+flex-shrink: 0;
+      }
+.Pixso-group-99_1047 {
+        width: 75px;
+height: 75px;
+position: absolute;
+left: 0px;
+top: 0px;
+      }
+.Pixso-rectangle-99_1048 {
+        width: 75px;
+height: 75px;
+position: absolute;
+left: 0px;
+top: 0px;
+border-radius: 15px 15px 15px 15px;
+background-color: rgba(1, 89, 188, 1);
+      }
+.Pixso-vector-99_1049 {
+        width: 34.83331298828125px;
+height: 24.71%;
+background-image: url(@/assets/images/Vector_99_1049.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 50%;
+top: 25.33%;
+bottom: 49.96%;
+transform: translateX(calc(-50% + -0.08333206176757812px));
+      }
+.Pixso-paragraph-99_1050 {
+        font-size: 12px;
+font-family: "Source Han Sans CN-Regular";
+font-weight: 400;
+text-align: center;
+display: flex;
+flex-direction: column;
+justify-content: center;
+line-height: 24px;
+color: rgba(255, 255, 255, 1);
+width: 48px;
+height: 33px;
+position: absolute;
+left: 11px;
+top: 41px;
+      }
+

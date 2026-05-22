@@ -1,0 +1,92 @@
+
+.scroll-container {
+        height: 100%;
+width: 100%;
+overflow: auto;
+      }
+.Pixso-frame-99_1072 {
+        width: 100%;
+height: 70px;
+position: relative;
+flex-shrink: 0;
+      }
+.Pixso-vector-99_1073 {
+        width: 70px;
+height: 70px;
+background-image: url(@/assets/images/Ellipse_99_1073.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: absolute;
+left: 50%;
+top: 50%;
+transform: translateX(calc(-50% + 1.3301734924316406px)) translateY(calc(-50% + 0px));
+      }
+.Pixso-frame-99_1084 {
+        width: 14px;
+height: 24px;
+position: absolute;
+left: 50%;
+top: 50%;
+transform: translateX(calc(-50% + 1.3301734924316406px)) translateY(calc(-50% + 0px));
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+      }
+.frame-content-99_1084 {
+        display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px 0px 4px 0px;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-group-99_1085 {
+        width: 25px;
+height: 25px;
+position: relative;
+flex-shrink: 0;
+      }
+.Pixso-group-99_1086 {
+        width: 100%;
+height: 100%;
+position: absolute;
+left: 0%;
+right: 0%;
+top: 0%;
+bottom: 0%;
+      }
+.Pixso-frame-99_1087 {
+        width: 100%;
+height: 100%;
+position: absolute;
+left: 0%;
+right: 0%;
+top: 0%;
+bottom: 0%;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+      }
+.frame-content-99_1087 {
+        display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px 0px 2px 0px;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-vector-99_1088 {
+        width: 13.888916015625px;
+height: 24px;
+background-image: url(@/assets/images/Container108.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+align-items: center;
+      }
+

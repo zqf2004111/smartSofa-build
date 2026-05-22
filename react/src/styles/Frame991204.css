@@ -1,0 +1,97 @@
+
+.scroll-container {
+        height: 100%;
+width: 100%;
+overflow: auto;
+      }
+.Pixso-frame-99_1204 {
+        width: 100%;
+height: 100%;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: column;
+gap: 12px;
+align-items: center;
+padding: 24px 26.940000534057617px 24px 26.920000076293945px;
+border-radius: 16px 16px 16px 16px;
+background-color: rgba(1, 89, 188, 1);
+      }
+.stroke-wrapper-99_1204 {
+        position: relative;
+width: 100%;
+height: 120px;
+display: flex;
+flex-shrink: 0;
+padding: 1px 1px 1px 1px;
+      }
+.stroke-99_1204 {
+        position: absolute;
+inset: 0px;
+border-radius: 16px 16px 16px 16px;
+pointer-events: none;
+border-width: 1px;
+border-style: solid;
+box-sizing: border-box;
+border-color: rgba(0, 88, 188, 1);
+      }
+.Pixso-rectangle-99_1205 {
+        width: calc(100% - 0px);
+height: calc(100% - 0px);
+position: absolute;
+left: 0px;
+right: 0px;
+top: 0px;
+bottom: 0px;
+border-radius: 16px 16px 16px 16px;
+box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1) , 0px 4px 6px -4px rgba(0, 0, 0, 0.1) ;
+background-color: rgba(255, 255, 255, 0.0020000000949949026);
+      }
+.Pixso-frame-99_1206 {
+        width: 48px;
+height: 48px;
+position: relative;
+flex-shrink: 0;
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: center;
+border-radius: 9999px 9999px 9999px 9999px;
+box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05) ;
+background-color: rgba(255, 255, 255, 0.20000000298023224);
+      }
+.frame-content-99_1206 {
+        display: flex;
+flex-direction: row;
+align-items: center;
+justify-content: center;
+width: 100%;
+height: 100%;
+position: relative;
+      }
+.Pixso-vector-99_1207 {
+        width: 20px;
+height: 22.25px;
+background-image: url(@/assets/images/Group_99_1207.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: relative;
+flex-shrink: 0;
+      }
+.Pixso-paragraph-99_1214 {
+        font-size: 12px;
+font-family: "Source Han Sans CN-Regular";
+font-weight: 400;
+text-align: center;
+display: flex;
+flex-direction: column;
+justify-content: center;
+letter-spacing: 0.6000000238418579px;
+line-height: 12px;
+color: rgba(255, 255, 255, 1);
+width: 74.13999938964844px;
+height: 12px;
+position: relative;
+flex-shrink: 0;
+      }
+

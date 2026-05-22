@@ -1,0 +1,54 @@
+
+.scroll-container {
+        height: 100%;
+width: 100%;
+overflow: auto;
+      }
+.Pixso-frame-99_1223 {
+        width: 100%;
+height: 40px;
+position: relative;
+flex-shrink: 0;
+      }
+.Pixso-rectangle-99_1137 {
+        width: 100%;
+height: 100%;
+position: relative;
+border-radius: 15px 15px 15px 15px;
+background-color: rgba(255, 255, 255, 1);
+      }
+.stroke-wrapper-99_1137 {
+        position: absolute;
+left: 50%;
+top: 50%;
+width: 212px;
+height: 40px;
+transform: translateX(calc(-50% + 0px)) translateY(calc(-50% + 0px));
+      }
+.stroke-99_1137 {
+        position: absolute;
+inset: 0px;
+border-radius: 15px 15px 15px 15px;
+pointer-events: none;
+border-width: 1px 1px 1px 1px;
+border-style: solid;
+box-sizing: border-box;
+border-color: rgba(1, 89, 188, 1);
+      }
+.Pixso-paragraph-99_1224 {
+        font-size: 16px;
+font-family: "Source Han Sans CN-Medium";
+font-weight: 500;
+text-align: center;
+display: flex;
+flex-direction: column;
+justify-content: center;
+color: rgba(44, 44, 44, 1);
+width: 78px;
+height: 28px;
+position: absolute;
+left: 50%;
+top: 50%;
+transform: translateX(calc(-50% + 0px)) translateY(calc(-50% + 0px));
+      }
+

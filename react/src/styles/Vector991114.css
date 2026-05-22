@@ -1,0 +1,16 @@
+
+.scroll-container {
+        height: 100%;
+width: 100%;
+overflow: auto;
+      }
+.Pixso-vector-99_1114 {
+        width: 100%;
+height: 70.000244140625px;
+background-image: url(@/assets/images/Frame_99_1114.png);
+background-size: 100% 100%;
+background-repeat: no-repeat;
+position: relative;
+flex-shrink: 0;
+      }
+

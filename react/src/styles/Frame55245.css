@@ -1,0 +1,103 @@
+
+.scroll-container {
+        height: 100%;
+width: 100%;
+overflow: auto;
+      }
+.Pixso-frame-55_245 {
+        width: 100%;
+height: 779px;
+overflow: hidden;
+position: relative;
+flex-shrink: 0;
+background-color: rgba(255, 255, 255, 1);
+      }
+.Pixso-rectangle-55_281 {
+        width: 333px;
+height: 187px;
+position: absolute;
+left: 343px;
+top: 592px;
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+background-image: url(@/assets/images/4a7b51838fa2b70cd629dc9fbbb6f9046c395915.png);
+      }
+.Pixso-rectangle-55_282 {
+        width: 333px;
+height: 187px;
+position: absolute;
+left: 344px;
+top: 0px;
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+background-image: url(@/assets/images/ab74a22d76ee43f80f518dc064da2e95d65c8ba5.png);
+      }
+.Pixso-rectangle-55_283 {
+        width: 332px;
+height: 187px;
+position: absolute;
+left: 0px;
+top: 187px;
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+background-image: url(@/assets/images/4217b95aa78c96313a0be016592737ba2d3da936.png);
+      }
+.Pixso-rectangle-55_284 {
+        width: 332px;
+height: 188px;
+position: absolute;
+left: 344px;
+top: 197px;
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+background-image: url(@/assets/images/740850facc6d49ea890f65efc2d972012ea283b5.png);
+      }
+.Pixso-rectangle-55_285 {
+        width: 333px;
+height: 188px;
+position: absolute;
+left: 0px;
+top: 394px;
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+background-image: url(@/assets/images/0f3f13a3b90294833558d0863cd71e2d621c5b7c.png);
+      }
+.Pixso-rectangle-55_286 {
+        width: 333px;
+height: 188px;
+position: absolute;
+left: 343px;
+top: 394px;
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+background-image: url(@/assets/images/dea5799eb38c1e6c97aedc42e9ad70a2b27e4672.png);
+      }
+.Pixso-rectangle-55_287 {
+        width: 332px;
+height: 187px;
+position: absolute;
+left: 0px;
+top: 592px;
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+background-image: url(@/assets/images/0c01d0e3ca55908bee122972b66e2be26f5ad9c9.png);
+      }
+.Pixso-rectangle-55_288 {
+        width: 327px;
+height: 167px;
+position: absolute;
+left: 0px;
+top: 0px;
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+background-image: url(@/assets/images/9d2780770d86b685274cc74c98e66c7d573580f2.png);
+      }
+
