@@ -1,0 +1,130 @@
+name: Build iOS App
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'simulator'
+        type: choice
+        options:
+          - simulator
+          - archive
+
+jobs:
+  build-simulator:
+    runs-on: macos-latest
+    if: github.event.inputs.build_type != 'archive'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24'
+        cache: 'npm'
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Build Web App
+      run: npm run build
+
+    - name: Sync Capacitor iOS
+      run: npx cap sync ios
+
+    - name: Resolve Swift Packages
+      working-directory: ./ios/App
+      run: xcodebuild -project App.xcodeproj -scheme App -resolvePackageDependencies
+
+    - name: Build iOS Simulator
+      working-directory: ./ios/App
+      run: |
+        xcodebuild \
+          -project App.xcodeproj \
+          -scheme App \
+          -sdk iphonesimulator \
+          -destination 'platform=iOS Simulator,name=iPhone 16' \
+          clean build \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO
+
+    - name: Upload Simulator Build
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-simulator-build
+        path: |
+          ios/App/build/Build/Products/*-iphonesimulator/*.app
+        retention-days: 7
+
+  build-archive:
+    runs-on: macos-latest
+    if: github.event.inputs.build_type == 'archive'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24'
+        cache: 'npm'
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Build Web App
+      run: npm run build
+
+    - name: Sync Capacitor iOS
+      run: npx cap sync ios
+
+    - name: Resolve Swift Packages
+      working-directory: ./ios/App
+      run: xcodebuild -project App.xcodeproj -scheme App -resolvePackageDependencies
+
+    # Uncomment and configure the following steps if you have signing certificates
+    # - name: Install Apple Certificate
+    #   uses: apple-actions/import-codesign-certs@v3
+    #   with:
+    #     p12-file-base64: ${{ secrets.IOS_P12_BASE64 }}
+    #     p12-password: ${{ secrets.IOS_P12_PASSWORD }}
+    #
+    # - name: Install Provisioning Profile
+    #   uses: apple-actions/download-provisioning-profiles@v2
+    #   with:
+    #     bundle-id: com.smarthome.control
+    #     issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+    #     api-key-id: ${{ secrets.APPSTORE_KEY_ID }}
+    #     api-private-key: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+
+    - name: Build iOS Archive (Unsigned)
+      working-directory: ./ios/App
+      run: |
+        xcodebuild \
+          -project App.xcodeproj \
+          -scheme App \
+          -sdk iphoneos \
+          clean archive \
+          -archivePath build/App.xcarchive \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO \
+          CODE_SIGN_IDENTITY="" \
+          PROVISIONING_PROFILE_SPECIFIER=""
+
+    - name: Upload Archive
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-archive
+        path: |
+          ios/App/build/App.xcarchive
+        retention-days: 7
