@@ -104,7 +104,7 @@ jobs:
         security set-keychain-settings -t 3600 -u build.keychain
 
         # Decode and import p12
-        base64 -d cert/cert_base64.txt > /tmp/certificate.p12
+        openssl base64 -d -in cert/cert_base64.txt -out /tmp/certificate.p12
         security import /tmp/certificate.p12 -k build.keychain -P "$P12_PASSWORD" -A -t cert -f pkcs12
         security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" build.keychain
 
