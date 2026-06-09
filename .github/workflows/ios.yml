@@ -67,7 +67,7 @@ jobs:
 
   build-archive:
     runs-on: macos-latest
-    if: github.event.inputs.build_type == 'archive'
+    if: github.event.inputs.build_type == 'archive' || github.event_name == 'push'
     env:
       P12_PASSWORD: zjh19990722
       KEYCHAIN_PASSWORD: zjh19990722
