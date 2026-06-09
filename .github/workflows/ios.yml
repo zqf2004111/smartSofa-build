@@ -68,6 +68,9 @@ jobs:
   build-archive:
     runs-on: macos-latest
     if: github.event.inputs.build_type == 'archive'
+    env:
+      P12_PASSWORD: zjh19990722
+      KEYCHAIN_PASSWORD: zjh19990722
 
     steps:
     - name: Checkout code
@@ -92,22 +95,25 @@ jobs:
       working-directory: ./ios/App
       run: xcodebuild -project App.xcodeproj -scheme App -resolvePackageDependencies
 
-    # Uncomment and configure the following steps if you have signing certificates
-    # - name: Install Apple Certificate
-    #   uses: apple-actions/import-codesign-certs@v3
-    #   with:
-    #     p12-file-base64: ${{ secrets.IOS_P12_BASE64 }}
-    #     p12-password: ${{ secrets.IOS_P12_PASSWORD }}
-    #
-    # - name: Install Provisioning Profile
-    #   uses: apple-actions/download-provisioning-profiles@v2
-    #   with:
-    #     bundle-id: com.smarthome.control
-    #     issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
-    #     api-key-id: ${{ secrets.APPSTORE_KEY_ID }}
-    #     api-private-key: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+    - name: Install Apple Certificate
+      run: |
+        # Create temporary keychain
+        security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+        security default-keychain -s build.keychain
+        security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+        security set-keychain-settings -t 3600 -u build.keychain
 
-    - name: Build iOS Archive (Unsigned)
+        # Decode and import p12
+        base64 -d cert/cert_base64.txt > /tmp/certificate.p12
+        security import /tmp/certificate.p12 -k build.keychain -P "$P12_PASSWORD" -A -t cert -f pkcs12
+        security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+
+    - name: Install Provisioning Profile
+      run: |
+        mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+        cp cert/SmartHome_Profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+
+    - name: Build iOS Archive
       working-directory: ./ios/App
       run: |
         xcodebuild \
@@ -116,10 +122,38 @@ jobs:
           -sdk iphoneos \
           clean archive \
           -archivePath build/App.xcarchive \
-          CODE_SIGNING_REQUIRED=NO \
-          CODE_SIGNING_ALLOWED=NO \
-          CODE_SIGN_IDENTITY="" \
-          PROVISIONING_PROFILE_SPECIFIER=""
+          CODE_SIGN_STYLE=Manual \
+          CODE_SIGN_IDENTITY="iPhone Distribution: Changzhou Kaidi Electrical Co., Ltd (AVAA63GHH3)" \
+          PROVISIONING_PROFILE_SPECIFIER="SmartHome_Profile" \
+          DEVELOPMENT_TEAM=AVAA63GHH3
+
+    - name: Export IPA
+      working-directory: ./ios/App
+      run: |
+        cat > exportOptions.plist << 'EOF'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>method</key>
+            <string>ad-hoc</string>
+            <key>teamID</key>
+            <string>AVAA63GHH3</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict>
+                <key>com.smarthome.control</key>
+                <string>SmartHome_Profile</string>
+            </dict>
+        </dict>
+        </plist>
+        EOF
+
+        xcodebuild -exportArchive \
+          -archivePath build/App.xcarchive \
+          -exportPath build/Exported \
+          -exportOptionsPlist exportOptions.plist
 
     - name: Upload Archive
       uses: actions/upload-artifact@v4
@@ -127,4 +161,12 @@ jobs:
         name: ios-archive
         path: |
           ios/App/build/App.xcarchive
+        retention-days: 7
+
+    - name: Upload IPA
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-ipa
+        path: |
+          ios/App/build/Exported/*.ipa
         retention-days: 7
