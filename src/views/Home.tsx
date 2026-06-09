@@ -6,17 +6,36 @@ import { HeatingTab } from './HomeTabs/HeatingTab';
 import { VentilationTab } from './HomeTabs/VentilationTab';
 import { ChevronLeft, ChevronRight, LineChart, Thermometer, Wind, Activity, PawPrint, MousePointerClick, Hand } from 'lucide-react';
 import { useTranslation } from '../i18n';
-import massageSofaImg from '../assets/massage-sofa.png';
-import waveSuspendImg from '../assets/suspend-icon/Wave.png';
-import catwalkSuspendImg from '../assets/suspend-icon/catwalk.png';
-import butterflySuspendImg from '../assets/suspend-icon/butterfly.png';
-import acupressureSuspendImg from '../assets/suspend-icon/acupressure.png';
-import patSuspendImg from '../assets/suspend-icon/pat.png';
-import gentleSofaImg from '../assets/gentle-sofa.png';
-import rapidSofaImg from '../assets/rapid-sofa.png';
-import gentleVentilationSofaImg from '../assets/ventilation-icon/gentle-sofa.png';
-import rapidVentilationSofaImg from '../assets/ventilation-icon/rapid-sofa.png';
-import reclinerImg from '../assets/recliner.png';
+import type { MotorType } from '../types';
+
+const TOTAL_SEAT_FRAMES = 17;
+const TOTAL_HEAD_FRAMES = 12;
+
+const SofaAnimation = ({
+  motorPositions,
+  activeMotorAnim,
+}: {
+  motorPositions: Partial<Record<MotorType, number>>;
+  activeMotorAnim: MotorType | null;
+}) => {
+  const motorType = activeMotorAnim ?? 'seat';
+  const pct = motorPositions[motorType] ?? 0;
+
+  let frameSrc: string;
+  if (motorType === 'head') {
+    const frameIndex = Math.min(TOTAL_HEAD_FRAMES - 1, Math.max(0, Math.round((pct / 100) * (TOTAL_HEAD_FRAMES - 1))));
+    frameSrc = `/head-frames/1-${frameIndex + 1}.svg`;
+  } else {
+    const frameIndex = Math.min(TOTAL_SEAT_FRAMES - 1, Math.max(0, Math.round((pct / 100) * (TOTAL_SEAT_FRAMES - 1))));
+    frameSrc = `/sofa-frames/${frameIndex + 1}.svg`;
+  }
+
+  return (
+    <div className="relative w-full max-w-[268px]" style={{ aspectRatio: '268/230' }}>
+      <img src={frameSrc} alt="Sofa" className="absolute inset-0 w-full h-full object-contain opacity-90" />
+    </div>
+  );
+};
 
 // Custom Waves icon to match the squiggly lines for massage
 const WavesIcon = ({ size = 24, className = "" }) => (
@@ -27,8 +46,8 @@ const WavesIcon = ({ size = 24, className = "" }) => (
   </svg>
 );
 
-export function HomeView({ onBackToDevices }: { onBackToDevices?: () => void }) {
-  const { state, language, sendMotorCommand } = useDevice();
+export function HomeView({ onBackToDevices, selectedDevice, selectedDeviceName }: { onBackToDevices?: () => void; selectedDevice?: { name: string; model: string }; selectedDeviceName?: string }) {
+  const { state, language, sendMotorCommand, simulateMotorPosition, updateState } = useDevice();
   const t = useTranslation(language);
   const [activeTab, setActiveTab] = useState('posture');
 
@@ -39,33 +58,34 @@ export function HomeView({ onBackToDevices }: { onBackToDevices?: () => void }) 
     { id: 'ventilation', label: t('ventilation'), Icon: Wind },
   ];
 
+
+
   const getMassageSuspendIconSrc = () => {
-    if (!state.massageOn) return massageSofaImg;
     switch (state.massageMode) {
-      case 'wave': return waveSuspendImg;
-      case 'catwalk': return catwalkSuspendImg;
-      case 'butterfly': return butterflySuspendImg;
-      case 'acupressure': return acupressureSuspendImg;
-      case 'pat': return patSuspendImg;
-      default: return waveSuspendImg;
+      case 'wave': return '/suspend-icon/wave.svg';
+      case 'catwalk': return '/suspend-icon/catwalk.svg';
+      case 'butterfly': return '/suspend-icon/butterfly.svg';
+      case 'acupressure': return '/suspend-icon/acupressure.svg';
+      case 'pat': return '/suspend-icon/pat.svg';
+      default: return '/massage-off.svg';
     }
   };
   const massageSuspendIconSrc = getMassageSuspendIconSrc();
 
   const getHeatingSuspendIconSrc = () => {
     switch (state.heatingMode) {
-      case 'gentle': return gentleSofaImg;
-      case 'rapid': return rapidSofaImg;
-      default: return gentleSofaImg;
+      case 'gentle': return '/gentle-sofa.png';
+      case 'rapid': return '/rapid-sofa.png';
+      default: return '/gentle-sofa.png';
     }
   };
   const heatingSuspendIconSrc = getHeatingSuspendIconSrc();
 
   const getVentilationSuspendIconSrc = () => {
     switch (state.ventilationMode) {
-      case 'gentle': return gentleVentilationSofaImg;
-      case 'rapid': return rapidVentilationSofaImg;
-      default: return gentleVentilationSofaImg;
+      case 'gentle': return '/ventilation-icon/gentle.svg';
+      case 'rapid': return '/ventilation-icon/rapid.svg';
+      default: return '/ventilation-icon/gentle.svg';
     }
   };
   const ventilationSuspendIconSrc = getVentilationSuspendIconSrc();
@@ -78,84 +98,102 @@ export function HomeView({ onBackToDevices }: { onBackToDevices?: () => void }) 
         <button onClick={onBackToDevices} className="absolute left-4 p-1">
           <ChevronLeft className="w-5 h-5 text-black" strokeWidth={2.5} />
         </button>
-        <h1 className="flex-1 text-center text-lg font-medium text-gray-900 tracking-tight">Smart Recliner Pro</h1>
+        <h1 className="flex-1 text-center text-lg font-medium text-gray-900 tracking-tight">{selectedDevice?.name || selectedDeviceName || 'Smart Recliner Pro'}</h1>
       </div>
 
       {/* Sofa Graphic */}
       <div className="w-full relative px-5 mb-6 mt-2 h-56 flex items-center justify-center">
-        {/* Recliner Image Area */}
+        {/* Recliner Graphic Area */}
         <div className="relative w-full max-w-[280px] mx-auto h-[220px] flex justify-center items-center">
-          <img src={reclinerImg} alt="Recliner Chair" className="w-[85%] h-full object-contain mix-blend-multiply opacity-90 ml-[3%]" onError={(e) => {
-            // Fallback SVG if image not uploaded yet
-            (e.target as HTMLImageElement).style.display = 'none';
-            const fallback = document.getElementById('sofa-fallback-svg');
-            if (fallback) fallback.style.display = 'block';
-          }} />
-          
-          <svg id="sofa-fallback-svg" width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="0.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-80 absolute" style={{ display: 'none' }}>
-            <path d="M4 11V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6" />
-            <rect width="20" height="6" x="2" y="11" rx="2" />
-            <path d="M4 17v2" />
-            <path d="M20 17v2" />
-          </svg>
+          {activeTab === 'posture' ? (
+            <SofaAnimation motorPositions={state.motorPositions} activeMotorAnim={state.activeMotorAnim} />
+          ) : (
+            <img src="/sofa.svg" alt="Sofa" className="h-[200px] w-auto object-contain opacity-90" />
+          )}
           
           {/* Faux control circles typical of the recliner interface */}
           {activeTab === 'posture' && (
             <>
-              {/* Top Left (Headrest Down) */}
-              <button 
-                onPointerDown={() => sendMotorCommand('head', 'down')}
-                onPointerUp={() => sendMotorCommand('head', 'stop')}
-                onPointerLeave={() => sendMotorCommand('head', 'stop')}
-                className="absolute top-[8%] left-[26%] w-[28px] h-[28px] bg-white border border-[#0A5BC4] rounded-full flex items-center justify-center shadow-sm text-black active:scale-95 active:bg-gray-100 transition-all select-none"
+              {/* Top Left (Headrest) */}
+              <div
+                className="absolute top-[8%] left-[26%] w-[28px] h-[28px] cursor-pointer active:scale-95 transition-transform select-none"
+                onPointerDown={() => simulateMotorPosition('head', 'up')}
+                onPointerUp={() => simulateMotorPosition('head', 'stop')}
+                onPointerLeave={() => simulateMotorPosition('head', 'stop')}
               >
-                <ChevronLeft size={16} strokeWidth={2.5} />
-              </button>
-              {/* Center Left (Seat Down) */}
-              <button 
-                onPointerDown={() => sendMotorCommand('seat', 'down')}
-                onPointerUp={() => sendMotorCommand('seat', 'stop')}
-                onPointerLeave={() => sendMotorCommand('seat', 'stop')}
-                className="absolute top-[38%] left-[2%] w-[28px] h-[28px] bg-white border border-[#0A5BC4] rounded-full flex items-center justify-center shadow-sm text-black active:scale-95 active:bg-gray-100 transition-all select-none"
+                <img src="/headrest-up.svg" alt="Headrest Up" className="w-[28px] h-[28px] object-contain" />
+              </div>
+              {/* Center Left (Seat) */}
+              <div
+                className="absolute top-[38%] left-[2%] w-[28px] h-[28px] cursor-pointer active:scale-95 transition-transform select-none"
+                onPointerDown={() => simulateMotorPosition('seat', 'up')}
+                onPointerUp={() => simulateMotorPosition('seat', 'stop')}
+                onPointerLeave={() => simulateMotorPosition('seat', 'stop')}
               >
-                <ChevronLeft size={16} strokeWidth={2.5} />
-              </button>
-              {/* Top Right (Headrest Up) */}
-              <button 
-                onPointerDown={() => sendMotorCommand('head', 'up')}
-                onPointerUp={() => sendMotorCommand('head', 'stop')}
-                onPointerLeave={() => sendMotorCommand('head', 'stop')}
-                className="absolute top-[28%] right-[4%] w-[28px] h-[28px] bg-[#EEF5FD] border border-[#0A5BC4] rounded-full flex items-center justify-center shadow-sm text-[#0A5BC4] active:scale-95 active:bg-blue-100 transition-all select-none"
+                <img src="/seat-up.svg" alt="Seat Up" className="w-[28px] h-[28px] object-contain" />
+              </div>
+              {/* Top Right (Backrest) */}
+              <div
+                className="absolute top-[28%] right-[4%] w-[28px] h-[28px] cursor-pointer active:scale-95 transition-transform select-none"
+                onPointerDown={() => simulateMotorPosition('head', 'down')}
+                onPointerUp={() => simulateMotorPosition('head', 'stop')}
+                onPointerLeave={() => simulateMotorPosition('head', 'stop')}
               >
-                 <ChevronRight size={16} strokeWidth={2.5} />
-              </button>
-              {/* Bottom Right (Seat Up) */}
-              <button 
-                onPointerDown={() => sendMotorCommand('seat', 'up')}
-                onPointerUp={() => sendMotorCommand('seat', 'stop')}
-                onPointerLeave={() => sendMotorCommand('seat', 'stop')}
-                className="absolute bottom-[20%] right-[25%] w-[28px] h-[28px] bg-white border border-[#0A5BC4] rounded-full flex items-center justify-center shadow-sm text-black active:scale-95 active:bg-gray-100 transition-all select-none"
+                <img src="/headrest-down.svg" alt="Headrest Down" className="w-[28px] h-[28px] object-contain" />
+              </div>
+              {/* Bottom Right (Legrest) */}
+              <div
+                className="absolute bottom-[20%] right-[25%] w-[28px] h-[28px] cursor-pointer active:scale-95 transition-transform select-none"
+                onPointerDown={() => simulateMotorPosition('seat', 'down')}
+                onPointerUp={() => simulateMotorPosition('seat', 'stop')}
+                onPointerLeave={() => simulateMotorPosition('seat', 'stop')}
               >
-                 <ChevronRight size={16} strokeWidth={2.5} />
-              </button>
+                <img src="/seat-down.svg" alt="Seat Down" className="w-[28px] h-[28px] object-contain" />
+              </div>
             </>
           )}
 
-          {activeTab === 'massage' && (
-            <div className="absolute top-[calc(21%+10px)] left-[calc(51%+20px)] -ml-[16px] w-[32px] h-[32px] flex items-center justify-center">
-               <img src={massageSuspendIconSrc} alt="Massage Mode" className="w-[40px] h-[40px] object-contain drop-shadow-sm pointer-events-none mix-blend-multiply" />
+
+
+          {activeTab === 'massage' && state.massageMode !== '' && (
+            <div 
+              className="absolute top-[calc(21%+10px)] left-[calc(51%+20px)] -ml-[16px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
+              onClick={() => {
+                const modes = ['wave', 'catwalk', 'butterfly', 'acupressure', 'pat'];
+                const idx = modes.indexOf(state.massageMode);
+                const next = modes[(idx + 1) % modes.length];
+                updateState({ massageMode: next });
+              }}
+            >
+               <img src={massageSuspendIconSrc} alt="Massage Mode" className="w-[40px] h-[40px] object-contain drop-shadow-sm mix-blend-multiply" />
             </div>
           )}
 
-          {activeTab === 'heating' && (
-            <div className="absolute top-[calc(21%+10px)] left-[calc(51%+20px)] -ml-[16px] w-[32px] h-[32px] flex items-center justify-center">
-               <img src={heatingSuspendIconSrc} alt="Heating Mode" className="w-[40px] h-[40px] object-contain drop-shadow-sm pointer-events-none mix-blend-multiply" />
+          {activeTab === 'heating' && state.heatingOn && (
+            <div 
+              className="absolute top-[calc(21%+10px)] left-[calc(51%+20px)] -ml-[16px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
+              onClick={() => {
+                const modes = ['gentle', 'rapid'];
+                const idx = modes.indexOf(state.heatingMode);
+                const next = modes[(idx + 1) % modes.length];
+                updateState({ heatingMode: next });
+              }}
+            >
+               <img src={heatingSuspendIconSrc} alt="Heating Mode" className="w-[40px] h-[40px] object-contain drop-shadow-sm mix-blend-multiply" />
             </div>
           )}
 
-          {activeTab === 'ventilation' && (
-            <div className="absolute top-[calc(21%+10px)] left-[calc(51%+20px)] -ml-[16px] w-[32px] h-[32px] flex items-center justify-center">
-               <img src={ventilationSuspendIconSrc} alt="Ventilation Mode" className="w-[40px] h-[40px] object-contain drop-shadow-sm pointer-events-none mix-blend-multiply" />
+          {activeTab === 'ventilation' && state.ventilationOn && (
+            <div 
+              className="absolute top-[calc(21%+10px)] left-[calc(51%+20px)] -ml-[16px] w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
+              onClick={() => {
+                const modes = ['gentle', 'rapid'];
+                const idx = modes.indexOf(state.ventilationMode);
+                const next = modes[(idx + 1) % modes.length];
+                updateState({ ventilationMode: next });
+              }}
+            >
+               <img src={ventilationSuspendIconSrc} alt="Ventilation Mode" className="w-[40px] h-[40px] object-contain drop-shadow-sm mix-blend-multiply" />
             </div>
           )}
         </div>

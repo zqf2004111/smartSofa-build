@@ -4,45 +4,49 @@
  */
 
 import React, { useState } from 'react';
-import { DeviceProvider } from './context';
+import { DeviceProvider, useDevice } from './context';
 import { BottomNav } from './components/BottomNav';
 import { HomeView } from './views/Home';
 import { MediaView } from './views/Media';
 import { YouView } from './views/You';
 import { AddDeviceModal } from './components/AddDeviceModal';
+import { DeviceSwitchModal } from './components/DeviceSwitchModal';
 import { DeviceSelectionView } from './views/DeviceSelection';
 
-export default function App() {
-  const [currentScreen, setCurrentScreen] = useState<'main' | 'devices'>('main');
+function AppContent() {
+  const [currentScreen, setCurrentScreen] = useState<'main' | 'devices'>('devices');
   const [currentTab, setCurrentTab] = useState('home');
   const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
+  const [isDeviceSwitchModalOpen, setIsDeviceSwitchModalOpen] = useState(false);
+  const [currentDeviceId, setCurrentDeviceId] = useState<string | null>(null);
+  const { savedDevices } = useDevice();
 
-  if (currentScreen === 'devices') {
-    return (
-      <div className="w-full max-w-md mx-auto min-h-screen bg-gray-50 flex flex-col relative shadow-xl overflow-hidden">
-        <DeviceSelectionView 
-          onSelectDevice={() => setCurrentScreen('main')} 
-          onAddDevice={() => setIsAddDeviceModalOpen(true)}
-        />
-        <AddDeviceModal 
-          isOpen={isAddDeviceModalOpen} 
-          onClose={() => setIsAddDeviceModalOpen(false)} 
-        />
-      </div>
-    );
-  }
+  const currentDevice = savedDevices.find(d => d.id === currentDeviceId) || savedDevices[0];
+  const deviceName = currentDevice?.name || 'Recliner Plus';
 
   return (
-    <DeviceProvider>
-      <div className="w-full max-w-md mx-auto min-h-screen bg-gray-50 flex flex-col relative pb-20 shadow-xl overflow-hidden">
+    <>
+      {currentScreen === 'devices' ? (
+        <div className="w-full max-w-md mx-auto min-h-screen bg-gray-50 flex flex-col relative shadow-xl overflow-hidden">
+          <DeviceSelectionView 
+            onSelectDevice={() => setCurrentScreen('main')} 
+            onAddDevice={() => setIsAddDeviceModalOpen(true)}
+          />
+          <AddDeviceModal 
+            isOpen={isAddDeviceModalOpen} 
+            onClose={() => setIsAddDeviceModalOpen(false)} 
+          />
+        </div>
+      ) : (
+        <div className="w-full max-w-md mx-auto min-h-screen bg-gray-50 flex flex-col relative pb-20 shadow-xl overflow-hidden">
         
         {/* Top Header */}
-        <div className={`px-5 pt-4 pb-3 bg-white sticky top-0 z-40 flex items-center justify-between ${currentTab === 'media' ? '' : 'border-b border-gray-100/50 shadow-[0_4px_12px_rgba(0,0,0,0.02)]'}`}>
+        <div className={`px-5 pt-8 pb-4 bg-white sticky top-0 z-40 flex items-center justify-between ${currentTab === 'media' ? '' : 'border-b border-gray-100/50 shadow-[0_4px_12px_rgba(0,0,0,0.02)]'}`}>
           <div 
             className="flex items-center space-x-1 cursor-pointer"
-            onClick={() => setCurrentScreen('devices')}
+            onClick={() => setIsDeviceSwitchModalOpen(true)}
           >
-            <span className="text-base font-medium text-gray-900">Recliner Plus</span>
+            <span className="text-base font-medium text-gray-900">{deviceName}</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-900">
               <path d="m6 9 6 6 6-6"/>
             </svg>
@@ -60,7 +64,7 @@ export default function App() {
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto scroll-smooth">
-          {currentTab === 'home' && <HomeView onBackToDevices={() => setCurrentScreen('devices')} />}
+          {currentTab === 'home' && <HomeView onBackToDevices={() => setCurrentScreen('devices')} selectedDeviceName={deviceName} />}
           {currentTab === 'media' && <MediaView />}
           {currentTab === 'you' && <YouView />}
         </main>
@@ -71,8 +75,21 @@ export default function App() {
           isOpen={isAddDeviceModalOpen} 
           onClose={() => setIsAddDeviceModalOpen(false)} 
         />
+        <DeviceSwitchModal
+          isOpen={isDeviceSwitchModalOpen}
+          onClose={() => setIsDeviceSwitchModalOpen(false)}
+          onSelectDevice={(id) => { setCurrentDeviceId(id); setIsDeviceSwitchModalOpen(false); }}
+        />
       </div>
-    </DeviceProvider>
+      )}
+    </>
   );
 }
 
+export default function App() {
+  return (
+    <DeviceProvider>
+      <AppContent />
+    </DeviceProvider>
+  );
+}

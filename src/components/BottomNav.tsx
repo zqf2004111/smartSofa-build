@@ -13,7 +13,7 @@ export function BottomNav({ currentTab, onTabChange }: BottomNavProps) {
   const t = useTranslation(language);
 
   const tabs = [
-    { id: 'home', label: t('home').toUpperCase(), icon: Home },
+    { id: 'home', label: t('homeTab').toUpperCase(), icon: Home },
     { id: 'media', label: t('media').toUpperCase(), icon: MonitorPlay },
     { id: 'you', label: t('you').toUpperCase(), icon: UserCircle2 },
   ];

@@ -1,0 +1,376 @@
+/**
+ * BLE Manager
+ * Wraps @capacitor-community/bluetooth-le for sofa control
+ */
+
+import {
+  BleClient,
+  numbersToDataView,
+  type ScanResult,
+  type BleDevice,
+  type ConnectionStatus,
+} from '@capacitor-community/bluetooth-le';
+
+import {
+  SERVICE_UUID,
+  CHARACTERISTIC_TX,
+  CHARACTERISTIC_RX,
+  COMPANY_ID,
+  bytesToHex,
+  parseFrame,
+  type ParsedFrame,
+} from './protocol';
+
+import {
+  parseAdvertisingData,
+  extractManufacturerData,
+  parseStatusReport,
+  type DeviceConfig,
+  type FullDeviceState,
+} from './parser';
+
+export interface DiscoveredDevice {
+  deviceId: string;
+  name: string;
+  rssi: number;
+  config: DeviceConfig | null;
+  raw: BleDevice;
+}
+
+export type BleConnectionState = 'disconnected' | 'scanning' | 'connecting' | 'connected' | 'reconnecting';
+
+export interface BleCallbacks {
+  onStateChange?: (state: BleConnectionState) => void;
+  onDeviceFound?: (device: DiscoveredDevice) => void;
+  onStatusReport?: (status: FullDeviceState) => void;
+  onLog?: (direction: 'TX' | 'RX', hex: string) => void;
+  onError?: (error: string) => void;
+}
+
+class BleManager {
+  private state: BleConnectionState = 'disconnected';
+  private connectedDeviceId: string | null = null;
+  private callbacks: BleCallbacks = {};
+  private motorInterval: ReturnType<typeof setInterval> | null = null;
+  private currentMotorCmd: Uint8Array | null = null;
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 3;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private rxBuffer: number[] = [];
+
+  async initialize(): Promise<void> {
+    try {
+      await BleClient.initialize({ androidNeverForLocation: true });
+      console.log('[BLE] Initialized');
+    } catch (e) {
+      console.error('[BLE] Init failed:', e);
+      this.callbacks.onError?.('Bluetooth initialization failed: ' + String(e));
+    }
+  }
+
+  setCallbacks(cb: BleCallbacks) {
+    this.callbacks = { ...this.callbacks, ...cb };
+  }
+
+  getState(): BleConnectionState {
+    return this.state;
+  }
+
+  getConnectedDeviceId(): string | null {
+    return this.connectedDeviceId;
+  }
+
+  async ensureEnabled(): Promise<boolean> {
+    try {
+      const enabled = await BleClient.isEnabled();
+      if (!enabled) {
+        await BleClient.requestEnable();
+      }
+      return true;
+    } catch (e) {
+      this.callbacks.onError?.('Bluetooth is not enabled');
+      return false;
+    }
+  }
+
+  async startScan(): Promise<void> {
+    if (this.state === 'scanning' || this.state === 'connecting') {
+      console.log('[BLE] Already scanning/connecting, skip');
+      return;
+    }
+
+    const ok = await this.ensureEnabled();
+    if (!ok) return;
+
+    this.setState('scanning');
+    console.log('[BLE] Start scanning...');
+
+    try {
+      await BleClient.requestLEScan(
+        {
+          services: [],
+          allowDuplicates: false,
+        },
+        (result) => this.handleScanResult(result)
+      );
+    } catch (e) {
+      console.error('[BLE] Scan failed:', e);
+      this.callbacks.onError?.('Scan failed: ' + String(e));
+      this.setState('disconnected');
+    }
+  }
+
+  async stopScan(): Promise<void> {
+    if (this.state !== 'scanning') {
+      console.log('[BLE] Not scanning, skip stop');
+      return;
+    }
+
+    try {
+      await BleClient.stopLEScan();
+      console.log('[BLE] Scan stopped');
+    } catch (e) {
+      console.error('[BLE] Stop scan error:', e);
+    }
+    if (this.state === 'scanning') {
+      this.setState('disconnected');
+    }
+  }
+
+  private handleScanResult(result: ScanResult): void {
+    const device = result.device;
+    const name = device.name || result.localName || '';
+
+    // Log ALL scan results for debugging
+    console.log(`[BLE] Raw scan: name="${name}" id=${device.deviceId} rssi=${result.rssi} manuData=${JSON.stringify(result.manufacturerData)}`);
+
+    const displayName = name || 'Unknown Device';
+    const manuData = extractManufacturerData(result.manufacturerData);
+    const config = manuData ? parseAdvertisingData(manuData) : null;
+
+    const discovered: DiscoveredDevice = {
+      deviceId: device.deviceId,
+      name: displayName,
+      rssi: result.rssi ?? -100,
+      config,
+      raw: device,
+    };
+
+    console.log(`[BLE] Found device: ${displayName} (${device.deviceId}) RSSI:${result.rssi}`);
+    this.callbacks.onDeviceFound?.(discovered);
+  }
+
+  async connect(deviceId: string): Promise<boolean> {
+    this.setState('connecting');
+    console.log(`[BLE] Connecting to ${deviceId}...`);
+
+    try {
+      await BleClient.connect(deviceId, (status) => this.handleConnectionStatus(status));
+      this.connectedDeviceId = deviceId;
+      this.reconnectAttempts = 0;
+
+      // Start notifications
+      await BleClient.startNotifications(
+        deviceId,
+        SERVICE_UUID,
+        CHARACTERISTIC_RX,
+        (value) => this.handleNotification(value)
+      );
+
+      this.setState('connected');
+      console.log('[BLE] Connected and notifications started');
+      return true;
+    } catch (e) {
+      console.error('[BLE] Connect failed:', e);
+      this.callbacks.onError?.('Connection failed: ' + String(e));
+      this.setState('disconnected');
+      return false;
+    }
+  }
+
+  async disconnect(): Promise<void> {
+    if (this.motorInterval) {
+      clearInterval(this.motorInterval);
+      this.motorInterval = null;
+    }
+    this.currentMotorCmd = null;
+
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+
+    if (this.connectedDeviceId) {
+      try {
+        await BleClient.stopNotifications(this.connectedDeviceId, SERVICE_UUID, CHARACTERISTIC_RX);
+      } catch (e) {
+        // ignore
+      }
+      try {
+        await BleClient.disconnect(this.connectedDeviceId);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    this.connectedDeviceId = null;
+    this.setState('disconnected');
+    console.log('[BLE] Disconnected');
+  }
+
+  private handleConnectionStatus(status: ConnectionStatus): void {
+    console.log('[BLE] Connection status:', status.connected);
+    if (!status.connected) {
+      this.setState('disconnected');
+      this.attemptReconnect();
+    }
+  }
+
+  private attemptReconnect(): void {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.log('[BLE] Max reconnect attempts reached');
+      this.callbacks.onError?.('Connection lost. Please reconnect manually.');
+      return;
+    }
+
+    this.reconnectAttempts++;
+    this.setState('reconnecting');
+    console.log(`[BLE] Reconnecting... attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
+
+    this.reconnectTimer = setTimeout(async () => {
+      if (this.connectedDeviceId) {
+        const ok = await this.connect(this.connectedDeviceId);
+        if (!ok) {
+          this.attemptReconnect();
+        }
+      }
+    }, 2000);
+  }
+
+  private handleNotification(value: DataView): void {
+    // Use byteOffset/byteLength to avoid reading buffer padding
+    const bytes = new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+    const hex = bytesToHex(bytes);
+    console.log(`[BLE] RX raw (${bytes.length} bytes): ${hex}`);
+    this.callbacks.onLog?.('RX', hex);
+
+    // Accumulate into buffer for frame parsing
+    for (let i = 0; i < bytes.length; i++) {
+      this.rxBuffer.push(bytes[i]);
+    }
+
+    this.processRxBuffer();
+  }
+
+  private processRxBuffer(): void {
+    // Look for 0xBB header
+    console.log(`[BLE] processRxBuffer, len=${this.rxBuffer.length}, content=${this.rxBuffer.map(b => b.toString(16).padStart(2,'0')).join(' ')}`);
+    while (this.rxBuffer.length >= 5) {
+      const headerIdx = this.rxBuffer.findIndex((b) => b === 0xBB);
+      if (headerIdx === -1) {
+        console.log('[BLE] No 0xBB header found, clearing buffer');
+        this.rxBuffer = [];
+        return;
+      }
+
+      if (headerIdx > 0) {
+        console.log(`[BLE] Discarding ${headerIdx} bytes before header`);
+        this.rxBuffer = this.rxBuffer.slice(headerIdx);
+      }
+
+      if (this.rxBuffer.length < 9) return; // need at least header + cmd + len
+
+      const dataLen = (this.rxBuffer[7] << 8) | this.rxBuffer[8];
+      const totalLen = 9 + dataLen + 1;
+      console.log(`[BLE] Found header, dataLen=${dataLen}, totalLen=${totalLen}, bufferLen=${this.rxBuffer.length}`);
+
+      if (this.rxBuffer.length < totalLen) {
+        console.log('[BLE] Frame incomplete, waiting for more data');
+        return; // incomplete
+      }
+
+      const frameBytes = new Uint8Array(this.rxBuffer.slice(0, totalLen));
+      this.rxBuffer = this.rxBuffer.slice(totalLen);
+
+      const frame = parseFrame(frameBytes);
+      console.log(`[BLE] parseFrame result: valid=${frame?.valid}, dataLen=${frame?.dataLen}, data=[${frame?.data?.map(b => b.toString(16).padStart(2,'0')).join(' ')}]`);
+      if (frame && frame.valid) {
+        this.handleParsedFrame(frame);
+      } else {
+        console.warn('[BLE] Invalid frame discarded');
+      }
+    }
+  }
+
+  private handleParsedFrame(frame: ParsedFrame): void {
+    // Status report command is 0x01 0x20 (version) or others
+    // For status reports, we assume the device sends full state periodically
+    // The command code might vary, but we parse the data as status report
+    if (frame.data.length > 0) {
+      const status = parseStatusReport(frame.data);
+      if (status) {
+        this.callbacks.onStatusReport?.(status);
+      }
+    }
+  }
+
+  private setState(state: BleConnectionState): void {
+    this.state = state;
+    this.callbacks.onStateChange?.(state);
+  }
+
+  // ===== Public Send Methods =====
+
+  async send(data: Uint8Array): Promise<void> {
+    if (!this.connectedDeviceId) {
+      console.warn('[BLE] Not connected, cannot send');
+      return;
+    }
+
+    const hex = bytesToHex(data);
+    console.log(`[BLE] TX: ${hex}`);
+    this.callbacks.onLog?.('TX', hex);
+
+    try {
+      await BleClient.writeWithoutResponse(
+        this.connectedDeviceId,
+        SERVICE_UUID,
+        CHARACTERISTIC_TX,
+        numbersToDataView(Array.from(data)),
+      );
+    } catch (e) {
+      console.error('[BLE] Write failed:', e);
+      this.callbacks.onError?.('Write failed: ' + String(e));
+    }
+  }
+
+  /**
+   * Start periodic motor command (100ms interval)
+   */
+  startMotorCommand(cmd: Uint8Array): void {
+    if (this.motorInterval) {
+      clearInterval(this.motorInterval);
+    }
+    this.currentMotorCmd = cmd;
+    this.send(cmd);
+    this.motorInterval = setInterval(() => {
+      if (this.currentMotorCmd) {
+        this.send(this.currentMotorCmd);
+      }
+    }, 100);
+  }
+
+  /**
+   * Stop periodic motor command (send stop once)
+   */
+  stopMotorCommand(stopCmd: Uint8Array): void {
+    if (this.motorInterval) {
+      clearInterval(this.motorInterval);
+      this.motorInterval = null;
+    }
+    this.currentMotorCmd = null;
+    this.send(stopCmd);
+  }
+}
+
+export const bleManager = new BleManager();

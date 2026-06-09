@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useDevice } from '../context';
 import { Bluetooth, Play, Pause, SkipBack, SkipForward, Repeat, RadioReceiver, Music, Wind, Power, Sun, RefreshCw } from 'lucide-react';
 import { BluetoothModal } from '../components/BluetoothModal';
+import { MarqueeText } from '../components/MarqueeText';
 import { useTranslation } from '../i18n';
 
 const SteadyIcon = ({ size, className, strokeWidth }: any) => (
@@ -22,12 +23,20 @@ const RhythmicIcon = ({ size, className, strokeWidth }: any) => (
 
 export function MediaView() {
   const [activeTab, setActiveTab] = useState<'audio'|'light'>('audio');
-  const { state, updateState, language } = useDevice();
+  const { state, updateState, language, sendVibroCommand, sendAudioCommand, sendLightCommand, mediaState, sendMediaCommand, openNotificationSettings } = useDevice();
   const t = useTranslation(language);
   const [angle, setAngle] = useState(210); // Matches initial blue color
   const wheelRef = useRef<HTMLDivElement>(null);
   const isDraggingColor = useRef(false);
   const [isBluetoothModalOpen, setIsBluetoothModalOpen] = useState(false);
+  const totalSeconds = mediaState.duration > 0 ? mediaState.duration : 0;
+  const progress = totalSeconds > 0 ? (mediaState.position / totalSeconds) * 100 : 0;
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
 
   // Initialize angle from lightColor if possible, or just default to 45
   useEffect(() => {
@@ -36,10 +45,9 @@ export function MediaView() {
   }, []);
 
   const handleVibroClick = () => {
-    // 0 -> 1 -> 2 -> 3 -> 0
-    updateState({ 
-      vibroState: state.vibroState === 3 ? 0 : state.vibroState + 1 
-    });
+    const next = state.vibroState === 3 ? 0 : state.vibroState + 1;
+    updateState({ vibroState: next });
+    sendVibroCommand(next > 0 ? 'music' : '', next);
   };
 
   const updateAngle = (clientX: number, clientY: number) => {
@@ -97,51 +105,100 @@ export function MediaView() {
              {/* Bluetooth */}
              <button 
                onClick={() => setIsBluetoothModalOpen(true)}
-               className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full bg-[#EEF5FD] text-[#0A5BC4] border border-[#d6e5fb]"
+               className="absolute top-3 right-3 w-[33px] h-[33px] flex items-center justify-center"
              >
-               <Bluetooth size={14} strokeWidth={2.5} />
+               <img src="/bluetooth-btn.svg" alt="Bluetooth" className="w-full h-full" />
              </button>
              
              {/* Track Info */}
-             <div className="text-center mt-3 mb-8">
-               <h2 className="text-[20px] font-medium text-gray-900 tracking-tight">Cyber Resonance</h2>
-               <p className="text-[13px] text-gray-500 mt-1">Vector Velocity • Atmos Mix</p>
+             <div className="text-center mt-3 mb-8 px-2">
+               {mediaState.a2dpConnected ? (
+                 <>
+                   <MarqueeText className="text-[20px] font-medium text-gray-900 tracking-tight" speed={50}>
+                     {mediaState.title || mediaState.deviceName || t('unknownTitle')}
+                   </MarqueeText>
+                   <MarqueeText className="text-[13px] text-gray-500 mt-1" speed={35}>
+                     {[
+                       mediaState.artist,
+                       mediaState.album,
+                     ]
+                       .filter(Boolean)
+                       .join(' • ') || (mediaState.title ? '' : t('connectMusicBluetooth'))}
+                   </MarqueeText>
+                   {!mediaState.notificationEnabled && (
+                     <button
+                       onClick={openNotificationSettings}
+                       className="mt-2 text-[12px] text-[#0A5BC4] underline"
+                     >
+                       Enable notification access to see song info
+                     </button>
+                   )}
+                 </>
+               ) : (
+                 <>
+                   <h2 className="text-[20px] font-medium text-gray-400 tracking-tight">{t('bluetoothNotConnected')}</h2>
+                   <p className="text-[13px] text-gray-400 mt-1">{t('connectMusicBluetooth')}</p>
+                 </>
+               )}
              </div>
 
              {/* Progress */}
              <div className="mb-10 px-1">
-                <div className="h-[5px] w-full bg-[#E5E7EB] rounded-full relative flex items-center">
-                   <div className="h-full bg-[#0A5BC4] rounded-full" style={{ width: '65%' }}></div>
-                   <div className="w-3.5 h-3.5 bg-white border-2 border-[#0A5BC4] rounded-full absolute shadow-sm" style={{ left: '65%', transform: 'translateX(-50%)' }}></div>
+                <div className="h-10 w-full flex items-center">
+                   <div className="h-[5px] w-full bg-[#E5E7EB] rounded-full relative flex items-center">
+                      <div className="h-full bg-[#0A5BC4] rounded-full" style={{ width: `${progress}%` }}></div>
+                      <div className="w-5 h-5 bg-white border-2 border-[#0A5BC4] rounded-full absolute shadow-sm" style={{ left: `${progress}%`, transform: 'translateX(-50%)' }}></div>
+                   </div>
                 </div>
-                <div className="flex justify-between mt-3 text-[11px] font-semibold text-[#6B7280]">
-                  <span>02:45</span>
-                  <span>04:12</span>
+                <div className="flex justify-between mt-1 text-[11px] font-semibold text-[#6B7280]">
+                  <span>{formatTime(mediaState.position)}</span>
+                  <span>{formatTime(totalSeconds)}</span>
                 </div>
              </div>
 
              {/* Controls */}
-             <div className="flex justify-center items-center space-x-11 mb-10 w-full px-2">
-                <button className="text-gray-900 hover:opacity-70 transition-opacity"><SkipBack size={24} fill="currentColor" /></button>
+             <div className="flex justify-center items-center mb-10 w-full px-2 relative">
+                <div className="flex items-center space-x-11">
+                  <button 
+                    onClick={() => { if (mediaState.a2dpConnected) sendMediaCommand('previous'); }}
+                    className={`transition-opacity ${mediaState.a2dpConnected ? 'text-gray-900 hover:opacity-70' : 'text-gray-300 cursor-not-allowed'}`}
+                  ><SkipBack size={24} fill="currentColor" /></button>
+                  <button 
+                    onClick={() => {
+                      if (mediaState.a2dpConnected) {
+                        sendMediaCommand('playPause');
+                        updateState({ isPlaying: !state.isPlaying });
+                      }
+                    }}
+                    className={`w-[60px] h-[60px] flex-shrink-0 rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(10,91,196,0.25)] hover:scale-105 transition-transform ${mediaState.a2dpConnected ? 'bg-[#0A5BC4] text-white' : 'bg-gray-300 text-white cursor-not-allowed'}`}
+                  >
+                    {mediaState.isPlaying ? <Pause size={28} fill="currentColor" className="fill-current" /> : <Play size={28} fill="currentColor" className="fill-current ml-1" />}
+                  </button>
+                  <button 
+                    onClick={() => { if (mediaState.a2dpConnected) sendMediaCommand('next'); }}
+                    className={`transition-opacity ${mediaState.a2dpConnected ? 'text-gray-900 hover:opacity-70' : 'text-gray-300 cursor-not-allowed'}`}
+                  ><SkipForward size={24} fill="currentColor" /></button>
+                </div>
                 <button 
-                  onClick={() => updateState({ isPlaying: !state.isPlaying })}
-                  className="w-[60px] h-[60px] flex-shrink-0 bg-[#0A5BC4] text-white rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(10,91,196,0.25)] hover:scale-105 transition-transform"
+                  onClick={() => updateState({ loopMode: state.loopMode === 'all' ? 'single' : 'all' })}
+                  className="absolute right-2 w-5 h-5 flex items-center justify-center"
                 >
-                  {state.isPlaying ? <Pause size={28} fill="currentColor" className="fill-current" /> : <Play size={28} fill="currentColor" className="fill-current ml-1" />}
+                  <img 
+                    src={state.loopMode === 'all' ? '/loop-playback.svg' : '/single-repeat.svg'} 
+                    alt="Loop" 
+                    className="w-4 h-4 object-contain"
+                  />
                 </button>
-                <button className="text-gray-900 hover:opacity-70 transition-opacity"><SkipForward size={24} fill="currentColor" /></button>
-                <button className="text-[#0A5BC4]"><Repeat size={20} strokeWidth={2.5} /></button>
              </div>
 
              {/* Sync Sensing */}
              <div className="flex items-center justify-between mt-auto">
                <button onClick={handleVibroClick} className="flex items-center space-x-3 text-left">
-                  <div className={`w-[38px] h-[38px] rounded-full border flex items-center justify-center relative transition-colors ${state.vibroState > 0 ? 'border-[#0A5BC4] text-[#0A5BC4]' : 'border-gray-200 text-gray-400'}`}>
-                    <Music size={16} strokeWidth={2.5} />
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="absolute opacity-30">
-                       <path d="M2 12h2" /><path d="M20 12h2" /><path d="M12 2v2" /><path d="M12 20v2" />
-                    </svg>
-                  </div>
+                  <img 
+                    src={state.vibroState > 0 ? '/music-vibrate-active.svg' : '/music-vibrate-normal.svg'} 
+                    alt="Sync" 
+                    className="w-[38px] h-[38px] object-contain -mt-[8px]"
+                  />
                   <span className={`text-[13px] font-medium transition-colors ${state.vibroState > 0 ? 'text-gray-900' : 'text-gray-500'}`}>{t('syncSensing')}</span>
                </button>
                <button 
@@ -182,13 +239,16 @@ export function MediaView() {
                    {/* Custom Slider Track */}
                    <div className="h-[9px] w-full bg-[#E5E7EB] rounded-full overflow-hidden relative">
                      <div className="h-full bg-[#0A5BC4] rounded-full absolute left-0 top-0 transition-all duration-300" style={{ width: `${slider.value}%` }}></div>
-                     {/* The native input goes on top with invisible thumb & track */}
                      <input 
                        type="range" 
                        min="0" max="100" 
                        value={slider.value}
-                       onChange={(e) => updateState({ [slider.id]: parseInt(e.target.value) })}
-                       className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" 
+                       onChange={(e) => {
+                         const val = parseInt(e.target.value);
+                         updateState({ [slider.id]: val });
+                         sendAudioCommand(state.audioProfile, slider.id === 'volume' ? val : state.volume, slider.id === 'treble' ? val : state.treble, slider.id === 'bass' ? val : state.bass);
+                       }}
+                       className="absolute top-1/2 -translate-y-1/2 left-0 w-full h-5 accent-[#0A5BC4] cursor-pointer" 
                      />
                    </div>
                 </div>
@@ -206,7 +266,10 @@ export function MediaView() {
                ].map((eq) => (
                  <button 
                    key={eq.id}
-                   onClick={() => updateState({ audioProfile: eq.id })}
+                   onClick={() => {
+                     updateState({ audioProfile: eq.id });
+                     sendAudioCommand(eq.id, state.volume, state.treble, state.bass);
+                   }}
                    className={`w-full py-3.5 rounded-[12px] text-[14px] font-medium transition-colors ${
                      state.audioProfile === eq.id 
                        ? 'bg-[#0A5BC4] text-white shadow-md' 
@@ -244,7 +307,9 @@ export function MediaView() {
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={(e) => {
                       e.stopPropagation();
-                      updateState({ lightOn: !state.lightOn });
+                      const nextOn = !state.lightOn;
+                      updateState({ lightOn: nextOn });
+                      sendLightCommand(nextOn ? state.lightMode : 'off');
                     }}
                     className={`transition-colors pointer-events-auto ${state.lightOn ? 'text-[#0A5BC4]' : 'text-gray-300'}`}
                   >
@@ -267,45 +332,51 @@ export function MediaView() {
               </div>
             </div>
 
-            {/* Ambient Effects Header */}
-            <div className="px-6 mb-6">
-              <div className="flex items-center space-x-2 text-gray-900 mb-2.5">
-                <Sun size={20} className="text-[#088380]" strokeWidth={2} />
-                <h3 className="text-[17px] font-medium tracking-tight">{t('lightEffect')}</h3>
+            {/* Ambient Effects */}
+            <div className={`transition-opacity duration-300 ${!state.lightOn ? 'opacity-50 pointer-events-none' : ''}`}>
+              {/* Ambient Effects Header */}
+              <div className="px-6 mb-6">
+                <div className="flex items-center space-x-2 text-gray-900 mb-2.5">
+                  <Sun size={20} className="text-[#088380]" strokeWidth={2} />
+                  <h3 className="text-[17px] font-medium tracking-tight">{t('lightEffect')}</h3>
+                </div>
+                <p className="text-[14px] text-gray-500 leading-relaxed font-medium">
+                  Synchronize your sofa's lighting with your mood or media playback.
+                </p>
               </div>
-              <p className="text-[14px] text-gray-500 leading-relaxed font-medium">
-                Synchronize your sofa's lighting with your mood or media playback.
-              </p>
-            </div>
 
-            {/* Effects Grid */}
-            <div className="px-6 grid grid-cols-2 gap-4">
-              {[
-                { id: 'steady', label: t('steady'), icon: SteadyIcon },
-                { id: 'cycle', label: t('colorCycle'), icon: RefreshCw },
-                { id: 'rhythmic', label: t('rhythmic'), icon: RhythmicIcon },
-                { id: 'breath', label: t('breath'), icon: Wind },
-              ].map((effect) => {
-                const isActive = state.lightMode === effect.id;
-                return (
-                  <button
-                    key={effect.id}
-                    onClick={() => updateState({ lightMode: effect.id })}
-                    className={`flex flex-col items-center justify-center py-6 rounded-[20px] transition-all ${
-                      isActive 
-                        ? 'bg-[#0A5BC4] text-white shadow-md' 
-                        : 'bg-[#F4F6F9] text-gray-600 hover:bg-gray-100'
-                    }`}
-                  >
-                    <div className={`w-[46px] h-[46px] rounded-full flex items-center justify-center mb-3 ${
-                      isActive ? 'bg-white/20 text-white' : 'bg-white text-[#0A5BC4] shadow-sm'
-                    }`}>
-                      <effect.icon size={22} className={isActive ? 'text-white' : 'text-[#0A5BC4]'} strokeWidth={2.5} />
-                    </div>
-                    <span className={`text-[13px] font-medium tracking-wide ${isActive ? 'text-white' : 'text-gray-800'}`}>{effect.label}</span>
-                  </button>
-                )
-              })}
+              {/* Effects Grid */}
+              <div className="px-6 grid grid-cols-2 gap-4">
+                {[
+                  { id: 'steady', label: t('steady'), icon: SteadyIcon },
+                  { id: 'cycle', label: t('colorCycle'), icon: RefreshCw },
+                  { id: 'rhythmic', label: t('rhythmic'), icon: RhythmicIcon },
+                  { id: 'breath', label: t('breath'), icon: Wind },
+                ].map((effect) => {
+                  const isActive = state.lightMode === effect.id;
+                  return (
+                    <button
+                      key={effect.id}
+                      onClick={() => {
+                        updateState({ lightMode: effect.id });
+                        sendLightCommand(effect.id);
+                      }}
+                      className={`flex flex-col items-center justify-center py-6 rounded-[20px] transition-all ${
+                        isActive 
+                          ? 'bg-[#0A5BC4] text-white shadow-md' 
+                          : 'bg-[#F4F6F9] text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <div className={`w-[46px] h-[46px] rounded-full flex items-center justify-center mb-3 ${
+                        isActive ? 'bg-white/20 text-white' : 'bg-white text-[#0A5BC4] shadow-sm'
+                      }`}>
+                        <effect.icon size={22} className={isActive ? 'text-white' : 'text-[#0A5BC4]'} strokeWidth={2.5} />
+                      </div>
+                      <span className={`text-[13px] font-medium tracking-wide ${isActive ? 'text-white' : 'text-gray-800'}`}>{effect.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           </div>
         </div>

@@ -21,7 +21,7 @@ export const LanguageModal: React.FC<LanguageModalProps> = ({ isOpen, onClose })
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 transition-opacity" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/40 transition-opacity" onClick={onClose}>
       <div 
         className="bg-[#FAFAFA] rounded-t-[24px] sm:rounded-[24px] w-full max-w-md p-5 pb-8 sm:pb-5 shadow-xl animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200" 
         onClick={e => e.stopPropagation()}

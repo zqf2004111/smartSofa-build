@@ -9,6 +9,19 @@
   --color-primary-light: #e6f0fa;
 }
 
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee linear infinite;
+}
+
 body {
   @apply bg-gray-50 text-gray-900;
   -webkit-tap-highlight-color: transparent;

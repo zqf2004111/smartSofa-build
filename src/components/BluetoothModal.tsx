@@ -18,7 +18,7 @@ export const BluetoothModal: React.FC<BluetoothModalProps> = ({ isOpen, onClose 
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 transition-opacity" onClick={onClose}>
+      <div className={`fixed inset-0 z-50 flex items-center justify-center bg-black/40 transition-opacity ${isSearchModalOpen ? 'opacity-0 pointer-events-none' : ''}`} onClick={onClose}>
         <div 
           className="bg-[#FAFAFA] rounded-[24px] w-[300px] p-6 shadow-xl animate-in zoom-in-95 duration-200" 
           onClick={e => e.stopPropagation()}
@@ -55,7 +55,7 @@ export const BluetoothModal: React.FC<BluetoothModalProps> = ({ isOpen, onClose 
             <div className="flex items-center justify-between">
               <span className="text-[14px] text-gray-800">{t('adHocNetwork')}</span>
               <button 
-                onClick={() => setIsSearchModalOpen(true)}
+                onClick={(e) => { e.stopPropagation(); setIsSearchModalOpen(true); }}
                 className="w-[152px] h-[32px] rounded-[12px] bg-[#E5E7EB] text-[#0A5BC4] text-[13px] font-medium"
               >
                 {t('search')}

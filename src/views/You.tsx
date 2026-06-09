@@ -1,5 +1,18 @@
 import React, { useState } from 'react';
-import { User, Bell, Shield, HelpCircle, ChevronRight, Edit2, Plus, ChevronLeft, Globe } from 'lucide-react';
+import { User, Bell, Shield, HelpCircle, ChevronRight, Edit2, Plus, ChevronLeft, Globe, Sofa } from 'lucide-react';
+import avatarImg from '../assets/avatar.jpg';
+
+function Avatar({ src, alt, className }: { src: string; alt: string; className?: string }) {
+  const [error, setError] = useState(false);
+  if (error) {
+    return (
+      <div className={`flex items-center justify-center bg-gray-100 rounded-full ${className}`}>
+        <User size={40} className="text-gray-400" />
+      </div>
+    );
+  }
+  return <img src={src} alt={alt} className={`rounded-full object-cover ${className}`} onError={() => setError(true)} />;
+}
 import { useDevice } from '../context';
 import { useTranslation } from '../i18n';
 import { LanguageModal } from '../components/LanguageModal';
@@ -21,10 +34,10 @@ export function YouView() {
         <div className="flex flex-col items-center mb-10 mt-4">
           <div className="relative">
             <div className="w-[104px] h-[104px] rounded-full border-[3px] border-[#00D1FF] p-1 shadow-[0_4px_12px_rgba(0,209,255,0.2)]">
-              <img 
-                src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80" 
+              <Avatar 
+                src={avatarImg} 
                 alt="Alex Thompson"
-                className="w-full h-full rounded-full object-cover"
+                className="w-full h-full"
               />
             </div>
             {/* Edit Badge */}
@@ -143,10 +156,10 @@ export function YouView() {
         <div className="relative mb-4">
           {/* Avatar Ring */}
           <div className="w-[104px] h-[104px] rounded-full border-[3px] border-[#00D1FF] p-1">
-            <img 
-              src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80" 
+            <Avatar 
+              src={avatarImg} 
               alt="Alex Thompson"
-              className="w-full h-full rounded-full object-cover"
+              className="w-full h-full"
             />
           </div>
           {/* Edit Badge */}
@@ -169,26 +182,22 @@ export function YouView() {
         <ChevronRight size={20} className="text-gray-400" />
       </button>
 
-      {/* Family Member Section */}
+      {/* Equipment Status Section */}
       <div className="mb-8">
-        <h3 className="text-[12px] font-medium text-gray-500 uppercase tracking-widest mb-3 ml-1">{t('familyMember')}</h3>
+        <h3 className="text-[12px] font-medium text-gray-500 uppercase tracking-widest mb-3 ml-1">{t('equipmentStatus')}</h3>
         <button className="w-full bg-white rounded-3xl p-5 shadow-sm border border-gray-100 flex items-center justify-between active:scale-[0.98] transition-transform">
           <div className="text-left">
-            <h4 className="text-[17px] font-medium text-gray-900 mb-1">Alex's home</h4>
-            <p className="text-[13px] text-gray-500">{t('oneFamilyMember')}</p>
+            <h4 className="text-[17px] font-medium text-gray-900 mb-1">Recliner Plus</h4>
+            <div className="flex items-center space-x-1.5">
+              <div className="w-2 h-2 rounded-full bg-[#22C55E]"></div>
+              <p className="text-[13px] text-gray-500">{t('inOperation')}</p>
+            </div>
           </div>
           <div className="flex items-center">
-            <div className="w-8 h-8 rounded-full border-2 border-white shadow-sm overflow-hidden z-10">
-              <img 
-                src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80" 
-                alt="Family Member"
-                className="w-full h-full object-cover"
-              />
+            <div className="w-10 h-10 rounded-[12px] bg-gray-50 flex items-center justify-center mr-2">
+              <Sofa size={20} className="text-gray-700" />
             </div>
-            <div className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center -ml-2 z-0">
-              <Plus size={16} className="text-gray-600" />
-            </div>
-            <ChevronRight size={20} className="text-gray-400 ml-2" />
+            <ChevronRight size={20} className="text-gray-400" />
           </div>
         </button>
       </div>
