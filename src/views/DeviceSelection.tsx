@@ -39,6 +39,7 @@ export function DeviceSelectionView({ onSelectDevice, onAddDevice }: DeviceSelec
               {savedDevices.map((device) => (
                 <div 
                   key={device.id}
+                  onClick={() => !isManaging && onSelectDevice(device.id)}
                   className="flex flex-col items-center cursor-pointer relative"
                 >
                   {isManaging && (
@@ -52,19 +53,14 @@ export function DeviceSelectionView({ onSelectDevice, onAddDevice }: DeviceSelec
                       <Minus size={12} className="text-white" />
                     </button>
                   )}
-                  <div 
-                    onClick={() => !isManaging && onSelectDevice(device.id)}
-                    className="flex flex-col items-center"
-                  >
-                    <div className="w-[120px] h-[80px] flex items-center justify-center mb-2">
-                      <img 
-                        src={reclinerImg} 
-                        alt={device.name} 
-                        className="w-[100px] h-full object-contain mix-blend-multiply" 
-                      />
-                    </div>
-                    <span className="text-[13px] text-gray-800 text-center font-medium leading-tight">{device.name}</span>
+                  <div className="w-[120px] h-[80px] flex items-center justify-center mb-2">
+                    <img 
+                      src={reclinerImg} 
+                      alt={device.name} 
+                      className="w-[100px] h-full object-contain mix-blend-multiply" 
+                    />
                   </div>
+                  <span className="text-[13px] text-gray-800 text-center font-medium leading-tight">{device.name}</span>
                 </div>
               ))}
             </div>

@@ -46,7 +46,7 @@ export function HeatingTab() {
                     alt={mode.label} 
                     className="w-[72px] h-[72px] object-contain mb-2"
                   />
-                  <span className="text-[13px] font-semibold text-[#0A5BC4]">{mode.label}</span>
+                  <span className={`text-[13px] font-semibold ${isActive ? 'text-[#0A5BC4]' : 'text-gray-500'}`}>{mode.label}</span>
                 </button>
               );
             })}
