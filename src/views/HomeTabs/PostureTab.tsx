@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useDevice } from '../../context';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { useTranslation } from '../../i18n';
@@ -7,9 +7,11 @@ export function PostureTab() {
   const { sendPositionCommand, sendMotorCommand, setMemoryPosition, language, deviceConfig } = useDevice();
   const t = useTranslation(language);
   const [activePreset, setActivePreset] = useState('');
+  const [toast, setToast] = useState('');
 
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLongPress = useRef(false);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const presets = [
     { id: 'home', label: t('home'), icon: '/posture-icon/home.svg', iconSelected: '/posture-icon/home-selected.svg', code: 'home' as const },
@@ -54,7 +56,11 @@ export function PostureTab() {
       setMemoryPosition(1); // Save to slot 1
       // Visual feedback
       setActivePreset('memory');
-    }, 800);
+      // Show toast
+      setToast(t('memorySaved'));
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+      toastTimer.current = setTimeout(() => setToast(''), 2500);
+    }, 3000);
   }, [setMemoryPosition]);
 
   const handleMemoryPointerUp = useCallback(() => {
@@ -74,6 +80,12 @@ export function PostureTab() {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
     }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    };
   }, []);
 
   return (
@@ -135,6 +147,12 @@ export function PostureTab() {
         ))}
       </div>
 
+      {/* Toast */}
+      {toast && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-gray-900/90 text-white text-[14px] font-medium px-5 py-2.5 rounded-full shadow-lg animate-in fade-in slide-in-from-top-2 duration-200">
+          {toast}
+        </div>
+      )}
     </div>
   );
 }
