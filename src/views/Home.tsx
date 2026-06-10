@@ -47,7 +47,7 @@ const WavesIcon = ({ size = 24, className = "" }) => (
 );
 
 export function HomeView({ onBackToDevices, selectedDevice, selectedDeviceName }: { onBackToDevices?: () => void; selectedDevice?: { name: string; model: string }; selectedDeviceName?: string }) {
-  const { state, language, sendMotorCommand, simulateMotorPosition, updateState } = useDevice();
+  const { state, language, sendMotorCommand, simulateMotorPosition, updateState, sendMassageCommand, sendHeatingCommand, sendVentilationCommand } = useDevice();
   const t = useTranslation(language);
   const [activeTab, setActiveTab] = useState('posture');
 
@@ -117,36 +117,36 @@ export function HomeView({ onBackToDevices, selectedDevice, selectedDeviceName }
               {/* Top Left (Headrest) */}
               <div
                 className="absolute top-[8%] left-[26%] w-[28px] h-[28px] cursor-pointer active:scale-95 transition-transform select-none"
-                onPointerDown={() => simulateMotorPosition('head', 'up')}
-                onPointerUp={() => simulateMotorPosition('head', 'stop')}
-                onPointerLeave={() => simulateMotorPosition('head', 'stop')}
+                onPointerDown={() => sendMotorCommand('head', 'up')}
+                onPointerUp={() => sendMotorCommand('head', 'stop')}
+                onPointerLeave={() => sendMotorCommand('head', 'stop')}
               >
                 <img src="/headrest-up.svg" alt="Headrest Up" className="w-[28px] h-[28px] object-contain" />
               </div>
               {/* Center Left (Seat) */}
               <div
                 className="absolute top-[38%] left-[2%] w-[28px] h-[28px] cursor-pointer active:scale-95 transition-transform select-none"
-                onPointerDown={() => simulateMotorPosition('seat', 'up')}
-                onPointerUp={() => simulateMotorPosition('seat', 'stop')}
-                onPointerLeave={() => simulateMotorPosition('seat', 'stop')}
+                onPointerDown={() => sendMotorCommand('seat', 'up')}
+                onPointerUp={() => sendMotorCommand('seat', 'stop')}
+                onPointerLeave={() => sendMotorCommand('seat', 'stop')}
               >
                 <img src="/seat-up.svg" alt="Seat Up" className="w-[28px] h-[28px] object-contain" />
               </div>
               {/* Top Right (Backrest) */}
               <div
                 className="absolute top-[28%] right-[4%] w-[28px] h-[28px] cursor-pointer active:scale-95 transition-transform select-none"
-                onPointerDown={() => simulateMotorPosition('head', 'down')}
-                onPointerUp={() => simulateMotorPosition('head', 'stop')}
-                onPointerLeave={() => simulateMotorPosition('head', 'stop')}
+                onPointerDown={() => sendMotorCommand('head', 'down')}
+                onPointerUp={() => sendMotorCommand('head', 'stop')}
+                onPointerLeave={() => sendMotorCommand('head', 'stop')}
               >
                 <img src="/headrest-down.svg" alt="Headrest Down" className="w-[28px] h-[28px] object-contain" />
               </div>
               {/* Bottom Right (Legrest) */}
               <div
                 className="absolute bottom-[20%] right-[25%] w-[28px] h-[28px] cursor-pointer active:scale-95 transition-transform select-none"
-                onPointerDown={() => simulateMotorPosition('seat', 'down')}
-                onPointerUp={() => simulateMotorPosition('seat', 'stop')}
-                onPointerLeave={() => simulateMotorPosition('seat', 'stop')}
+                onPointerDown={() => sendMotorCommand('seat', 'down')}
+                onPointerUp={() => sendMotorCommand('seat', 'stop')}
+                onPointerLeave={() => sendMotorCommand('seat', 'stop')}
               >
                 <img src="/seat-down.svg" alt="Seat Down" className="w-[28px] h-[28px] object-contain" />
               </div>
@@ -163,6 +163,7 @@ export function HomeView({ onBackToDevices, selectedDevice, selectedDeviceName }
                 const idx = modes.indexOf(state.massageMode);
                 const next = modes[(idx + 1) % modes.length];
                 updateState({ massageMode: next });
+                sendMassageCommand(next, state.massageIntensity);
               }}
             >
                <img src={massageSuspendIconSrc} alt="Massage Mode" className="w-[40px] h-[40px] object-contain drop-shadow-sm mix-blend-multiply" />
@@ -177,6 +178,7 @@ export function HomeView({ onBackToDevices, selectedDevice, selectedDeviceName }
                 const idx = modes.indexOf(state.heatingMode);
                 const next = modes[(idx + 1) % modes.length];
                 updateState({ heatingMode: next });
+                sendHeatingCommand(next, true);
               }}
             >
                <img src={heatingSuspendIconSrc} alt="Heating Mode" className="w-[40px] h-[40px] object-contain drop-shadow-sm mix-blend-multiply" />
@@ -191,6 +193,7 @@ export function HomeView({ onBackToDevices, selectedDevice, selectedDeviceName }
                 const idx = modes.indexOf(state.ventilationMode);
                 const next = modes[(idx + 1) % modes.length];
                 updateState({ ventilationMode: next });
+                sendVentilationCommand(next, true);
               }}
             >
                <img src={ventilationSuspendIconSrc} alt="Ventilation Mode" className="w-[40px] h-[40px] object-contain drop-shadow-sm mix-blend-multiply" />

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Plus } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, Minus } from 'lucide-react';
 import { useTranslation } from '../i18n';
 import { useDevice } from '../context';
 import reclinerImg from '../assets/recliner.png';
@@ -10,12 +10,19 @@ interface DeviceSelectionProps {
 }
 
 export function DeviceSelectionView({ onSelectDevice, onAddDevice }: DeviceSelectionProps) {
-  const { language, savedDevices } = useDevice();
+  const { language, savedDevices, removeSavedDevice } = useDevice();
   const t = useTranslation(language);
+  const [isManaging, setIsManaging] = useState(false);
 
   return (
     <div className="w-full h-screen bg-[#f4f4f4] flex flex-col items-center">
-      <div className="w-full max-w-md bg-white pt-12 pb-3 flex items-center justify-end px-4 mb-2">
+      <div className="w-full max-w-md bg-white pt-12 pb-3 flex items-center justify-between px-4 mb-2">
+        <button 
+          onClick={() => setIsManaging(!isManaging)}
+          className="text-[15px] font-medium text-[#0A5BC4] px-2 py-1"
+        >
+          {isManaging ? t('cancel') || '取消' : t('manage') || '管理'}
+        </button>
         <button onClick={onAddDevice} className="p-2">
           <Plus size={24} className="text-black" />
         </button>
@@ -32,17 +39,32 @@ export function DeviceSelectionView({ onSelectDevice, onAddDevice }: DeviceSelec
               {savedDevices.map((device) => (
                 <div 
                   key={device.id}
-                  onClick={() => onSelectDevice(device.id)}
-                  className="flex flex-col items-center cursor-pointer"
+                  className="flex flex-col items-center cursor-pointer relative"
                 >
-                  <div className="w-[120px] h-[80px] flex items-center justify-center mb-2">
-                    <img 
-                      src={reclinerImg} 
-                      alt={device.name} 
-                      className="w-[100px] h-full object-contain mix-blend-multiply" 
-                    />
+                  {isManaging && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeSavedDevice(device.id);
+                      }}
+                      className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center z-10"
+                    >
+                      <Minus size={12} className="text-white" />
+                    </button>
+                  )}
+                  <div 
+                    onClick={() => !isManaging && onSelectDevice(device.id)}
+                    className="flex flex-col items-center"
+                  >
+                    <div className="w-[120px] h-[80px] flex items-center justify-center mb-2">
+                      <img 
+                        src={reclinerImg} 
+                        alt={device.name} 
+                        className="w-[100px] h-full object-contain mix-blend-multiply" 
+                      />
+                    </div>
+                    <span className="text-[13px] text-gray-800 text-center font-medium leading-tight">{device.name}</span>
                   </div>
-                  <span className="text-[13px] text-gray-800 text-center font-medium leading-tight">{device.name}</span>
                 </div>
               ))}
             </div>
