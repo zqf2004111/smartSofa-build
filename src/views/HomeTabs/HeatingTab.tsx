@@ -75,8 +75,8 @@ export function HeatingTab() {
                 }`}
                 onClick={() => {
                   if (state.heatingTimerOn) {
-                    updateState({ heatingTimerOn: false, heatingTimerStartAt: null });
-                    sendTimerCommand('heating', 0);
+                    // Allow re-setting timer directly without turning off first
+                    setIsTimerModalOpen(true);
                   } else if (state.heatingOn) {
                     setIsTimerModalOpen(true);
                   }

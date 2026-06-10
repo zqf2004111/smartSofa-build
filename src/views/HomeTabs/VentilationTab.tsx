@@ -77,8 +77,8 @@ export function VentilationTab() {
                 }`}
                 onClick={() => {
                   if (state.ventilationTimerOn) {
-                    updateState({ ventilationTimerOn: false, ventilationTimerStartAt: null });
-                    sendTimerCommand('ventilation', 0);
+                    // Allow re-setting timer directly without turning off first
+                    setIsTimerModalOpen(true);
                   } else if (state.ventilationOn) {
                     setIsTimerModalOpen(true);
                   }

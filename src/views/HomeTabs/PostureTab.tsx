@@ -36,7 +36,6 @@ export function PostureTab() {
       // Short press: run memory
       sendPositionCommand('memory');
       setActivePreset('memory');
-      setTimeout(() => setActivePreset(''), 2000);
       return;
     }
 
@@ -55,7 +54,6 @@ export function PostureTab() {
       setMemoryPosition(1); // Save to slot 1
       // Visual feedback
       setActivePreset('memory');
-      setTimeout(() => setActivePreset(''), 2000);
     }, 800);
   }, [setMemoryPosition]);
 
@@ -68,7 +66,6 @@ export function PostureTab() {
       // Short press: run memory
       sendPositionCommand('memory');
       setActivePreset('memory');
-      setTimeout(() => setActivePreset(''), 2000);
     }
   }, [sendPositionCommand]);
 

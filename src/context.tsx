@@ -52,7 +52,9 @@ interface DeviceContextType {
   sendVentilationCommand: (mode: string, on: boolean) => void;
   sendVibroCommand: (mode: string, level: number) => void;
   sendAudioCommand: (profile: string, volume: number, treble: number, bass: number) => void;
+  sendAudioModeCommand: (profile: string) => void;
   sendLightCommand: (mode: string) => void;
+  sendLightColorCommand: (r: number, g: number, b: number) => void;
   // Media Bluetooth (A2DP)
   mediaState: MediaBluetoothState;
   sendMediaCommand: (action: 'playPause' | 'next' | 'previous') => Promise<void>;
@@ -308,7 +310,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     if (bleState !== 'connected') return;
     const modeVal = massageModeToProtocol(mode);
     bleManager.send(buildMassageCmd(modeVal));
-    if (modeVal !== MASSAGE_MODE.OFF && intensity > 0) {
+    if (intensity > 0) {
       bleManager.send(buildMassageIntensityCmd(intensity));
     }
   };
@@ -348,10 +350,21 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     bleManager.send(buildAudioBassCmd(Math.round(bass)));
   };
 
+  const sendAudioModeCommand = (profile: string) => {
+    if (bleState !== 'connected') return;
+    const modeVal = audioModeToProtocol(profile);
+    bleManager.send(buildAudioModeCmd(modeVal));
+  };
+
   const sendLightCommand = (mode: string) => {
     if (bleState !== 'connected') return;
     const modeVal = lightModeToProtocol(mode);
     bleManager.send(buildLightCmd(modeVal));
+  };
+
+  const sendLightColorCommand = (r: number, g: number, b: number) => {
+    if (bleState !== 'connected') return;
+    bleManager.send(buildLightColorCmd(r, g, b));
   };
 
   const sendMediaCommand = useCallback(async (action: 'playPause' | 'next' | 'previous') => {
@@ -379,12 +392,22 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const removeSavedDevice = (id: string) => {
+  const removeSavedDevice = async (id: string) => {
+    // Disconnect BLE if the removed device is currently connected
+    if (bleManager.getConnectedDeviceId() === id) {
+      try {
+        await bleManager.disconnect();
+      } catch (e) {
+        console.error('[BLE] Disconnect on remove failed:', e);
+      }
+    }
     setSavedDevices((prev) => {
       const next = prev.filter((d) => d.id !== id);
       localStorage.setItem('smartSofa_savedDevices', JSON.stringify(next));
       return next;
     });
+    // Reset auto-connect flag so removed device won't auto-connect on restart
+    autoConnectAttempted.current = false;
   };
 
   // Bluetooth
@@ -582,7 +605,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       deviceConfig,
       discoveredDevices, bleState, startScan, stopScan, clearDiscoveredDevices, connectBleDevice,
       sendMassageCommand, sendTimerCommand, sendHeatingCommand, sendVentilationCommand,
-      sendVibroCommand, sendAudioCommand, sendLightCommand,
+      sendVibroCommand, sendAudioCommand, sendAudioModeCommand, sendLightCommand, sendLightColorCommand,
       mediaState, sendMediaCommand, openNotificationSettings,
     }}>
       {children}

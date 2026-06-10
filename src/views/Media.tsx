@@ -23,11 +23,12 @@ const RhythmicIcon = ({ size, className, strokeWidth }: any) => (
 
 export function MediaView() {
   const [activeTab, setActiveTab] = useState<'audio'|'light'>('audio');
-  const { state, updateState, language, sendVibroCommand, sendAudioCommand, sendLightCommand, mediaState, sendMediaCommand, openNotificationSettings } = useDevice();
+  const { state, updateState, language, sendVibroCommand, sendAudioCommand, sendAudioModeCommand, sendLightCommand, sendLightColorCommand, mediaState, sendMediaCommand, openNotificationSettings } = useDevice();
   const t = useTranslation(language);
   const [angle, setAngle] = useState(210); // Matches initial blue color
   const wheelRef = useRef<HTMLDivElement>(null);
   const isDraggingColor = useRef(false);
+  const pendingAudioValues = useRef({ volume: state.volume, treble: state.treble, bass: state.bass });
   const [isBluetoothModalOpen, setIsBluetoothModalOpen] = useState(false);
   const totalSeconds = mediaState.duration > 0 ? mediaState.duration : 0;
   const progress = totalSeconds > 0 ? (mediaState.position / totalSeconds) * 100 : 0;
@@ -86,6 +87,19 @@ export function MediaView() {
     if (!isDraggingColor.current) return;
     isDraggingColor.current = false;
     (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    // Send light color command when dragging ends (steady mode only)
+    if (state.lightOn && state.lightMode === 'steady') {
+      const h = angle;
+      const x = 1 - Math.abs((h / 60) % 2 - 1);
+      let r = 0, g = 0, b = 0;
+      if (h < 60) { r = 255; g = Math.round(x * 255); b = 0; }
+      else if (h < 120) { r = Math.round(x * 255); g = 255; b = 0; }
+      else if (h < 180) { r = 0; g = 255; b = Math.round(x * 255); }
+      else if (h < 240) { r = 0; g = Math.round(x * 255); b = 255; }
+      else if (h < 300) { r = Math.round(x * 255); g = 0; b = 255; }
+      else { r = 255; g = 0; b = Math.round(x * 255); }
+      sendLightColorCommand(r, g, b);
+    }
   };
 
   return (
@@ -246,7 +260,11 @@ export function MediaView() {
                        onChange={(e) => {
                          const val = parseInt(e.target.value);
                          updateState({ [slider.id]: val });
-                         sendAudioCommand(state.audioProfile, slider.id === 'volume' ? val : state.volume, slider.id === 'treble' ? val : state.treble, slider.id === 'bass' ? val : state.bass);
+                         pendingAudioValues.current[slider.id as 'volume' | 'treble' | 'bass'] = val;
+                       }}
+                       onPointerUp={() => {
+                         const { volume, treble, bass } = pendingAudioValues.current;
+                         sendAudioCommand(state.audioProfile, volume, treble, bass);
                        }}
                        className="absolute top-1/2 -translate-y-1/2 left-0 w-full h-5 accent-[#0A5BC4] cursor-pointer" 
                      />
@@ -268,7 +286,7 @@ export function MediaView() {
                    key={eq.id}
                    onClick={() => {
                      updateState({ audioProfile: eq.id });
-                     sendAudioCommand(eq.id, state.volume, state.treble, state.bass);
+                     sendAudioModeCommand(eq.id);
                    }}
                    className={`w-full py-3.5 rounded-[12px] text-[14px] font-medium transition-colors ${
                      state.audioProfile === eq.id 

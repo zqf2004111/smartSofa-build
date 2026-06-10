@@ -21,7 +21,8 @@ export function MassageTab() {
       sendMassageCommand('', 0);
     } else {
       updateState({ massageMode: modeId });
-      sendMassageCommand(modeId, state.massageIntensity);
+      // Only send mode command on switch; intensity sent separately when user adjusts it
+      sendMassageCommand(modeId, 0);
     }
   };
 
@@ -113,8 +114,8 @@ export function MassageTab() {
               }`}
               onClick={() => {
                 if (state.massageTimerOn) {
-                  updateState({ massageTimerOn: false, massageTimerStartAt: null });
-                  sendTimerCommand('massage', 0);
+                  // Allow re-setting timer directly without turning off first
+                  setIsTimerModalOpen(true);
                 } else if (state.massageMode !== '') {
                   setIsTimerModalOpen(true);
                 }
