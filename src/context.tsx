@@ -393,12 +393,15 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   };
 
   const removeSavedDevice = async (id: string) => {
-    // Disconnect BLE if the removed device is currently connected
-    if (bleManager.getConnectedDeviceId() === id) {
+    const connectedId = bleManager.getConnectedDeviceId();
+    console.log('[Device] removeSavedDevice', id, 'connectedId', connectedId, 'bleState', bleState);
+    // Disconnect BLE if currently connected to any device, so scanning can find it again
+    if (connectedId || bleState === 'connected' || bleState === 'connecting') {
       try {
         await bleManager.disconnect();
+        console.log('[Device] BLE disconnected after remove');
       } catch (e) {
-        console.error('[BLE] Disconnect on remove failed:', e);
+        console.error('[Device] BLE disconnect on remove failed:', e);
       }
     }
     setSavedDevices((prev) => {
@@ -406,6 +409,8 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('smartSofa_savedDevices', JSON.stringify(next));
       return next;
     });
+    // Clear discovered devices so the scan list is fresh
+    setDiscoveredDevices([]);
     // Reset auto-connect flag so removed device won't auto-connect on restart
     autoConnectAttempted.current = false;
   };
