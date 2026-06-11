@@ -29,6 +29,7 @@ export function MediaView() {
   const wheelRef = useRef<HTMLDivElement>(null);
   const isDraggingColor = useRef(false);
   const pendingAudioValues = useRef({ volume: state.volume, treble: state.treble, bass: state.bass });
+  const lastSentAudioValues = useRef({ volume: state.volume, treble: state.treble, bass: state.bass });
   const [isBluetoothModalOpen, setIsBluetoothModalOpen] = useState(false);
   const totalSeconds = mediaState.duration > 0 ? mediaState.duration : 0;
   const progress = totalSeconds > 0 ? (mediaState.position / totalSeconds) * 100 : 0;
@@ -259,11 +260,21 @@ export function MediaView() {
                        value={slider.value}
                        onChange={(e) => {
                          const val = parseInt(e.target.value);
-                         updateState({ [slider.id]: val });
-                         pendingAudioValues.current[slider.id as 'volume' | 'treble' | 'bass'] = val;
+                         const key = slider.id as 'volume' | 'treble' | 'bass';
+                         updateState({ [key]: val });
+                         pendingAudioValues.current[key] = val;
+                         // Send every 5% change during drag for responsiveness
+                         if (Math.abs(val - lastSentAudioValues.current[key]) >= 5) {
+                           lastSentAudioValues.current[key] = val;
+                           sendAudioCommand(state.audioProfile, 
+                             key === 'volume' ? val : pendingAudioValues.current.volume,
+                             key === 'treble' ? val : pendingAudioValues.current.treble,
+                             key === 'bass' ? val : pendingAudioValues.current.bass);
+                         }
                        }}
                        onPointerUp={() => {
                          const { volume, treble, bass } = pendingAudioValues.current;
+                         lastSentAudioValues.current = { volume, treble, bass };
                          sendAudioCommand(state.audioProfile, volume, treble, bass);
                        }}
                        className="absolute top-1/2 -translate-y-1/2 left-0 w-full h-5 accent-[#0A5BC4] cursor-pointer" 
