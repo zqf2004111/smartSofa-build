@@ -5,11 +5,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowInsetsController;
+import android.webkit.WebView;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        WebView.setWebContentsDebuggingEnabled(true);
         registerPlugin(MediaControlPlugin.class);
         super.onCreate(savedInstanceState);
 

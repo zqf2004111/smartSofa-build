@@ -395,15 +395,21 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   const removeSavedDevice = async (id: string) => {
     const connectedId = bleManager.getConnectedDeviceId();
     console.log('[Device] removeSavedDevice', id, 'connectedId', connectedId, 'bleState', bleState);
-    // Disconnect BLE if currently connected to any device, so scanning can find it again
-    if (connectedId || bleState === 'connected' || bleState === 'connecting') {
-      try {
-        await bleManager.disconnect();
-        console.log('[Device] BLE disconnected after remove');
-      } catch (e) {
-        console.error('[Device] BLE disconnect on remove failed:', e);
-      }
+    // Always release BLE resources on device removal so the device becomes discoverable again
+    try {
+      await bleManager.disconnect();
+      console.log('[Device] BLE disconnected after remove');
+    } catch (e) {
+      console.error('[Device] BLE disconnect on remove failed:', e);
     }
+    try {
+      await bleManager.stopScan();
+      console.log('[Device] BLE scan stopped after remove');
+    } catch (e) {
+      console.error('[Device] BLE stopScan on remove failed:', e);
+    }
+    // Give Android time to drop the link and the peripheral time to resume advertising
+    await new Promise((resolve) => setTimeout(resolve, 800));
     setSavedDevices((prev) => {
       const next = prev.filter((d) => d.id !== id);
       localStorage.setItem('smartSofa_savedDevices', JSON.stringify(next));
