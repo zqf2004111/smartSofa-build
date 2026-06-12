@@ -69,8 +69,8 @@ jobs:
     runs-on: macos-latest
     if: github.event.inputs.build_type == 'archive' || github.event_name == 'push'
     env:
-      P12_PASSWORD: zjh19990722
-      KEYCHAIN_PASSWORD: zjh19990722
+      P12_PASSWORD: kaidi
+      KEYCHAIN_PASSWORD: kaidi
 
     steps:
     - name: Checkout code
@@ -104,14 +104,14 @@ jobs:
         security set-keychain-settings -t 3600 -u build.keychain
 
         # Decode and import p12
-        openssl base64 -d -in cert/cert_base64.txt -out /tmp/certificate.p12
+        openssl base64 -d -in cert/ios_dev.p12.b64 -out /tmp/certificate.p12
         security import /tmp/certificate.p12 -k build.keychain -P "$P12_PASSWORD" -A -t cert -f pkcs12
         security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" build.keychain
 
     - name: Install Provisioning Profile
       run: |
         mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-        cp cert/SmartHome_Profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+        cp cert/SmartHome_Control.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
 
     - name: Build iOS Archive
       working-directory: ./ios/App
@@ -123,8 +123,8 @@ jobs:
           clean archive \
           -archivePath build/App.xcarchive \
           CODE_SIGN_STYLE=Manual \
-          CODE_SIGN_IDENTITY="iPhone Distribution: Changzhou Kaidi Electrical Co., Ltd (AVAA63GHH3)" \
-          PROVISIONING_PROFILE_SPECIFIER="SmartHome_Profile" \
+          CODE_SIGN_IDENTITY="iPhone Developer: zhiyun zong (K3H87YGH8J)" \
+          PROVISIONING_PROFILE_SPECIFIER="SmartHome Control Provisioning Profile" \
           DEVELOPMENT_TEAM=AVAA63GHH3
 
     - name: Export IPA
@@ -136,7 +136,7 @@ jobs:
         <plist version="1.0">
         <dict>
             <key>method</key>
-            <string>ad-hoc</string>
+            <string>development</string>
             <key>teamID</key>
             <string>AVAA63GHH3</string>
             <key>signingStyle</key>
@@ -144,7 +144,7 @@ jobs:
             <key>provisioningProfiles</key>
             <dict>
                 <key>com.smarthome.control</key>
-                <string>SmartHome_Profile</string>
+                <string>SmartHome Control Provisioning Profile</string>
             </dict>
         </dict>
         </plist>
