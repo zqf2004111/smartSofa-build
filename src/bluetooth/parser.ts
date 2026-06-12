@@ -155,18 +155,124 @@ export function parseAdvertisingData(data: Uint8Array): DeviceConfig | null {
   };
 
   console.log('[BLE] Parsed advertising config:', JSON.stringify(config, null, 2));
+  (globalThis as any).__lastParsedDeviceConfig = config;
   return config;
 }
 
 /**
  * Extract manufacturer data from BLE scan result
  */
-export function extractManufacturerData(manufacturerData?: Record<string, number[]>): Uint8Array | null {
+export function extractManufacturerData(manufacturerData?: Record<string, unknown>): Uint8Array | null {
   if (!manufacturerData) return null;
   const key = COMPANY_ID.toString(16).toLowerCase().padStart(4, '0');
   const data = manufacturerData[key] || manufacturerData[COMPANY_ID.toString()] || Object.values(manufacturerData)[0];
   if (!data) return null;
-  return new Uint8Array(data);
+  // The Capacitor bridge returns different shapes across OS versions:
+  // plain number array, hex string, DataView, ArrayBuffer, or an empty object.
+  if (typeof data === 'string') {
+    const hex = data.replace(/\s/g, '');
+    const bytes: number[] = [];
+    for (let i = 0; i < hex.length; i += 2) {
+      bytes.push(parseInt(hex.slice(i, i + 2), 16));
+    }
+    return new Uint8Array(bytes);
+  }
+  if (ArrayBuffer.isView(data) && !(data instanceof Uint8Array)) {
+    return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+  }
+  if (data instanceof ArrayBuffer) {
+    return new Uint8Array(data);
+  }
+  if (Array.isArray(data)) {
+    return new Uint8Array(data);
+  }
+  // Some Android builds return empty/plain objects; treat as no usable data.
+  return null;
+}
+
+function toByteArray(raw: unknown): number[] | null {
+  if (!raw) return null;
+  if (typeof raw === 'string') {
+    const hex = raw.replace(/\s/g, '');
+    if (hex.length < 2) return null;
+    const bytes: number[] = [];
+    for (let i = 0; i < hex.length; i += 2) {
+      bytes.push(parseInt(hex.slice(i, i + 2), 16));
+    }
+    return bytes;
+  }
+  if (raw instanceof Uint8Array || raw instanceof ArrayBuffer) {
+    return Array.from(new Uint8Array(raw));
+  }
+  if (ArrayBuffer.isView(raw)) {
+    return Array.from(new Uint8Array(raw.buffer, raw.byteOffset, raw.byteLength));
+  }
+  if (Array.isArray(raw)) {
+    return raw.map((v) => Number(v));
+  }
+  if (typeof (raw as any).length === 'number') {
+    try {
+      return Array.from(raw as any).map((v) => Number(v));
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+/**
+ * Parse a BLE raw advertisement payload and extract the manufacturer-specific
+ * config block (AD type 0xFF). The input may be a hex string, Uint8Array,
+ * ArrayBuffer, DataView or plain number array depending on the Capacitor bridge.
+ */
+export function parseRawAdvertisement(raw: unknown): Uint8Array | null {
+  const bytes = toByteArray(raw);
+  console.log('[BLE] parseRawAdvertisement input:', typeof raw, 'len=', bytes?.length);
+  if (!bytes || bytes.length === 0) return null;
+  try {
+    let i = 0;
+    while (i < bytes.length) {
+      const len = bytes[i];
+      if (len === 0 || i + 1 + len > bytes.length) break;
+      const type = bytes[i + 1];
+      if (type === 0xff) {
+        const data = bytes.slice(i + 2, i + 1 + len);
+        console.log('[BLE] rawAdvertisement manufacturer data:', data.map(b => b.toString(16).padStart(2, '0')).join(' '));
+        // KD_SOF advertises a 16-byte config block right after the 0xFF type
+        // (the first 2 bytes double as the custom company ID).
+        if (data.length >= 16) {
+          return new Uint8Array(data.slice(0, 16));
+        }
+        return null;
+      }
+      i += 1 + len;
+    }
+  } catch (e) {
+    console.error('[BLE] Failed to parse rawAdvertisement:', e);
+  }
+  return null;
+}
+
+/**
+ * Try to extract the 16-byte advertising config block from a scan result,
+ * first from manufacturerData, then from rawAdvertisement.
+ */
+export function extractAdvertisingPayload(result: {
+  manufacturerData?: Record<string, number[]>;
+  rawAdvertisement?: unknown;
+}): Uint8Array | null {
+  // Prefer the structured field when it actually contains data
+  const manu = extractManufacturerData(result.manufacturerData);
+  if (manu && manu.length >= 16) {
+    console.log('[BLE] Using manufacturerData payload');
+    return manu.slice(0, 16);
+  }
+  // Fall back to the raw advertisement payload
+  if (result.rawAdvertisement) {
+    console.log('[BLE] Falling back to rawAdvertisement');
+    return parseRawAdvertisement(result.rawAdvertisement);
+  }
+  return null;
 }
 
 // ===== Status Report Parser (0xBB variable-length) =====
@@ -380,22 +486,35 @@ export function parseStatusReport(data: number[]): FullDeviceState | null {
 
 export function massageModeFromProtocol(mode: number): string {
   switch (mode) {
+    // 单排控制的气囊按摩
+    case MASSAGE_MODE.SINGLE_WAVE: return 'singleWave';
+    case MASSAGE_MODE.PAT: return 'pat';
+    case MASSAGE_MODE.DOUBLE_WAVE: return 'doubleWave';
+    // 单点控制的气囊按摩（8 点气囊）
     case MASSAGE_MODE.WAVE: return 'wave';
     case MASSAGE_MODE.CATWALK: return 'catwalk';
     case MASSAGE_MODE.BUTTERFLY: return 'butterfly';
-    case MASSAGE_MODE.ACUPRESSURE:
-    case MASSAGE_MODE.ACUPRESSURE_C: return 'acupressure';
-    case MASSAGE_MODE.PAT:
+    case MASSAGE_MODE.ACUPRESSURE: return 'acupressure';
     case MASSAGE_MODE.PAT_B: return 'pat';
+    // 仿机芯揉捏的气囊按摩
+    case MASSAGE_MODE.KNEAD: return 'knead';
+    case MASSAGE_MODE.ACUPRESSURE_C: return 'acupressure';
+    case MASSAGE_MODE.PAT_C: return 'pat';
     default: return '';
   }
 }
 
 export function massageModeToProtocol(mode: string): number {
   switch (mode) {
+    // 单排控制的气囊按摩
+    case 'singleWave': return MASSAGE_MODE.SINGLE_WAVE;
+    case 'doubleWave': return MASSAGE_MODE.DOUBLE_WAVE;
+    // 单点控制的气囊按摩（8 点气囊）
     case 'wave': return MASSAGE_MODE.WAVE;
     case 'catwalk': return MASSAGE_MODE.CATWALK;
     case 'butterfly': return MASSAGE_MODE.BUTTERFLY;
+    // 仿机芯揉捏的气囊按摩
+    case 'knead': return MASSAGE_MODE.KNEAD;
     case 'acupressure': return MASSAGE_MODE.ACUPRESSURE;
     case 'pat': return MASSAGE_MODE.PAT;
     default: return MASSAGE_MODE.OFF;
@@ -433,6 +552,7 @@ export function vibroModeToProtocol(mode: string): number {
     case 'music': return 0x01;
     case 'massage1': return 0x04;
     case 'massage2': return 0x05;
+    case 'off':
     default: return 0x00;
   }
 }

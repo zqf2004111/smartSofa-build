@@ -14,9 +14,16 @@ import {
   MASSAGE_MODE, POSITION_PRESET, HEATING_MODE, VENTILATION_MODE, LIGHT_MODE, AUDIO_MODE, VIBRO_MODE,
 } from './bluetooth/protocol';
 import {
-  massageModeToProtocol, heatingModeToProtocol, ventilationModeToProtocol,
+  heatingModeToProtocol, ventilationModeToProtocol,
   audioModeToProtocol, vibroModeToProtocol, lightModeToProtocol,
 } from './bluetooth/parser';
+import {
+  getMassageSystem,
+  getMassageProtocolValue,
+  getMassageModeIdFromProtocol,
+  getDefaultMassageModeId,
+  isMassageModeSupported,
+} from './massageConfig';
 
 interface SavedDevice {
   id: string;
@@ -148,6 +155,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   }, [deviceConfig]);
   const bleInitialized = useRef(false);
   const motorSimInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const massageCmdPendingUntilRef = useRef<number>(0);
 
   const [mediaState, setMediaState] = useState<MediaBluetoothState>({
     a2dpConnected: false,
@@ -221,6 +229,18 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   const updateState = (updates: Partial<SofaState>) => {
     setState((prev) => ({ ...prev, ...updates }));
   };
+
+  // When the device config (massage system type) becomes known, make sure the
+  // selected massage mode actually belongs to that system. Do not override a
+  // mode that is currently reported as running by the chair.
+  useEffect(() => {
+    if (!deviceConfig) return;
+    const system = deviceConfig.massage?.system;
+    if (!system || system === 'none') return;
+    if (!state.massageOn && state.massageMode !== '' && !isMassageModeSupported(system, state.massageMode)) {
+      updateState({ massageMode: getDefaultMassageModeId(system) });
+    }
+  }, [deviceConfig, state.massageMode, state.massageOn]);
 
   const simulateMotorPosition = (type: string, direction: 'up' | 'down' | 'stop') => {
     const motorType = type as 'seat' | 'head' | 'lumbar' | 'foot' | 'back';
@@ -308,7 +328,10 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
 
   const sendMassageCommand = (mode: string, intensity: number) => {
     if (bleState !== 'connected') return;
-    const modeVal = massageModeToProtocol(mode);
+    const system = getMassageSystem(deviceConfigRef.current);
+    const modeVal = mode === '' ? MASSAGE_MODE.OFF : getMassageProtocolValue(system, mode);
+    // 防止设备在命令发送后立刻返回旧状态把 UI 反跳回来
+    massageCmdPendingUntilRef.current = Date.now() + 1200;
     bleManager.send(buildMassageCmd(modeVal));
     if (intensity > 0) {
       bleManager.send(buildMassageIntensityCmd(intensity));
@@ -430,15 +453,15 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       // Massage
       if (report.massage.length > 0) {
         const m = report.massage[0];
-        const modeMap: Record<number, string> = {
-          [MASSAGE_MODE.WAVE]: 'wave',
-          [MASSAGE_MODE.CATWALK]: 'catwalk',
-          [MASSAGE_MODE.BUTTERFLY]: 'butterfly',
-          [MASSAGE_MODE.ACUPRESSURE]: 'acupressure',
-          [MASSAGE_MODE.PAT]: 'pat',
-        };
-        updates.massageOn = m.mode !== MASSAGE_MODE.OFF;
-        updates.massageMode = modeMap[m.mode] || prev.massageMode;
+        const system = getMassageSystem(deviceConfigRef.current);
+        const modeId = getMassageModeIdFromProtocol(system, m.mode);
+        const isOn = m.mode !== MASSAGE_MODE.OFF;
+        const isPending = Date.now() < massageCmdPendingUntilRef.current;
+        if (!isPending) {
+          updates.massageOn = isOn;
+          // 关闭时清空选中模式；打开时使用设备报告的模式
+          updates.massageMode = isOn ? (modeId || prev.massageMode) : '';
+        }
         updates.massageIntensity = m.intensity || prev.massageIntensity;
         updates.massageTimerRemaining = m.remainingTime || 0;
       }
@@ -490,7 +513,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       if (report.vibros.length > 0) {
         const v = report.vibros[0];
         updates.vibroOn = v.mode !== VIBRO_MODE.OFF;
-        updates.vibroState = v.intensity;
+        updates.vibroState = v.mode === VIBRO_MODE.OFF ? 0 : v.intensity;
       }
       // Motor positions
       const cfgRef = deviceConfigRef.current;
@@ -607,6 +630,12 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     }
     return ok;
   }, [discoveredDevices]);
+
+  // Debug: expose scan/config for runtime inspection
+  useEffect(() => {
+    (window as any).__startScan = startScan;
+    (window as any).__connectBleDevice = connectBleDevice;
+  }, [startScan, connectBleDevice]);
 
   return (
     <DeviceContext.Provider value={{

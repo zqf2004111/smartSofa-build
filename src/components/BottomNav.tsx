@@ -28,14 +28,15 @@ export function BottomNav({ currentTab, onTabChange }: BottomNavProps) {
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`flex flex-col items-center justify-center space-y-1.5 w-16 transition-colors ${
+            onContextMenu={(e) => e.preventDefault()}
+            className={`flex flex-col items-center justify-center space-y-1.5 w-16 transition-colors select-none ${
               isActive ? 'text-[#0A5BC4]' : 'text-gray-400'
             }`}
           >
             <div className={`px-4 py-1 rounded-2xl transition-transform ${isActive ? 'bg-[#EEF5FD]' : 'hover:bg-gray-50'}`}>
                <Icon size={22} className={isActive ? 'fill-current text-[#0A5BC4]' : 'text-gray-400'} />
             </div>
-            <span className={`text-[10px] font-semibold tracking-wide ${isActive ? 'text-[#0A5BC4]' : 'text-gray-400'}`}>
+            <span className={`text-[10px] font-semibold tracking-wide select-none ${isActive ? 'text-[#0A5BC4]' : 'text-gray-400'}`}>
               {tab.label}
             </span>
           </button>

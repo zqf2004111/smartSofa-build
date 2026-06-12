@@ -24,6 +24,7 @@ const RhythmicIcon = ({ size, className, strokeWidth }: any) => (
 export function MediaView() {
   const [activeTab, setActiveTab] = useState<'audio'|'light'>('audio');
   const { state, updateState, language, sendVibroCommand, sendAudioCommand, sendAudioModeCommand, sendLightCommand, sendLightColorCommand, mediaState, sendMediaCommand, openNotificationSettings } = useDevice();
+
   const t = useTranslation(language);
   const [angle, setAngle] = useState(210); // Matches initial blue color
   const wheelRef = useRef<HTMLDivElement>(null);
@@ -47,9 +48,10 @@ export function MediaView() {
   }, []);
 
   const handleVibroClick = () => {
-    const next = state.vibroState === 3 ? 0 : state.vibroState + 1;
-    updateState({ vibroState: next });
-    sendVibroCommand(next > 0 ? 'music' : '', next);
+    // Cycle: off → music level 1 → music level 2 → music level 3 → off
+    const next = state.vibroState >= 3 ? 0 : state.vibroState + 1;
+    updateState({ vibroState: next, vibroOn: next > 0 });
+    sendVibroCommand(next > 0 ? 'music' : 'off', next);
   };
 
   const updateAngle = (clientX: number, clientY: number) => {
@@ -104,7 +106,7 @@ export function MediaView() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#f8fafc] animate-in fade-in duration-300 pb-24">
+    <div className="flex flex-col min-h-full bg-[#f8fafc] animate-in fade-in duration-300 pb-24">
       
       {/* Top Tabs */}
       <div className="bg-white pb-4 pt-1 shadow-sm flex justify-center space-x-10 w-full mb-6 z-10 sticky top-0">

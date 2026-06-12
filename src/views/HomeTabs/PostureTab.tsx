@@ -133,7 +133,7 @@ export function PostureTab() {
               <ChevronUp size={28} className="text-gray-800" strokeWidth={3} />
             </button>
 
-            <span className="text-sm font-semibold text-gray-800 my-4 tracking-wide">{motor.label}</span>
+            <span className="text-sm font-semibold text-gray-800 my-4 tracking-wide select-none" onContextMenu={(e) => e.preventDefault()}>{motor.label}</span>
 
             <button
               onPointerDown={() => sendMotorCommand(motor.id, 'down')}

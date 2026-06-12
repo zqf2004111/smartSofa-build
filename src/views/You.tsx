@@ -25,7 +25,7 @@ export function YouView() {
 
   if (view === 'account') {
     return (
-      <div className="flex flex-col h-full bg-[#f8fafc] animate-in fade-in slide-in-from-right-4 duration-300 px-5 pt-8 pb-24 relative">
+      <div className="flex flex-col min-h-full bg-[#f8fafc] animate-in fade-in slide-in-from-right-4 duration-300 px-5 pt-8 pb-24 relative">
         <button onClick={() => setView('main')} className="absolute top-4 left-4 p-2 text-gray-600 z-10 active:scale-95 transition-transform" aria-label="Back">
           <ChevronLeft size={26} strokeWidth={2.5} />
         </button>
@@ -149,7 +149,7 @@ export function YouView() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#f8fafc] animate-in fade-in duration-300 px-5 pt-8 pb-24">
+    <div className="flex flex-col min-h-full bg-[#f8fafc] animate-in fade-in duration-300 px-5 pt-8 pb-24">
       
       {/* Profile Header */}
       <div className="flex flex-col items-center mb-8">

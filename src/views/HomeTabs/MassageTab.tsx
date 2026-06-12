@@ -3,11 +3,15 @@ import { useDevice } from '../../context';
 import { Clock } from 'lucide-react';
 import { TimerModal } from '../../components/TimerModal';
 import { useTranslation } from '../../i18n';
+import { getMassageSystem, getMassageModes } from '../../massageConfig';
 
 export function MassageTab() {
-  const { state, updateState, language, sendMassageCommand, sendTimerCommand } = useDevice();
+  const { state, deviceConfig, updateState, language, sendMassageCommand, sendTimerCommand } = useDevice();
   const t = useTranslation(language);
   const [isTimerModalOpen, setIsTimerModalOpen] = useState(false);
+
+  const system = getMassageSystem(deviceConfig);
+  const modes = getMassageModes(system);
 
   const handleTimerConfirm = (val: number) => {
     updateState({ massageTimerOn: true, massageTimerDuration: val, massageTimerRemaining: val * 60, massageTimerStartAt: Date.now() });
@@ -17,12 +21,13 @@ export function MassageTab() {
 
   const handleModeClick = (modeId: string) => {
     if (state.massageMode === modeId) {
+      // 再次点击当前模式：关闭按摩
       updateState({ massageMode: '' });
       sendMassageCommand('', 0);
     } else {
+      // 切换到新模式：直接使用当前强度打开（默认为 1）
       updateState({ massageMode: modeId });
-      // Only send mode command on switch; intensity sent separately when user adjusts it
-      sendMassageCommand(modeId, 0);
+      sendMassageCommand(modeId, state.massageIntensity || 1);
     }
   };
 
@@ -32,14 +37,6 @@ export function MassageTab() {
       sendMassageCommand(state.massageMode, level);
     }
   };
-
-  const modes = [
-    { id: 'wave', label: t('wave'), icon: '/massage-icon/Wave.svg', iconSelected: '/massage-icon/Wave-selected.svg' },
-    { id: 'catwalk', label: t('catwalk'), icon: '/massage-icon/catwalk.svg', iconSelected: '/massage-icon/catwalk-selected.svg' },
-    { id: 'butterfly', label: t('butterfly'), icon: '/massage-icon/butterfly.svg', iconSelected: '/massage-icon/butterfly-selected.svg' },
-    { id: 'acupressure', label: t('acupressure'), icon: '/massage-icon/acupressure.svg', iconSelected: '/massage-icon/acupressure-selected.svg' },
-    { id: 'pat', label: t('pat'), icon: '/massage-icon/pat.svg', iconSelected: '/massage-icon/pat-selected.svg' },
-  ];
 
   return (
     <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
@@ -57,10 +54,10 @@ export function MassageTab() {
               >
                 <img 
                   src={isActive ? mode.iconSelected : mode.icon} 
-                  alt={mode.label} 
+                  alt={t(mode.labelKey)} 
                   className="w-[72px] h-[72px] object-contain mb-2"
                 />
-                <span className={`text-[13px] font-semibold ${isActive ? 'text-[#0A5BC4]' : 'text-gray-500'}`}>{mode.label}</span>
+                <span className={`text-[13px] font-semibold ${isActive ? 'text-[#0A5BC4]' : 'text-gray-500'}`}>{t(mode.labelKey)}</span>
               </button>
             );
           })}

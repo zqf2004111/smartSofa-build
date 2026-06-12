@@ -18,12 +18,13 @@ import {
   COMPANY_ID,
   bytesToHex,
   parseFrame,
+  buildVersionCmd,
   type ParsedFrame,
 } from './protocol';
 
 import {
   parseAdvertisingData,
-  extractManufacturerData,
+  extractAdvertisingPayload,
   parseStatusReport,
   type DeviceConfig,
   type FullDeviceState,
@@ -145,8 +146,8 @@ class BleManager {
     console.log(`[BLE] Raw scan: name="${name}" id=${device.deviceId} rssi=${result.rssi} manuData=${JSON.stringify(result.manufacturerData)}`);
 
     const displayName = name || 'Unknown Device';
-    const manuData = extractManufacturerData(result.manufacturerData);
-    const config = manuData ? parseAdvertisingData(manuData) : null;
+    const payload = extractAdvertisingPayload(result as any);
+    const config = payload ? parseAdvertisingData(payload) : null;
 
     const discovered: DiscoveredDevice = {
       deviceId: device.deviceId,
@@ -179,6 +180,14 @@ class BleManager {
 
       this.setState('connected');
       console.log('[BLE] Connected and notifications started');
+
+      // Query the full device state so the UI can initialize from real data
+      try {
+        await this.send(buildVersionCmd());
+        console.log('[BLE] Queried device state after connect');
+      } catch (e) {
+        console.warn('[BLE] Failed to query device state:', e);
+      }
       return true;
     } catch (e) {
       console.error('[BLE] Connect failed:', e);
