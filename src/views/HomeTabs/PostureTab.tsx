@@ -8,15 +8,34 @@ export function PostureTab() {
   const t = useTranslation(language);
   const [activePreset, setActivePreset] = useState('');
   const [toast, setToast] = useState('');
+  const [memoryCountdown, setMemoryCountdown] = useState<number | null>(null);
 
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const isLongPress = useRef(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearMemoryTimers = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    if (countdownTimer.current) {
+      clearInterval(countdownTimer.current);
+      countdownTimer.current = null;
+    }
+  }, []);
+
+  const hasZeroGravity = deviceConfig?.sofaFrameType !== 'normal';
+
+  const posturePreset = hasZeroGravity
+    ? { id: 'zg', label: t('zg'), icon: '/posture-icon/zg.svg', iconSelected: '/posture-icon/zg-selected.svg', code: 'zg' as const }
+    : { id: 'recline', label: t('recline'), icon: '/posture-icon/recline.svg', iconSelected: '/posture-icon/recline-selected.svg', code: 'recline' as const };
 
   const presets = [
     { id: 'home', label: t('home'), icon: '/posture-icon/home.svg', iconSelected: '/posture-icon/home-selected.svg', code: 'home' as const },
     { id: 'tv', label: t('tv'), icon: '/posture-icon/tv.svg', iconSelected: '/posture-icon/tv-selected.svg', code: 'tv' as const },
-    { id: 'zg', label: t('zg'), icon: '/posture-icon/zg.svg', iconSelected: '/posture-icon/zg-selected.svg', code: 'zg' as const },
+    posturePreset,
     { id: 'memory', label: t('memory'), icon: '/posture-icon/memory.svg', iconSelected: '/posture-icon/memory-selected.svg', code: 'memory' as const },
   ];
 
@@ -51,9 +70,24 @@ export function PostureTab() {
 
   const handleMemoryPointerDown = useCallback(() => {
     isLongPress.current = false;
+    setMemoryCountdown(3);
+    countdownTimer.current = setInterval(() => {
+      setMemoryCountdown((prev) => {
+        if (prev === null || prev <= 1) {
+          if (countdownTimer.current) {
+            clearInterval(countdownTimer.current);
+            countdownTimer.current = null;
+          }
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
     longPressTimer.current = setTimeout(() => {
       isLongPress.current = true;
       setMemoryPosition(1); // Save to slot 1
+      setMemoryCountdown(null);
+      clearMemoryTimers();
       // Visual feedback
       setActivePreset('memory');
       // Show toast
@@ -61,32 +95,29 @@ export function PostureTab() {
       if (toastTimer.current) clearTimeout(toastTimer.current);
       toastTimer.current = setTimeout(() => setToast(''), 2500);
     }, 3000);
-  }, [setMemoryPosition]);
+  }, [setMemoryPosition, clearMemoryTimers, t]);
 
   const handleMemoryPointerUp = useCallback(() => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
+    clearMemoryTimers();
+    setMemoryCountdown(null);
     if (!isLongPress.current) {
       // Short press: run memory
       sendPositionCommand('memory');
       setActivePreset('memory');
     }
-  }, [sendPositionCommand]);
+  }, [sendPositionCommand, clearMemoryTimers]);
 
   const handleMemoryPointerLeave = useCallback(() => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  }, []);
+    clearMemoryTimers();
+    setMemoryCountdown(null);
+  }, [clearMemoryTimers]);
 
   useEffect(() => {
     return () => {
+      clearMemoryTimers();
       if (toastTimer.current) clearTimeout(toastTimer.current);
     };
-  }, []);
+  }, [clearMemoryTimers]);
 
   return (
     <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
@@ -105,13 +136,23 @@ export function PostureTab() {
               onPointerDown={isMemory ? handleMemoryPointerDown : undefined}
               onPointerUp={isMemory ? handleMemoryPointerUp : undefined}
               onPointerLeave={isMemory ? handleMemoryPointerLeave : undefined}
-              className="flex flex-col items-center group select-none"
+              onContextMenu={(e) => e.preventDefault()}
+              className="flex flex-col items-center group select-none relative"
             >
-              <img 
-                src={isActive ? preset.iconSelected : preset.icon}
-                alt={preset.label}
-                className="w-[66px] h-[66px] object-contain mb-2"
-              />
+              <div className="relative">
+                <img 
+                  src={isActive ? preset.iconSelected : preset.icon}
+                  alt={preset.label}
+                  className="w-[66px] h-[66px] object-contain mb-2"
+                />
+                {isMemory && memoryCountdown !== null && (
+                  <div className="absolute inset-0 flex items-center justify-center mb-2">
+                    <div className="w-[66px] h-[66px] rounded-full bg-gray-900/60 flex items-center justify-center">
+                      <span className="text-white text-2xl font-bold">{memoryCountdown}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
               <span className={`text-xs font-semibold tracking-wide text-[#0A5BC4]`}>
                 {preset.label}
               </span>

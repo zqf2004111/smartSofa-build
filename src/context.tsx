@@ -2,13 +2,13 @@ import React, { createContext, useContext, useState, ReactNode, useRef, useCallb
 import { SofaState, type MediaBluetoothState } from './types';
 import { bleManager, type DiscoveredDevice, type BleConnectionState, type FullDeviceState } from './bluetooth';
 import { MediaControl } from './native/MediaControl';
-import { type DeviceConfig } from './bluetooth/parser';
+import { type DeviceConfig, type HeatingZoneKey, type VentilationZoneKey, HEATING_ZONE_ORDER, VENTILATION_ZONE_ORDER } from './bluetooth/parser';
 import {
   buildMotorCmd, buildPositionCmd, buildMemoryRunCmd, buildMemorySetCmd,
   buildMassageCmd, buildMassageIntensityCmd,
-  buildHeatingModeCmd, buildVentilationModeCmd, buildTimerCmd,
+  buildHeatingCmd, buildHeatingModeCmd, buildVentilationCmd, buildVentilationModeCmd, buildTimerCmd,
   buildVibroCmd, buildVibroIntensityCmd,
-  buildLightCmd,
+  buildLightCmd, buildLightColorCmd,
   buildAudioModeCmd, buildAudioVolumeCmd, buildAudioTrebleCmd, buildAudioBassCmd,
   MOTOR_STOP, MOTOR_UP, MOTOR_DOWN,
   MASSAGE_MODE, POSITION_PRESET, HEATING_MODE, VENTILATION_MODE, LIGHT_MODE, AUDIO_MODE, VIBRO_MODE,
@@ -39,7 +39,7 @@ interface DeviceContextType {
   updateState: (updates: Partial<SofaState>) => void;
   sendMotorCommand: (type: string, direction: 'up' | 'down' | 'stop') => void;
   simulateMotorPosition: (type: string, direction: 'up' | 'down' | 'stop') => void;
-  sendPositionCommand: (position: 'home' | 'tv' | 'zg' | 'memory') => void;
+  sendPositionCommand: (position: 'home' | 'tv' | 'zg' | 'recline' | 'memory') => void;
   setMemoryPosition: (slot: number) => void;
   savedDevices: SavedDevice[];
   addSavedDevice: (device: SavedDevice) => void;
@@ -55,8 +55,8 @@ interface DeviceContextType {
   // Feature commands
   sendMassageCommand: (mode: string, intensity: number) => void;
   sendTimerCommand: (type: 'massage' | 'heating' | 'ventilation', minutes: number) => void;
-  sendHeatingCommand: (mode: string, on: boolean) => void;
-  sendVentilationCommand: (mode: string, on: boolean) => void;
+  sendHeatingCommand: (mode: string, on: boolean, zones?: HeatingZoneKey[]) => void;
+  sendVentilationCommand: (mode: string, on: boolean, zones?: VentilationZoneKey[]) => void;
   sendVibroCommand: (mode: string, level: number) => void;
   sendAudioCommand: (profile: string, volume: number, treble: number, bass: number) => void;
   sendAudioModeCommand: (profile: string) => void;
@@ -82,11 +82,15 @@ const initialState: SofaState = {
   heatingTimer: 5,
   heatingOn: false,
   heatingMode: 'gentle',
+  heatingSelectedZones: [],
+  heatingZoneStates: {},
 
   ventilationLevel: 1,
   ventilationTimer: 5,
   ventilationOn: false,
   ventilationMode: 'gentle',
+  ventilationSelectedZones: [],
+  ventilationZoneStates: {},
 
   isPlaying: false,
   vibroState: 0,
@@ -304,13 +308,14 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const sendPositionCommand = (position: 'home' | 'tv' | 'zg' | 'memory') => {
+  const sendPositionCommand = (position: 'home' | 'tv' | 'zg' | 'recline' | 'memory') => {
     if (bleState !== 'connected') return;
     let preset: number;
     switch (position) {
       case 'home': preset = POSITION_PRESET.HOME; break;
       case 'tv': preset = POSITION_PRESET.TV; break;
       case 'zg': preset = POSITION_PRESET.ZG; break;
+      case 'recline': preset = POSITION_PRESET.RECLINE; break;
       case 'memory': preset = 0x01; break;
       default: return;
     }
@@ -343,16 +348,77 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     bleManager.send(buildTimerCmd(type, minutes));
   };
 
-  const sendHeatingCommand = (mode: string, on: boolean) => {
-    if (bleState !== 'connected') return;
-    const modeVal = on ? heatingModeToProtocol(mode) : HEATING_MODE.OFF;
-    bleManager.send(buildHeatingModeCmd(modeVal));
+  const getSupportedHeatingZones = (config: DeviceConfig | null): HeatingZoneKey[] => {
+    if (!config) return [];
+    return HEATING_ZONE_ORDER.filter((z) => config.heating[z]);
   };
 
-  const sendVentilationCommand = (mode: string, on: boolean) => {
+  const getSupportedVentilationZones = (config: DeviceConfig | null): VentilationZoneKey[] => {
+    if (!config) return [];
+    return VENTILATION_ZONE_ORDER.filter((z) => config.ventilation[z]);
+  };
+
+  const sendHeatingCommand = (mode: string, on: boolean, zones?: HeatingZoneKey[]) => {
+    if (bleState !== 'connected') return;
+    const modeVal = on ? heatingModeToProtocol(mode) : HEATING_MODE.OFF;
+    let targetZones = zones ?? state.heatingSelectedZones;
+    if (targetZones.length === 0) {
+      const supported = getSupportedHeatingZones(deviceConfigRef.current);
+      if (supported.length === 0) {
+        // 无配置时回退到全局模式命令，保证兼容
+        bleManager.send(buildHeatingModeCmd(modeVal));
+        return;
+      }
+      targetZones = supported;
+    }
+    targetZones.forEach((zone) => {
+      bleManager.send(buildHeatingCmd(zone, modeVal));
+    });
+    setState((prev) => {
+      const nextZoneStates: SofaState['heatingZoneStates'] = { ...prev.heatingZoneStates };
+      targetZones.forEach((zone) => {
+        const existing = nextZoneStates[zone] || { on: false, level: 0, remainingTime: 0 };
+        nextZoneStates[zone] = { ...existing, on, level: on ? modeVal : 0 };
+      });
+      return {
+        ...prev,
+        heatingOn: on || HEATING_ZONE_ORDER.some((z) => nextZoneStates[z]?.on),
+        heatingMode: on ? mode : prev.heatingMode,
+        heatingSelectedZones: targetZones,
+        heatingZoneStates: nextZoneStates,
+      };
+    });
+  };
+
+  const sendVentilationCommand = (mode: string, on: boolean, zones?: VentilationZoneKey[]) => {
     if (bleState !== 'connected') return;
     const modeVal = on ? ventilationModeToProtocol(mode) : VENTILATION_MODE.OFF;
-    bleManager.send(buildVentilationModeCmd(modeVal));
+    let targetZones = zones ?? state.ventilationSelectedZones;
+    if (targetZones.length === 0) {
+      const supported = getSupportedVentilationZones(deviceConfigRef.current);
+      if (supported.length === 0) {
+        bleManager.send(buildVentilationModeCmd(modeVal));
+        return;
+      }
+      targetZones = supported;
+    }
+    targetZones.forEach((zone) => {
+      bleManager.send(buildVentilationCmd(zone, modeVal));
+    });
+    setState((prev) => {
+      const nextZoneStates: SofaState['ventilationZoneStates'] = { ...prev.ventilationZoneStates };
+      targetZones.forEach((zone) => {
+        const existing = nextZoneStates[zone] || { on: false, level: 0, remainingTime: 0 };
+        nextZoneStates[zone] = { ...existing, on, level: on ? modeVal : 0 };
+      });
+      return {
+        ...prev,
+        ventilationOn: on || VENTILATION_ZONE_ORDER.some((z) => nextZoneStates[z]?.on),
+        ventilationMode: on ? mode : prev.ventilationMode,
+        ventilationSelectedZones: targetZones,
+        ventilationZoneStates: nextZoneStates,
+      };
+    });
   };
 
   const sendVibroCommand = (mode: string, level: number) => {
@@ -465,19 +531,62 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
         updates.massageIntensity = m.intensity || prev.massageIntensity;
         updates.massageTimerRemaining = m.remainingTime || 0;
       }
-      // Heating
+      // Heating (multi-zone)
       if (report.heating.length > 0) {
-        const h = report.heating[0];
-        updates.heatingOn = h.mode !== HEATING_MODE.OFF;
-        updates.heatingMode = h.mode === HEATING_MODE.RAPID ? 'rapid' : h.mode === HEATING_MODE.GENTLE ? 'gentle' : prev.heatingMode;
-        updates.heatingTimerRemaining = h.remainingTime || 0;
+        const supported = getSupportedHeatingZones(deviceConfigRef.current);
+        const zoneStates: SofaState['heatingZoneStates'] = { ...prev.heatingZoneStates };
+        const onZones: HeatingZoneKey[] = [];
+        let commonMode: number | null = null;
+        report.heating.forEach((h, idx) => {
+          // 优先按实际支持的部位顺序映射；无配置时回退到全局顺序
+          const zone = supported[idx] ?? HEATING_ZONE_ORDER[idx];
+          if (!zone) return;
+          const isOn = h.mode !== HEATING_MODE.OFF;
+          zoneStates[zone] = { on: isOn, level: h.level, remainingTime: h.remainingTime || 0 };
+          if (isOn) {
+            onZones.push(zone);
+            if (commonMode === null) commonMode = h.mode;
+            else if (commonMode !== h.mode) commonMode = -1;
+          }
+        });
+        const anyOn = onZones.length > 0;
+        updates.heatingOn = anyOn;
+        updates.heatingMode = anyOn
+          ? (commonMode === HEATING_MODE.RAPID ? 'rapid' : commonMode === HEATING_MODE.GENTLE ? 'gentle' : prev.heatingMode)
+          : prev.heatingMode;
+        updates.heatingTimerRemaining = report.heating[0]?.remainingTime || 0;
+        updates.heatingZoneStates = zoneStates;
+        if (anyOn) {
+          updates.heatingSelectedZones = onZones;
+        }
       }
-      // Ventilation
+      // Ventilation (multi-zone)
       if (report.ventilation.length > 0) {
-        const v = report.ventilation[0];
-        updates.ventilationOn = v.mode !== VENTILATION_MODE.OFF;
-        updates.ventilationMode = v.mode === VENTILATION_MODE.RAPID ? 'rapid' : v.mode === VENTILATION_MODE.GENTLE ? 'gentle' : prev.ventilationMode;
-        updates.ventilationTimerRemaining = v.remainingTime || 0;
+        const supportedVent = getSupportedVentilationZones(deviceConfigRef.current);
+        const zoneStates: SofaState['ventilationZoneStates'] = { ...prev.ventilationZoneStates };
+        const onZones: VentilationZoneKey[] = [];
+        let commonMode: number | null = null;
+        report.ventilation.forEach((v, idx) => {
+          const zone = supportedVent[idx] ?? VENTILATION_ZONE_ORDER[idx];
+          if (!zone) return;
+          const isOn = v.mode !== VENTILATION_MODE.OFF;
+          zoneStates[zone] = { on: isOn, level: v.level, remainingTime: v.remainingTime || 0 };
+          if (isOn) {
+            onZones.push(zone);
+            if (commonMode === null) commonMode = v.mode;
+            else if (commonMode !== v.mode) commonMode = -1;
+          }
+        });
+        const anyOn = onZones.length > 0;
+        updates.ventilationOn = anyOn;
+        updates.ventilationMode = anyOn
+          ? (commonMode === VENTILATION_MODE.RAPID ? 'rapid' : commonMode === VENTILATION_MODE.GENTLE ? 'gentle' : prev.ventilationMode)
+          : prev.ventilationMode;
+        updates.ventilationTimerRemaining = report.ventilation[0]?.remainingTime || 0;
+        updates.ventilationZoneStates = zoneStates;
+        if (anyOn) {
+          updates.ventilationSelectedZones = onZones;
+        }
       }
       // Audio
       if (report.audios.length > 0) {
@@ -613,7 +722,8 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     const ok = await bleManager.connect(deviceId);
     if (ok) {
       const device = discoveredDevices.find((d) => d.deviceId === deviceId);
-      const config = device?.config ?? null;
+      const existing = savedDevices.find((d) => d.id === deviceId);
+      const config = device?.config ?? existing?.config ?? null;
       if (config) {
         setDeviceConfig(config);
       }
@@ -629,7 +739,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       });
     }
     return ok;
-  }, [discoveredDevices]);
+  }, [discoveredDevices, savedDevices]);
 
   // Debug: expose scan/config for runtime inspection
   useEffect(() => {

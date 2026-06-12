@@ -8,7 +8,6 @@ import {
   numbersToDataView,
   type ScanResult,
   type BleDevice,
-  type ConnectionStatus,
 } from '@capacitor-community/bluetooth-le';
 
 import {
@@ -166,7 +165,7 @@ class BleManager {
     console.log(`[BLE] Connecting to ${deviceId}...`);
 
     try {
-      await BleClient.connect(deviceId, (status) => this.handleConnectionStatus(status));
+      await BleClient.connect(deviceId, (disconnectedDeviceId) => this.handleConnectionStatus(disconnectedDeviceId));
       this.connectedDeviceId = deviceId;
       this.reconnectAttempts = 0;
 
@@ -227,9 +226,9 @@ class BleManager {
     console.log('[BLE] Disconnected');
   }
 
-  private handleConnectionStatus(status: ConnectionStatus): void {
-    console.log('[BLE] Connection status:', status.connected);
-    if (!status.connected) {
+  private handleConnectionStatus(deviceId: string): void {
+    console.log('[BLE] Disconnected from:', deviceId);
+    if (this.connectedDeviceId === deviceId) {
       this.setState('disconnected');
       this.attemptReconnect();
     }

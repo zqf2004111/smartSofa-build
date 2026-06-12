@@ -16,13 +16,20 @@ export interface MotorConfig {
   kind: MotorKind;
 }
 
+export type HeatingZoneKey = 'seat' | 'back' | 'shoulder' | 'leg' | 'arm';
+export type VentilationZoneKey = 'seat' | 'back';
+
+// 状态上报数组与命令子码的对应顺序（按 0x30/0x31/0x32/0x33/0x34）
+export const HEATING_ZONE_ORDER: HeatingZoneKey[] = ['seat', 'back', 'shoulder', 'leg', 'arm'];
+export const VENTILATION_ZONE_ORDER: VentilationZoneKey[] = ['seat', 'back'];
+
 export interface HeatingConfig {
-  seat: boolean;
-  back: boolean;
-  shoulder: boolean;
-  waist: boolean;
-  leg: boolean;
-  arm: boolean;
+  seat: boolean;      // d6 bit0
+  leg: boolean;       // d6 bit1
+  shoulder: boolean;  // d6 bit3
+  back: boolean;      // d6 bit4
+  arm: boolean;       // d6 bit5
+  // d6 bit2 腰腹加热当前无对应单部位命令，视为预留
 }
 
 export interface VentilationConfig {
@@ -31,6 +38,9 @@ export interface VentilationConfig {
 }
 
 export type MassageSystem = 'none' | 'single_row' | 'eight_point' | 'knead';
+
+export type SofaFrameType = 'normal' | 'three_zero' | 'four_zero' | 'elderly';
+export type SofaSeatType = 'single' | 'double' | 'triple';
 
 export interface MassageConfig {
   system: MassageSystem;
@@ -43,7 +53,9 @@ export interface MultimediaConfig {
 }
 
 export interface DeviceConfig {
-  sofaType: 'single' | 'double' | 'triple';
+  sofaType: SofaSeatType;
+  sofaFrameType: SofaFrameType;
+  seatCount: number;
   motors: MotorConfig[];
   heating: HeatingConfig;
   ventilation: VentilationConfig;
@@ -70,6 +82,33 @@ function parseMassageSystem(bits: number): MassageSystem {
     case 0x02: return 'eight_point';
     case 0x03: return 'knead';
     default: return 'none';
+  }
+}
+
+function parseSofaFrameType(bits: number): SofaFrameType {
+  switch ((bits >> 4) & 0x0f) {
+    case 0x01: return 'normal';
+    case 0x02: return 'three_zero';
+    case 0x03: return 'four_zero';
+    case 0x04: return 'elderly';
+    default: return 'normal';
+  }
+}
+
+function parseSeatCount(bits: number): number {
+  switch (bits & 0x0f) {
+    case 0x01: return 1;
+    case 0x02: return 2;
+    case 0x03: return 3;
+    default: return 1;
+  }
+}
+
+function parseSeatType(bits: number): SofaSeatType {
+  switch (bits & 0x0f) {
+    case 0x02: return 'double';
+    case 0x03: return 'triple';
+    default: return 'single';
   }
 }
 
@@ -100,8 +139,9 @@ export function parseAdvertisingData(data: Uint8Array): DeviceConfig | null {
   const d14 = data[14];
   const d15 = data[15];
 
-  const sofaType: 'single' | 'double' | 'triple' =
-    d0 === 0x02 ? 'double' : d0 === 0x03 ? 'triple' : 'single';
+  const sofaFrameType = parseSofaFrameType(d0);
+  const seatCount = parseSeatCount(d0);
+  const sofaType = parseSeatType(d0);
 
   const motors: MotorConfig[] = [];
   if (parseMotorKind(d1) !== 'none') motors.push({ type: 'seat', kind: parseMotorKind(d1) });
@@ -113,7 +153,7 @@ export function parseAdvertisingData(data: Uint8Array): DeviceConfig | null {
   const heating: HeatingConfig = {
     seat: !!(d6 & 0x01),
     leg: !!(d6 & 0x02),
-    waist: !!(d6 & 0x04),
+    // bit2 预留/腰腹加热，无对应单部位命令
     shoulder: !!(d6 & 0x08),
     back: !!(d6 & 0x10),
     arm: !!(d6 & 0x20),
@@ -143,6 +183,8 @@ export function parseAdvertisingData(data: Uint8Array): DeviceConfig | null {
 
   const config: DeviceConfig = {
     sofaType,
+    sofaFrameType,
+    seatCount,
     motors,
     heating,
     ventilation,

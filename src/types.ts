@@ -1,4 +1,5 @@
 import type { DeviceConfig, BleConnectionState } from './bluetooth';
+import type { HeatingZoneKey, VentilationZoneKey } from './bluetooth/parser';
 
 export interface Device {
   id: string;
@@ -30,12 +31,16 @@ export interface SofaState {
   heatingTimer: number;
   heatingOn: boolean;
   heatingMode: string;
+  heatingSelectedZones: HeatingZoneKey[];
+  heatingZoneStates: Partial<Record<HeatingZoneKey, { on: boolean; level: number; remainingTime: number }>>;
 
   // Ventilation
   ventilationLevel: number;
   ventilationTimer: number;
   ventilationOn: boolean;
   ventilationMode: string;
+  ventilationSelectedZones: VentilationZoneKey[];
+  ventilationZoneStates: Partial<Record<VentilationZoneKey, { on: boolean; level: number; remainingTime: number }>>;
 
   // Audio & Vibro
   isPlaying: boolean;

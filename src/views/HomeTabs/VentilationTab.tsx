@@ -2,18 +2,26 @@ import React, { useState } from 'react';
 import { useDevice } from '../../context';
 import { TimerModal } from '../../components/TimerModal';
 import { useTranslation } from '../../i18n';
+import type { VentilationZoneKey } from '../../bluetooth/parser';
+import { VENTILATION_ZONE_ORDER } from '../../bluetooth/parser';
 
 export function VentilationTab() {
-  const { state, updateState, language, sendVentilationCommand, sendTimerCommand } = useDevice();
+  const { state, updateState, language, sendVentilationCommand, sendTimerCommand, deviceConfig } = useDevice();
   const t = useTranslation(language);
   const [isTimerModalOpen, setIsTimerModalOpen] = useState(false);
+
+  const supportedZones = React.useMemo<VentilationZoneKey[]>(() => {
+    const cfg = deviceConfig?.ventilation;
+    if (!cfg) return [];
+    return VENTILATION_ZONE_ORDER.filter((z) => cfg[z]);
+  }, [deviceConfig?.ventilation]);
 
   const handleTimerConfirm = (val: number) => {
     updateState({ ventilationTimerOn: true, ventilationTimerDuration: val, ventilationTimerRemaining: val * 60, ventilationTimerStartAt: Date.now() });
     sendTimerCommand('ventilation', val);
     setIsTimerModalOpen(false);
   };
-  
+
   const modes = [
     { id: 'gentle', label: t('gentle'), icon: '/ventilation-icon/gentle.svg', iconSelected: '/ventilation-icon/gentle-selected.svg' },
     { id: 'rapid', label: t('rapid'), icon: '/ventilation-icon/rapid.svg', iconSelected: '/ventilation-icon/rapid-selected.svg' },
@@ -24,35 +32,73 @@ export function VentilationTab() {
       updateState({ ventilationOn: false });
       sendVentilationCommand(modeId, false);
     } else {
-      updateState({ ventilationMode: modeId, ventilationOn: true });
-      sendVentilationCommand(modeId, true);
+      const targetZones = state.ventilationSelectedZones.length > 0 ? state.ventilationSelectedZones : supportedZones;
+      updateState({ ventilationMode: modeId, ventilationOn: true, ventilationSelectedZones: targetZones });
+      sendVentilationCommand(modeId, true, targetZones);
+    }
+  };
+
+  const handleZoneToggle = (zone: VentilationZoneKey) => {
+    const isSelected = state.ventilationSelectedZones.includes(zone);
+    if (isSelected) {
+      const nextSelected = state.ventilationSelectedZones.filter((z) => z !== zone);
+      updateState({ ventilationSelectedZones: nextSelected });
+      sendVentilationCommand(state.ventilationMode, false, [zone]);
+    } else {
+      const nextSelected = [...state.ventilationSelectedZones, zone];
+      updateState({ ventilationSelectedZones: nextSelected, ventilationOn: true });
+      sendVentilationCommand(state.ventilationMode, true, [zone]);
     }
   };
 
   return (
     <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
       <div className={`transition-opacity duration-300 ${!state.ventilationOn && false ? 'opacity-50 pointer-events-none' : ''}`}>
-        
         {/* Modes */}
-        <div className="flex flex-wrap gap-4 mt-2 mb-8">
-            {modes.map((mode) => {
-              const isActive = state.ventilationMode === mode.id && state.ventilationOn;
+        <div className="flex flex-wrap gap-4 mt-2 mb-4">
+          {modes.map((mode) => {
+            const isActive = state.ventilationMode === mode.id && state.ventilationOn;
+            return (
+              <button
+                key={mode.id}
+                onClick={() => handleModeClick(mode.id)}
+                className="flex flex-col items-center justify-center w-[calc(33.333%-8px)] mb-4"
+              >
+                <img
+                  src={isActive ? mode.iconSelected : mode.icon}
+                  alt={mode.label}
+                  className="w-[72px] h-[72px] object-contain mb-2"
+                />
+                <span className={`text-[13px] font-semibold ${isActive ? 'text-[#0A5BC4]' : 'text-gray-500'}`}>{mode.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Zone selector (only when multiple zones are supported) */}
+        {supportedZones.length > 1 && (
+          <div className="flex flex-wrap gap-2 mb-6">
+            {supportedZones.map((zone) => {
+              const isSelected = state.ventilationSelectedZones.includes(zone);
+              const isOn = state.ventilationZoneStates[zone]?.on;
               return (
                 <button
-                  key={mode.id}
-                  onClick={() => handleModeClick(mode.id)}
-                  className="flex flex-col items-center justify-center w-[calc(33.333%-8px)] mb-4"
+                  key={zone}
+                  onClick={() => handleZoneToggle(zone)}
+                  className={`px-3 py-1.5 rounded-full text-[13px] font-medium border transition-colors ${
+                    isOn
+                      ? 'bg-[#0A5BC4] text-white border-[#0A5BC4]'
+                      : isSelected
+                      ? 'text-[#0A5BC4] border-[#0A5BC4] bg-blue-50'
+                      : 'text-gray-500 border-gray-200 bg-white'
+                  }`}
                 >
-                  <img 
-                    src={isActive ? mode.iconSelected : mode.icon} 
-                    alt={mode.label} 
-                    className="w-[72px] h-[72px] object-contain mb-2"
-                  />
-                  <span className={`text-[13px] font-semibold ${isActive ? 'text-[#0A5BC4]' : 'text-gray-500'}`}>{mode.label}</span>
+                  {t(zone)}
                 </button>
               );
             })}
-        </div>
+          </div>
+        )}
 
         {/* Timer Toggle */}
         <div className="pt-6 border-t border-gray-50 mt-4 mb-2">
@@ -63,7 +109,7 @@ export function VentilationTab() {
                 {t('setTimerPrefix')}{state.ventilationTimerDuration}{t('setTimerSuffix')}
               </span>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               {state.ventilationTimerOn && (
                 <span className="text-[14px] font-semibold text-[#0A5BC4]">
@@ -71,7 +117,7 @@ export function VentilationTab() {
                 </span>
               )}
               {/* Toggle Switch */}
-              <button 
+              <button
                 className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 ease-in-out border ${
                   state.ventilationTimerOn ? 'bg-[#0A5BC4] border-[#0A5BC4]' : 'bg-gray-100 border-gray-200'
                 }`}
@@ -84,7 +130,7 @@ export function VentilationTab() {
                   }
                 }}
               >
-                <div 
+                <div
                   className={`w-5 h-5 bg-white rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.1)] transform transition-transform duration-200 ease-in-out ${
                     state.ventilationTimerOn ? 'translate-x-5' : 'translate-x-0'
                   }`}
@@ -94,9 +140,9 @@ export function VentilationTab() {
           </div>
         </div>
       </div>
-      
-      <TimerModal 
-        isOpen={isTimerModalOpen} 
+
+      <TimerModal
+        isOpen={isTimerModalOpen}
         onClose={() => setIsTimerModalOpen(false)}
         initialTime={state.ventilationTimerDuration}
         onConfirm={handleTimerConfirm}

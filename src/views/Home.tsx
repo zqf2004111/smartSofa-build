@@ -117,23 +117,23 @@ export function HomeView({ onBackToDevices, selectedDevice, selectedDeviceName }
                 <>
                   {/* Top Left (Headrest) */}
                   <div
-                    className="absolute top-[8%] left-[26%] w-[28px] h-[28px] cursor-pointer active:scale-95 transition-transform select-none pointer-events-auto"
+                    className="absolute top-[8%] left-[26%] w-[42px] h-[42px] cursor-pointer active:scale-95 transition-transform select-none pointer-events-auto"
                     onPointerDown={() => sendMotorCommand('head', 'up')}
                     onPointerUp={() => sendMotorCommand('head', 'stop')}
                     onPointerLeave={() => sendMotorCommand('head', 'stop')}
                     onContextMenu={(e) => e.preventDefault()}
                   >
-                    <img src="/headrest-up.svg" alt="Headrest Up" className="w-[28px] h-[28px] object-contain" />
+                    <img src="/headrest-up.svg" alt="Headrest Up" className="w-[42px] h-[42px] object-contain" />
                   </div>
                   {/* Top Right (Backrest) */}
                   <div
-                    className="absolute top-[28%] right-[4%] w-[28px] h-[28px] cursor-pointer active:scale-95 transition-transform select-none pointer-events-auto"
+                    className="absolute top-[28%] right-[4%] w-[42px] h-[42px] cursor-pointer active:scale-95 transition-transform select-none pointer-events-auto"
                     onPointerDown={() => sendMotorCommand('head', 'down')}
                     onPointerUp={() => sendMotorCommand('head', 'stop')}
                     onPointerLeave={() => sendMotorCommand('head', 'stop')}
                     onContextMenu={(e) => e.preventDefault()}
                   >
-                    <img src="/headrest-down.svg" alt="Headrest Down" className="w-[28px] h-[28px] object-contain" />
+                    <img src="/headrest-down.svg" alt="Headrest Down" className="w-[42px] h-[42px] object-contain" />
                   </div>
                 </>
               )}
@@ -141,23 +141,23 @@ export function HomeView({ onBackToDevices, selectedDevice, selectedDeviceName }
                 <>
                   {/* Center Left (Seat) */}
                   <div
-                    className="absolute top-[38%] left-[2%] w-[28px] h-[28px] cursor-pointer active:scale-95 transition-transform select-none pointer-events-auto"
+                    className="absolute top-[38%] left-[2%] w-[42px] h-[42px] cursor-pointer active:scale-95 transition-transform select-none pointer-events-auto"
                     onPointerDown={() => sendMotorCommand('seat', 'up')}
                     onPointerUp={() => sendMotorCommand('seat', 'stop')}
                     onPointerLeave={() => sendMotorCommand('seat', 'stop')}
                     onContextMenu={(e) => e.preventDefault()}
                   >
-                    <img src="/seat-up.svg" alt="Seat Up" className="w-[28px] h-[28px] object-contain" />
+                    <img src="/seat-up.svg" alt="Seat Up" className="w-[42px] h-[42px] object-contain" />
                   </div>
                   {/* Bottom Right (Legrest) */}
                   <div
-                    className="absolute bottom-[20%] right-[25%] w-[28px] h-[28px] cursor-pointer active:scale-95 transition-transform select-none pointer-events-auto"
+                    className="absolute bottom-[20%] right-[25%] w-[42px] h-[42px] cursor-pointer active:scale-95 transition-transform select-none pointer-events-auto"
                     onPointerDown={() => sendMotorCommand('seat', 'down')}
                     onPointerUp={() => sendMotorCommand('seat', 'stop')}
                     onPointerLeave={() => sendMotorCommand('seat', 'stop')}
                     onContextMenu={(e) => e.preventDefault()}
                   >
-                    <img src="/seat-down.svg" alt="Seat Down" className="w-[28px] h-[28px] object-contain" />
+                    <img src="/seat-down.svg" alt="Seat Down" className="w-[42px] h-[42px] object-contain" />
                   </div>
                 </>
               )}

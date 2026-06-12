@@ -262,7 +262,7 @@ export function buildMassageIntensityCmd(level: number): Uint8Array {
 }
 
 export function buildHeatingCmd(zone: 'seat' | 'back' | 'shoulder' | 'leg' | 'arm', level: number): Uint8Array {
-  const subCmdMap: Record<string, number> = {
+  const subCmdMap: Record<'seat' | 'back' | 'shoulder' | 'leg' | 'arm', number> = {
     seat: 0x30,
     back: 0x31,
     shoulder: 0x32,
@@ -277,7 +277,7 @@ export function buildHeatingModeCmd(mode: number): Uint8Array {
 }
 
 export function buildVentilationCmd(zone: 'seat' | 'back', level: number): Uint8Array {
-  const subCmdMap: Record<string, number> = {
+  const subCmdMap: Record<'seat' | 'back', number> = {
     seat: 0x20,
     back: 0x21,
   };
