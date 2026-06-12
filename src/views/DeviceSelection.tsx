@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, Loader2 } from 'lucide-react';
 import { useTranslation } from '../i18n';
 import { useDevice } from '../context';
 import reclinerImg from '../assets/recliner.png';
@@ -13,6 +13,7 @@ export function DeviceSelectionView({ onSelectDevice, onAddDevice }: DeviceSelec
   const { language, savedDevices, removeSavedDevice } = useDevice();
   const t = useTranslation(language);
   const [isManaging, setIsManaging] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   return (
     <div className="w-full h-screen bg-[#f4f4f4] flex flex-col items-center">
@@ -44,11 +45,17 @@ export function DeviceSelectionView({ onSelectDevice, onAddDevice }: DeviceSelec
                 >
                   {isManaging && (
                     <button
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.stopPropagation();
-                        removeSavedDevice(device.id);
+                        setDeletingId(device.id);
+                        try {
+                          await removeSavedDevice(device.id);
+                        } finally {
+                          setDeletingId(null);
+                        }
                       }}
-                      className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center z-10"
+                      disabled={deletingId !== null}
+                      className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center z-10 disabled:opacity-50"
                     >
                       <Minus size={12} className="text-white" />
                     </button>
@@ -74,6 +81,16 @@ export function DeviceSelectionView({ onSelectDevice, onAddDevice }: DeviceSelec
           {t('addDevice')}
         </button>
       </div>
+
+      {/* Deleting loading overlay */}
+      {deletingId !== null && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+          <div className="bg-white rounded-2xl px-8 py-6 flex flex-col items-center shadow-xl">
+            <Loader2 className="w-8 h-8 text-[#0A5BC4] animate-spin mb-3" />
+            <span className="text-[15px] font-medium text-gray-800">{t('deletingDevice')}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
