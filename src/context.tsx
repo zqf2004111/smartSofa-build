@@ -484,6 +484,8 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   const removeSavedDevice = async (id: string) => {
     const connectedId = bleManager.getConnectedDeviceId();
     console.log('[Device] removeSavedDevice', id, 'connectedId', connectedId, 'bleState', bleState);
+    // Prevent any automatic reconnect attempts while we are intentionally removing the device
+    bleManager.disableReconnect();
     // Always release BLE resources on device removal so the device becomes discoverable again
     try {
       await bleManager.disconnect();

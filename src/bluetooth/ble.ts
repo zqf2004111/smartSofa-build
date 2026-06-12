@@ -56,6 +56,7 @@ class BleManager {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 3;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private reconnectEnabled = true;
   private rxBuffer: number[] = [];
 
   async initialize(): Promise<void> {
@@ -168,6 +169,7 @@ class BleManager {
       await BleClient.connect(deviceId, (disconnectedDeviceId) => this.handleConnectionStatus(disconnectedDeviceId));
       this.connectedDeviceId = deviceId;
       this.reconnectAttempts = 0;
+      this.reconnectEnabled = true;
 
       // Start notifications
       await BleClient.startNotifications(
@@ -226,11 +228,21 @@ class BleManager {
     console.log('[BLE] Disconnected');
   }
 
+  disableReconnect(): void {
+    this.reconnectEnabled = false;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+  }
+
   private handleConnectionStatus(deviceId: string): void {
     console.log('[BLE] Disconnected from:', deviceId);
     if (this.connectedDeviceId === deviceId) {
       this.setState('disconnected');
-      this.attemptReconnect();
+      if (this.reconnectEnabled) {
+        this.attemptReconnect();
+      }
     }
   }
 
