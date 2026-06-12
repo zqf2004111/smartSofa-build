@@ -17,6 +17,7 @@ function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<'main' | 'devices'>('devices');
   const [currentTab, setCurrentTab] = useState('home');
   const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
+  const [isManaging, setIsManaging] = useState(false);
   const [isDeviceSwitchModalOpen, setIsDeviceSwitchModalOpen] = useState(false);
   const [currentDeviceId, setCurrentDeviceId] = useState<string | null>(null);
   const { savedDevices } = useDevice();
@@ -31,10 +32,13 @@ function AppContent() {
           <DeviceSelectionView 
             onSelectDevice={() => setCurrentScreen('main')} 
             onAddDevice={() => setIsAddDeviceModalOpen(true)}
+            isManaging={isManaging}
+            onManagingChange={setIsManaging}
           />
           <AddDeviceModal 
             isOpen={isAddDeviceModalOpen} 
-            onClose={() => setIsAddDeviceModalOpen(false)} 
+            onClose={() => setIsAddDeviceModalOpen(false)}
+            onDeviceAdded={() => setIsManaging(false)}
           />
         </div>
       ) : (
@@ -73,7 +77,8 @@ function AppContent() {
 
         <AddDeviceModal 
           isOpen={isAddDeviceModalOpen} 
-          onClose={() => setIsAddDeviceModalOpen(false)} 
+          onClose={() => setIsAddDeviceModalOpen(false)}
+          onDeviceAdded={() => setIsManaging(false)}
         />
         <DeviceSwitchModal
           isOpen={isDeviceSwitchModalOpen}

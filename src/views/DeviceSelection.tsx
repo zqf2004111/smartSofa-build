@@ -7,13 +7,16 @@ import reclinerImg from '../assets/recliner.png';
 interface DeviceSelectionProps {
   onSelectDevice: (id: string) => void;
   onAddDevice: () => void;
+  isManaging?: boolean;
+  onManagingChange?: (v: boolean) => void;
 }
 
-export function DeviceSelectionView({ onSelectDevice, onAddDevice }: DeviceSelectionProps) {
+export function DeviceSelectionView({ onSelectDevice, onAddDevice, isManaging = false, onManagingChange }: DeviceSelectionProps) {
   const { language, savedDevices, removeSavedDevice } = useDevice();
   const t = useTranslation(language);
-  const [isManaging, setIsManaging] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const setIsManaging = (v: boolean) => onManagingChange?.(v);
 
   return (
     <div className="w-full h-screen bg-[#f4f4f4] flex flex-col items-center">

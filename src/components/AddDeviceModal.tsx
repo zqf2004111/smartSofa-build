@@ -9,11 +9,12 @@ import { QrScannerModal } from './QrScannerModal';
 interface AddDeviceModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onDeviceAdded?: () => void;
 }
 
 type QrStatus = 'idle' | 'searching' | 'found';
 
-export const AddDeviceModal: React.FC<AddDeviceModalProps> = ({ isOpen, onClose }) => {
+export const AddDeviceModal: React.FC<AddDeviceModalProps> = ({ isOpen, onClose, onDeviceAdded }) => {
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [isQrScanning, setIsQrScanning] = useState(false);
   const [qrTargetName, setQrTargetName] = useState<string>('');
@@ -45,6 +46,7 @@ export const AddDeviceModal: React.FC<AddDeviceModalProps> = ({ isOpen, onClose 
     try {
       const ok = await connectBleDevice(device.deviceId, device.name);
       if (ok) {
+        onDeviceAdded?.();
         onClose();
       }
     } catch (e) {
