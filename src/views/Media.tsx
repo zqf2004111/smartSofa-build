@@ -351,6 +351,12 @@ export function MediaView() {
                        type="range"
                        min="0" max="100"
                        value={slider.value}
+                       onPointerDown={() => {
+                         const key = slider.id as 'volume' | 'treble' | 'bass';
+                         const w: any = window as any;
+                         w.__audioDragging = w.__audioDragging || {};
+                         w.__audioDragging[key] = true;
+                       }}
                        onChange={(e) => {
                          const val = parseInt(e.target.value);
                          const key = slider.id as 'volume' | 'treble' | 'bass';
@@ -367,8 +373,23 @@ export function MediaView() {
                          }
                        }}
                        onPointerUp={() => {
+                         const key = slider.id as 'volume' | 'treble' | 'bass';
                          // Final send when drag ends, also throttled to enforce >= 100ms spacing.
                          scheduleAudioSend();
+                         // Keep ignoring incoming reports for a brief window so
+                         // the device's echoed status frame doesn't snap the
+                         // slider back to a stale value.
+                         setTimeout(() => {
+                           const w: any = window as any;
+                           if (w.__audioDragging) w.__audioDragging[key] = false;
+                         }, 600);
+                       }}
+                       onPointerCancel={() => {
+                         const key = slider.id as 'volume' | 'treble' | 'bass';
+                         setTimeout(() => {
+                           const w: any = window as any;
+                           if (w.__audioDragging) w.__audioDragging[key] = false;
+                         }, 600);
                        }}
                        className="audio-slider absolute inset-0 w-full h-full cursor-pointer"
                      />

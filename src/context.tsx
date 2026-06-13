@@ -723,9 +723,13 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
             [AUDIO_MODE.JAZZ]: 'jazz',
           };
           updates.audioProfile = audioMap[mode] || prev.audioProfile;
-          updates.volume = vol;
-          updates.treble = tre;
-          updates.bass = bas;
+          // Skip overwriting volume/treble/bass while the user is dragging
+          // their sliders — otherwise echoed status frames would fight the
+          // drag and make the slider jitter.
+          const dragging = (typeof window !== 'undefined' && (window as any).__audioDragging) || {};
+          if (!dragging.volume) updates.volume = vol;
+          if (!dragging.treble) updates.treble = tre;
+          if (!dragging.bass) updates.bass = bas;
           audioSyncedToDevice.current = true;
         } else if (!audioSyncedToDevice.current) {
           // Device reported invalid/blank audio. Schedule a one-shot push of
