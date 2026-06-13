@@ -41,20 +41,51 @@ textarea,
   user-select: auto;
 }
 
-/* Hide range slider thumb when value is 0 (used for audio sliders) */
-.slider-no-thumb::-webkit-slider-thumb {
+/* Audio sliders (Volume/Treble/Bass): always-visible thumb,
+   large iOS-friendly hit area, transparent track (visual track is the
+   div underneath). Used in Media.tsx. */
+.audio-slider {
   -webkit-appearance: none;
   appearance: none;
-  width: 0;
-  height: 0;
   background: transparent;
-  border: none;
-  box-shadow: none;
+  outline: none;
+  /* Disable native scroll-on-drag so iOS uses the slider gesture. */
+  touch-action: none;
+  /* Bigger hit area than the visible track. */
+  padding: 0;
+  margin: 0;
 }
-.slider-no-thumb::-moz-range-thumb {
-  width: 0;
-  height: 0;
+.audio-slider::-webkit-slider-runnable-track {
+  -webkit-appearance: none;
+  appearance: none;
   background: transparent;
+  height: 100%;
   border: none;
-  box-shadow: none;
+}
+.audio-slider::-moz-range-track {
+  background: transparent;
+  height: 100%;
+  border: none;
+}
+.audio-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 2px solid #0A5BC4;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+  cursor: pointer;
+  /* Vertically center on the 9px visual track. */
+  margin-top: 0;
+}
+.audio-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 2px solid #0A5BC4;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+  cursor: pointer;
 }

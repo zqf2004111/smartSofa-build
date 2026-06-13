@@ -295,14 +295,18 @@ export function MediaView() {
                      <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">{slider.label}</span>
                      <span className="text-[12px] font-bold text-[#0A5BC4]">{slider.value}%</span>
                    </div>
-                   {/* Custom Slider Track */}
-                   <div className="h-[9px] w-full bg-[#E5E7EB] rounded-full overflow-hidden relative">
-                     {slider.value > 0 && (
-                       <div className="h-full bg-[#0A5BC4] rounded-full absolute left-0 top-0 transition-all duration-300" style={{ width: `${slider.value}%` }}></div>
-                     )}
-                     <input 
-                       type="range" 
-                       min="0" max="100" 
+                   {/* Slider row: large hit area for iOS, visual track underneath. */}
+                   <div className="relative h-11 flex items-center">
+                     {/* Visual track */}
+                     <div className="h-[9px] w-full bg-[#E5E7EB] rounded-full relative pointer-events-none">
+                       {slider.value > 0 && (
+                         <div className="h-full bg-[#0A5BC4] rounded-full absolute left-0 top-0 transition-all duration-150" style={{ width: `${slider.value}%` }}></div>
+                       )}
+                     </div>
+                     {/* Native range input — full row, large hit area, always-visible thumb */}
+                     <input
+                       type="range"
+                       min="0" max="100"
                        value={slider.value}
                        onChange={(e) => {
                          const val = parseInt(e.target.value);
@@ -319,7 +323,7 @@ export function MediaView() {
                          // Final send when drag ends, also throttled to enforce >= 100ms spacing.
                          scheduleAudioSend();
                        }}
-                       className={`absolute top-1/2 -translate-y-1/2 left-0 w-full h-5 accent-[#0A5BC4] cursor-pointer${slider.value === 0 ? ' slider-no-thumb' : ''}`}
+                       className="audio-slider absolute inset-0 w-full h-full cursor-pointer"
                      />
                    </div>
                 </div>
