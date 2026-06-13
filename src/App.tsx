@@ -12,6 +12,7 @@ import { YouView } from './views/You';
 import { AddDeviceModal } from './components/AddDeviceModal';
 import { DeviceSwitchModal } from './components/DeviceSwitchModal';
 import { DeviceSelectionView } from './views/DeviceSelection';
+import { ConnectionBanner } from './components/ConnectionBanner';
 
 function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<'main' | 'devices'>('devices');
@@ -29,6 +30,7 @@ function AppContent() {
     <>
       {currentScreen === 'devices' ? (
         <div className="w-full max-w-md mx-auto h-[100dvh] bg-gray-50 flex flex-col relative shadow-xl overflow-hidden">
+          <ConnectionBanner />
           <DeviceSelectionView 
             onSelectDevice={() => setCurrentScreen('main')} 
             onAddDevice={() => setIsAddDeviceModalOpen(true)}
@@ -44,6 +46,7 @@ function AppContent() {
       ) : (
         <div className="w-full max-w-md mx-auto h-[100dvh] bg-gray-50 flex flex-col relative shadow-xl overflow-hidden">
         
+        <ConnectionBanner />
         {/* Top Header */}
         <div className={`px-5 pt-8 pb-4 bg-white flex-shrink-0 z-40 flex items-center justify-between ${currentTab === 'media' ? '' : 'border-b border-gray-100/50 shadow-[0_4px_12px_rgba(0,0,0,0.02)]'}`}>
           <div 

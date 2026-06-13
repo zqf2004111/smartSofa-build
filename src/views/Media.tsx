@@ -116,12 +116,14 @@ export function MediaView() {
   };
 
   const onWheelPointerDown = (e: React.PointerEvent) => {
+    if (!state.lightOn) return;
     isDraggingColor.current = true;
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     updateAngle(e.clientX, e.clientY);
   };
 
   const onWheelPointerMove = (e: React.PointerEvent) => {
+    if (!state.lightOn) return;
     if (!isDraggingColor.current) return;
     updateAngle(e.clientX, e.clientY);
   };
@@ -149,7 +151,7 @@ export function MediaView() {
     <div className="flex flex-col min-h-full bg-[#f8fafc] animate-in fade-in duration-300 pb-24">
       
       {/* Top Tabs */}
-      <div className="bg-white pb-4 pt-1 shadow-sm flex justify-center space-x-10 w-full mb-6 z-10 sticky top-0">
+      <div className="bg-white pb-4 pt-1 shadow-sm flex justify-center space-x-10 w-full mb-6 z-30 sticky top-0">
          <button onClick={() => setActiveTab('audio')} className={`py-1 px-8 rounded-full text-[15px] transition-all ${activeTab === 'audio' ? 'bg-[#0A5BC4] text-white font-medium' : 'text-gray-800 text-[16px] font-normal'}`}>{t('audio')}</button>
          <button onClick={() => setActiveTab('light')} className={`py-1 px-8 rounded-full text-[15px] transition-all ${activeTab === 'light' ? 'bg-[#0A5BC4] text-white font-medium' : 'text-gray-800 text-[16px] font-normal'}`}>{t('light')}</button>
       </div>
@@ -295,7 +297,9 @@ export function MediaView() {
                    </div>
                    {/* Custom Slider Track */}
                    <div className="h-[9px] w-full bg-[#E5E7EB] rounded-full overflow-hidden relative">
-                     <div className="h-full bg-[#0A5BC4] rounded-full absolute left-0 top-0 transition-all duration-300" style={{ width: `${slider.value}%` }}></div>
+                     {slider.value > 0 && (
+                       <div className="h-full bg-[#0A5BC4] rounded-full absolute left-0 top-0 transition-all duration-300" style={{ width: `${slider.value}%` }}></div>
+                     )}
                      <input 
                        type="range" 
                        min="0" max="100" 
@@ -315,7 +319,7 @@ export function MediaView() {
                          // Final send when drag ends, also throttled to enforce >= 100ms spacing.
                          scheduleAudioSend();
                        }}
-                       className="absolute top-1/2 -translate-y-1/2 left-0 w-full h-5 accent-[#0A5BC4] cursor-pointer" 
+                       className={`absolute top-1/2 -translate-y-1/2 left-0 w-full h-5 accent-[#0A5BC4] cursor-pointer${slider.value === 0 ? ' slider-no-thumb' : ''}`}
                      />
                    </div>
                 </div>
@@ -352,7 +356,16 @@ export function MediaView() {
       )}
 
       {activeTab === 'light' && (
-        <div className="px-5 space-y-6 animate-in slide-in-from-right-4 duration-300">
+        <div
+          className="px-5 space-y-6 animate-in slide-in-from-right-4 duration-300 select-none"
+          style={{
+            WebkitUserSelect: 'none',
+            userSelect: 'none',
+            WebkitTouchCallout: 'none',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+          onContextMenu={(e) => e.preventDefault()}
+        >
           <div className="bg-white rounded-[28px] shadow-[0_4px_24px_rgba(0,0,0,0.02)] border border-gray-100/80 w-full pb-8">
             
             {/* Color Wheel Area */}
@@ -363,7 +376,7 @@ export function MediaView() {
                 onPointerMove={onWheelPointerMove}
                 onPointerUp={onWheelPointerUp}
                 onPointerCancel={onWheelPointerUp}
-                className="w-56 h-56 rounded-full relative flex items-center justify-center shadow-sm cursor-pointer touch-none"
+                className={`w-56 h-56 rounded-full relative flex items-center justify-center shadow-sm touch-none ${state.lightOn ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                 style={{
                   background: 'conic-gradient(from 0deg at 50% 50%, hsl(0, 100%, 50%), hsl(60, 100%, 50%), hsl(120, 100%, 50%), hsl(180, 100%, 50%), hsl(240, 100%, 50%), hsl(300, 100%, 50%), hsl(360, 100%, 50%))'
                 }}

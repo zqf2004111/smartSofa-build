@@ -366,6 +366,28 @@ class BleManager {
     } catch (e) {
       console.error('[BLE] Write failed:', e);
       this.callbacks.onError?.('Write failed: ' + String(e));
+      // Treat write failure as disconnection (e.g. peripheral powered off without
+      // OS delivering disconnect callback). Mark state and trigger reconnect.
+      this.handleWriteFailure();
+    }
+  }
+
+  /**
+   * Called when a write fails. Stops motor repeat, marks state as disconnected
+   * and kicks off the reconnect chain (if reconnect is enabled).
+   */
+  private handleWriteFailure(): void {
+    if (this.state !== 'connected') return; // already handling
+    // Stop any motor repeat to avoid spamming failed writes.
+    if (this.motorInterval) {
+      clearInterval(this.motorInterval);
+      this.motorInterval = null;
+    }
+    this.currentMotorCmd = null;
+    this.setState('disconnected');
+    if (this.reconnectEnabled && this.connectedDeviceId) {
+      this.reconnectAttempts = 0;
+      this.attemptReconnect();
     }
   }
 

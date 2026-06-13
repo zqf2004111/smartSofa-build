@@ -17,8 +17,13 @@ export function HeatingTab() {
   }, [deviceConfig?.heating]);
 
   const handleTimerConfirm = (val: number) => {
-    updateState({ heatingTimerOn: true, heatingTimerDuration: val, heatingTimerRemaining: val * 60, heatingTimerStartAt: Date.now() });
-    sendTimerCommand('heating', val);
+    if (val <= 0) {
+      updateState({ heatingTimerOn: false, heatingTimerRemaining: 0 });
+      sendTimerCommand('heating', 0);
+    } else {
+      updateState({ heatingTimerOn: true, heatingTimerDuration: val, heatingTimerRemaining: val * 60, heatingTimerStartAt: Date.now() });
+      sendTimerCommand('heating', val);
+    }
     setIsTimerModalOpen(false);
   };
 
@@ -111,9 +116,13 @@ export function HeatingTab() {
 
           <div className="flex items-center space-x-4">
             {state.heatingTimerOn && (
-              <span className="text-[14px] font-semibold text-[#0A5BC4]">
+              <button
+                type="button"
+                onClick={() => setIsTimerModalOpen(true)}
+                className="text-[14px] font-semibold text-[#0A5BC4]"
+              >
                 {Math.floor(state.heatingTimerRemaining / 60).toString().padStart(2, '0')}:{(state.heatingTimerRemaining % 60).toString().padStart(2, '0')}
-              </span>
+              </button>
             )}
             {/* Toggle Switch */}
             <button
@@ -122,8 +131,8 @@ export function HeatingTab() {
               }`}
               onClick={() => {
                 if (state.heatingTimerOn) {
-                  // Allow re-setting timer directly without turning off first
-                  setIsTimerModalOpen(true);
+                  updateState({ heatingTimerOn: false, heatingTimerRemaining: 0 });
+                  sendTimerCommand('heating', 0);
                 } else if (state.heatingOn) {
                   setIsTimerModalOpen(true);
                 }

@@ -53,6 +53,7 @@ interface DeviceContextType {
   stopScan: () => Promise<void>;
   clearDiscoveredDevices: () => void;
   connectBleDevice: (deviceId: string, name: string) => Promise<boolean>;
+  reconnectDevice: () => Promise<boolean>;
   // Feature commands
   sendMassageCommand: (mode: string, intensity: number) => void;
   sendTimerCommand: (type: 'massage' | 'heating' | 'ventilation', minutes: number) => void;
@@ -164,6 +165,10 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   const motorSimInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const massageCmdPendingUntilRef = useRef<number>(0);
   const isRemovingDevice = useRef(false);
+  // Suppress device-driven timer auto-trigger for a short window after the user
+  // manually turns the countdown off. Otherwise a stale status report (still
+  // carrying remainingTime>0 because the device hasn't applied the timer=0
+  // command yet) would re-open the countdown, requiring a second tap.
 
   const [mediaState, setMediaState] = useState<MediaBluetoothState>({
     a2dpConnected: false,
@@ -233,6 +238,46 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     }
     return () => clearInterval(interval);
   }, [state.timerOn, state.timerRemaining]);
+
+  // Per-feature local 1Hz countdown tick.
+  // Display ticks every second locally; device status reports overwrite
+  // the value via handleStatusReport for sync correctness.
+  React.useEffect(() => {
+    const anyOn =
+      (state.massageTimerOn && state.massageTimerRemaining > 0) ||
+      (state.heatingTimerOn && state.heatingTimerRemaining > 0) ||
+      (state.ventilationTimerOn && state.ventilationTimerRemaining > 0);
+    if (!anyOn) return;
+    const interval = setInterval(() => {
+      setState((prev) => {
+        const next: Partial<SofaState> = {};
+        if (prev.massageTimerOn && prev.massageTimerRemaining > 0) {
+          const r = prev.massageTimerRemaining - 1;
+          next.massageTimerRemaining = r > 0 ? r : 0;
+          if (r <= 0) next.massageTimerOn = false;
+        }
+        if (prev.heatingTimerOn && prev.heatingTimerRemaining > 0) {
+          const r = prev.heatingTimerRemaining - 1;
+          next.heatingTimerRemaining = r > 0 ? r : 0;
+          if (r <= 0) next.heatingTimerOn = false;
+        }
+        if (prev.ventilationTimerOn && prev.ventilationTimerRemaining > 0) {
+          const r = prev.ventilationTimerRemaining - 1;
+          next.ventilationTimerRemaining = r > 0 ? r : 0;
+          if (r <= 0) next.ventilationTimerOn = false;
+        }
+        return Object.keys(next).length ? { ...prev, ...next } : prev;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [
+    state.massageTimerOn,
+    state.massageTimerRemaining,
+    state.heatingTimerOn,
+    state.heatingTimerRemaining,
+    state.ventilationTimerOn,
+    state.ventilationTimerRemaining,
+  ]);
 
   const updateState = (updates: Partial<SofaState>) => {
     setState((prev) => ({ ...prev, ...updates }));
@@ -544,7 +589,20 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           updates.massageMode = isOn ? (modeId || prev.massageMode) : '';
         }
         updates.massageIntensity = m.intensity || prev.massageIntensity;
-        updates.massageTimerRemaining = m.remainingTime || 0;
+        // 设备 remainingTime 驱动本地倒计时（双向同步）：
+        // - >0 且本地未开 → 打开（rising edge），由本地 1Hz tick 继续平滑递减
+        // - ==0 且本地仍开 → 立即关闭（保证关闭操作一次生效）
+        if (m.remainingTime > 0) {
+          if (!prev.massageTimerOn) {
+            updates.massageTimerOn = true;
+            updates.massageTimerRemaining = m.remainingTime;
+            updates.massageTimerDuration = Math.max(1, Math.round(m.remainingTime / 60));
+            updates.massageTimerStartAt = Date.now();
+          }
+        } else if (prev.massageTimerOn) {
+          updates.massageTimerOn = false;
+          updates.massageTimerRemaining = 0;
+        }
       }
       // Heating (multi-zone)
       if (report.heating.length > 0) {
@@ -552,6 +610,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
         const zoneStates: SofaState['heatingZoneStates'] = { ...prev.heatingZoneStates };
         const onZones: HeatingZoneKey[] = [];
         let commonMode: number | null = null;
+        let maxRemaining = 0;
         report.heating.forEach((h, idx) => {
           // 优先按实际支持的部位顺序映射；无配置时回退到全局顺序
           const zone = supported[idx] ?? HEATING_ZONE_ORDER[idx];
@@ -562,6 +621,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
             onZones.push(zone);
             if (commonMode === null) commonMode = h.mode;
             else if (commonMode !== h.mode) commonMode = -1;
+            if (h.remainingTime > maxRemaining) maxRemaining = h.remainingTime;
           }
         });
         const anyOn = onZones.length > 0;
@@ -569,10 +629,21 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
         updates.heatingMode = anyOn
           ? (commonMode === HEATING_MODE.RAPID ? 'rapid' : commonMode === HEATING_MODE.GENTLE ? 'gentle' : prev.heatingMode)
           : prev.heatingMode;
-        updates.heatingTimerRemaining = report.heating[0]?.remainingTime || 0;
         updates.heatingZoneStates = zoneStates;
         if (anyOn) {
           updates.heatingSelectedZones = onZones;
+        }
+        // 设备 remainingTime 驱动本地倒计时（同 massage）
+        if (maxRemaining > 0) {
+          if (!prev.heatingTimerOn) {
+            updates.heatingTimerOn = true;
+            updates.heatingTimerRemaining = maxRemaining;
+            updates.heatingTimerDuration = Math.max(1, Math.round(maxRemaining / 60));
+            updates.heatingTimerStartAt = Date.now();
+          }
+        } else if (prev.heatingTimerOn) {
+          updates.heatingTimerOn = false;
+          updates.heatingTimerRemaining = 0;
         }
       }
       // Ventilation (multi-zone)
@@ -581,6 +652,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
         const zoneStates: SofaState['ventilationZoneStates'] = { ...prev.ventilationZoneStates };
         const onZones: VentilationZoneKey[] = [];
         let commonMode: number | null = null;
+        let maxRemaining = 0;
         report.ventilation.forEach((v, idx) => {
           const zone = supportedVent[idx] ?? VENTILATION_ZONE_ORDER[idx];
           if (!zone) return;
@@ -590,6 +662,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
             onZones.push(zone);
             if (commonMode === null) commonMode = v.mode;
             else if (commonMode !== v.mode) commonMode = -1;
+            if (v.remainingTime > maxRemaining) maxRemaining = v.remainingTime;
           }
         });
         const anyOn = onZones.length > 0;
@@ -597,10 +670,21 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
         updates.ventilationMode = anyOn
           ? (commonMode === VENTILATION_MODE.RAPID ? 'rapid' : commonMode === VENTILATION_MODE.GENTLE ? 'gentle' : prev.ventilationMode)
           : prev.ventilationMode;
-        updates.ventilationTimerRemaining = report.ventilation[0]?.remainingTime || 0;
         updates.ventilationZoneStates = zoneStates;
         if (anyOn) {
           updates.ventilationSelectedZones = onZones;
+        }
+        // 设备 remainingTime 驱动本地倒计时（同 massage）
+        if (maxRemaining > 0) {
+          if (!prev.ventilationTimerOn) {
+            updates.ventilationTimerOn = true;
+            updates.ventilationTimerRemaining = maxRemaining;
+            updates.ventilationTimerDuration = Math.max(1, Math.round(maxRemaining / 60));
+            updates.ventilationTimerStartAt = Date.now();
+          }
+        } else if (prev.ventilationTimerOn) {
+          updates.ventilationTimerOn = false;
+          updates.ventilationTimerRemaining = 0;
         }
       }
       // Audio
@@ -733,6 +817,23 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     setDiscoveredDevices([]);
   }, []);
 
+  const reconnectDevice = useCallback(async () => {
+    if (savedDevices.length === 0) return false;
+    if (bleState === 'connected' || bleState === 'connecting' || bleState === 'reconnecting') {
+      return bleState === 'connected';
+    }
+    try {
+      await initializeBle();
+      const device = savedDevices[0];
+      autoConnectAttempted.current = true;
+      const ok = await bleManager.connect(device.id);
+      return ok;
+    } catch (e) {
+      console.error('[BLE] Manual reconnect failed', e);
+      return false;
+    }
+  }, [savedDevices, bleState, initializeBle]);
+
   const connectBleDevice = useCallback(async (deviceId: string, name: string) => {
     await bleManager.stopScan();
     const ok = await bleManager.connect(deviceId);
@@ -769,7 +870,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       sendMotorCommand, simulateMotorPosition, sendPositionCommand, setMemoryPosition,
       savedDevices, addSavedDevice, removeSavedDevice,
       deviceConfig,
-      discoveredDevices, bleState, startScan, stopScan, clearDiscoveredDevices, connectBleDevice,
+      discoveredDevices, bleState, startScan, stopScan, clearDiscoveredDevices, connectBleDevice, reconnectDevice,
       sendMassageCommand, sendTimerCommand, sendHeatingCommand, sendVentilationCommand,
       sendVibroCommand, sendAudioCommand, sendAudioModeCommand, sendLightCommand, sendLightColorCommand,
       mediaState, sendMediaCommand, openNotificationSettings,

@@ -17,8 +17,13 @@ export function VentilationTab() {
   }, [deviceConfig?.ventilation]);
 
   const handleTimerConfirm = (val: number) => {
-    updateState({ ventilationTimerOn: true, ventilationTimerDuration: val, ventilationTimerRemaining: val * 60, ventilationTimerStartAt: Date.now() });
-    sendTimerCommand('ventilation', val);
+    if (val <= 0) {
+      updateState({ ventilationTimerOn: false, ventilationTimerRemaining: 0 });
+      sendTimerCommand('ventilation', 0);
+    } else {
+      updateState({ ventilationTimerOn: true, ventilationTimerDuration: val, ventilationTimerRemaining: val * 60, ventilationTimerStartAt: Date.now() });
+      sendTimerCommand('ventilation', val);
+    }
     setIsTimerModalOpen(false);
   };
 
@@ -112,9 +117,13 @@ export function VentilationTab() {
 
             <div className="flex items-center space-x-4">
               {state.ventilationTimerOn && (
-                <span className="text-[14px] font-semibold text-[#0A5BC4]">
+                <button
+                  type="button"
+                  onClick={() => setIsTimerModalOpen(true)}
+                  className="text-[14px] font-semibold text-[#0A5BC4]"
+                >
                   {Math.floor(state.ventilationTimerRemaining / 60).toString().padStart(2, '0')}:{(state.ventilationTimerRemaining % 60).toString().padStart(2, '0')}
-                </span>
+                </button>
               )}
               {/* Toggle Switch */}
               <button
@@ -123,8 +132,8 @@ export function VentilationTab() {
                 }`}
                 onClick={() => {
                   if (state.ventilationTimerOn) {
-                    // Allow re-setting timer directly without turning off first
-                    setIsTimerModalOpen(true);
+                    updateState({ ventilationTimerOn: false, ventilationTimerRemaining: 0 });
+                    sendTimerCommand('ventilation', 0);
                   } else if (state.ventilationOn) {
                     setIsTimerModalOpen(true);
                   }

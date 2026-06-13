@@ -40,3 +40,21 @@ textarea,
   -ms-user-select: auto;
   user-select: auto;
 }
+
+/* Hide range slider thumb when value is 0 (used for audio sliders) */
+.slider-no-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+.slider-no-thumb::-moz-range-thumb {
+  width: 0;
+  height: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}

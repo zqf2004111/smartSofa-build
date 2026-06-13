@@ -12,7 +12,7 @@ interface TimerModalProps {
 export const TimerModal: React.FC<TimerModalProps> = ({ isOpen, onClose, onConfirm, initialTime }) => {
   const { language } = useDevice();
   const t = useTranslation(language);
-  const options = [5, 10, 15, 20, 25, 30];
+  const options = [0, 5, 10, 15, 20, 25, 30];
   const itemHeight = 48;
   const listSize = 300;
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -32,7 +32,7 @@ export const TimerModal: React.FC<TimerModalProps> = ({ isOpen, onClose, onConfi
   useEffect(() => {
     if (isOpen) {
       const midBlock = Math.floor((listSize / options.length) / 2);
-      const initialIndex = options.indexOf(initialTime || 5);
+      const initialIndex = options.indexOf(initialTime ?? 0);
       const target = midBlock * options.length + (initialIndex >= 0 ? initialIndex : 0);
       setActiveIndex(target);
       setDragOffset(0);
@@ -149,7 +149,7 @@ export const TimerModal: React.FC<TimerModalProps> = ({ isOpen, onClose, onConfi
 
         <div className="flex flex-col gap-3 mt-4">
           <button 
-            onClick={() => onConfirm(list[activeIndex] || 5)}
+            onClick={() => onConfirm(list[activeIndex] ?? 0)}
             className="w-full bg-[#0A5BC4] text-white rounded-full py-2.5 text-[15px] font-semibold tracking-wide shadow-sm"
           >
             {t('confirm')}

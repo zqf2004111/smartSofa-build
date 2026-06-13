@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useDevice } from '../../context';
-import { Clock } from 'lucide-react';
 import { TimerModal } from '../../components/TimerModal';
 import { useTranslation } from '../../i18n';
 import { getMassageSystem, getMassageModes } from '../../massageConfig';
@@ -14,8 +13,14 @@ export function MassageTab() {
   const modes = getMassageModes(system);
 
   const handleTimerConfirm = (val: number) => {
-    updateState({ massageTimerOn: true, massageTimerDuration: val, massageTimerRemaining: val * 60, massageTimerStartAt: Date.now() });
-    sendTimerCommand('massage', val);
+    if (val <= 0) {
+      // Selecting 0 = close countdown
+      updateState({ massageTimerOn: false, massageTimerRemaining: 0 });
+      sendTimerCommand('massage', 0);
+    } else {
+      updateState({ massageTimerOn: true, massageTimerDuration: val, massageTimerRemaining: val * 60, massageTimerStartAt: Date.now() });
+      sendTimerCommand('massage', val);
+    }
     setIsTimerModalOpen(false);
   };
 
@@ -64,8 +69,8 @@ export function MassageTab() {
         </div>
       </div>
 
-      {/* Intensity */}
-      {state.massageMode !== '' && (
+      {/* Intensity (hidden for now) */}
+      {false && state.massageMode !== '' && (
         <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100">
           <div className="flex items-center mb-4">
             <span className="text-[15px] font-medium text-gray-900">{t('intensity') || 'Intensity'}</span>
@@ -100,9 +105,13 @@ export function MassageTab() {
           
           <div className="flex items-center space-x-4">
             {state.massageTimerOn && (
-              <span className="text-[14px] font-semibold text-[#0A5BC4]">
+              <button
+                type="button"
+                onClick={() => setIsTimerModalOpen(true)}
+                className="text-[14px] font-semibold text-[#0A5BC4]"
+              >
                 {Math.floor(state.massageTimerRemaining / 60).toString().padStart(2, '0')}:{(state.massageTimerRemaining % 60).toString().padStart(2, '0')}
-              </span>
+              </button>
             )}
             {/* Toggle Switch */}
             <button 
@@ -111,8 +120,9 @@ export function MassageTab() {
               }`}
               onClick={() => {
                 if (state.massageTimerOn) {
-                  // Allow re-setting timer directly without turning off first
-                  setIsTimerModalOpen(true);
+                  // Turn off countdown immediately
+                  updateState({ massageTimerOn: false, massageTimerRemaining: 0 });
+                  sendTimerCommand('massage', 0);
                 } else if (state.massageMode !== '') {
                   setIsTimerModalOpen(true);
                 }
