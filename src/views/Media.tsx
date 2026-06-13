@@ -32,17 +32,31 @@ export function MediaView() {
   const isDraggingColor = useRef(false);
   const pendingAudioValues = useRef({ volume: state.volume, treble: state.treble, bass: state.bass });
   const lastSentAudioValues = useRef({ volume: state.volume, treble: state.treble, bass: state.bass });
+  // Always-fresh mirror of the relevant state fields, so flushAudioSend can
+  // pick up the current values for sliders the user is NOT dragging instead
+  // of using stale ref values captured at mount time.
+  const stateRef = useRef({ volume: state.volume, treble: state.treble, bass: state.bass, audioProfile: state.audioProfile });
+  useEffect(() => {
+    stateRef.current = { volume: state.volume, treble: state.treble, bass: state.bass, audioProfile: state.audioProfile };
+  }, [state.volume, state.treble, state.bass, state.audioProfile]);
   // Throttle audio commands: enforce >= 100ms between BLE writes for VOLUME/TREBLE/BASS
   const AUDIO_SEND_MIN_INTERVAL_MS = 100;
   const lastAudioSentAt = useRef(0);
   const audioSendTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const flushAudioSend = () => {
-    const { volume, treble, bass } = pendingAudioValues.current;
+    const w: any = typeof window !== 'undefined' ? window : {};
+    const dragging = w.__audioDragging || {};
+    // Only fields the user is actively dragging come from pendingAudioValues;
+    // for the rest, use the latest state value so we don't ship stale defaults
+    // that would clobber the device with old volume/treble/bass.
+    const volume = dragging.volume ? pendingAudioValues.current.volume : stateRef.current.volume;
+    const treble = dragging.treble ? pendingAudioValues.current.treble : stateRef.current.treble;
+    const bass   = dragging.bass   ? pendingAudioValues.current.bass   : stateRef.current.bass;
     lastSentAudioValues.current = { volume, treble, bass };
     lastAudioSentAt.current = Date.now();
     audioSendTimer.current = null;
-    sendAudioCommand(state.audioProfile, volume, treble, bass);
+    sendAudioCommand(stateRef.current.audioProfile, volume, treble, bass);
   };
 
   // Schedule an audio command send respecting the min interval.
