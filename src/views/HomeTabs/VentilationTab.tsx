@@ -18,7 +18,7 @@ export function VentilationTab() {
 
   const handleTimerConfirm = (val: number) => {
     if (val <= 0) {
-      updateState({ ventilationTimerOn: false, ventilationTimerRemaining: 0 });
+      // 关闭：UI 不本地更新，等设备响应驱动
       sendTimerCommand('ventilation', 0);
     } else {
       updateState({ ventilationTimerOn: true, ventilationTimerDuration: val, ventilationTimerRemaining: val * 60, ventilationTimerStartAt: Date.now() });
@@ -37,7 +37,7 @@ export function VentilationTab() {
       sendHeatingCommand(state.heatingMode, false);
     }
     if (state.heatingTimerOn) {
-      updateState({ heatingTimerOn: false, heatingTimerRemaining: 0 });
+      // 只发命令，等响应驱动
       sendTimerCommand('heating', 0);
     }
   };
@@ -144,7 +144,7 @@ export function VentilationTab() {
                 }`}
                 onClick={() => {
                   if (state.ventilationTimerOn) {
-                    updateState({ ventilationTimerOn: false, ventilationTimerRemaining: 0 });
+                    // 关闭倒计时：只发命令，等响应驱动 UI
                     sendTimerCommand('ventilation', 0);
                   } else if (state.ventilationOn) {
                     setIsTimerModalOpen(true);

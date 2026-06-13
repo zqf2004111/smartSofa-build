@@ -210,7 +210,28 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   // snap the slider back to the device's stale value before our BLE write
   // round-trips.
   const lastSysVolChangeAtMs = useRef(0);
-  const SYS_VOL_SUPPRESS_MS = 1500;
+  const SYS_VOL_SUPPRESS_MS = 3000;
+  // Coalesce systemVolumeChanged echoes. Hardware volume keys / BT absolute
+  // volume negotiation can emit a burst of out-of-order callbacks within a
+  // few hundred ms. Strategy: collect all values within a quiet window and
+  // pick the MEDIAN. Median is robust against:
+  //  - BT abs-vol negotiation outliers (briefly reports 0 or 100)
+  //  - Single-direction key-press bursts (user holding +/- key)
+  // For monotonic bursts (e.g. 80,73,67,60,53,47,40 from holding -) median
+  // gives ~60 which is approximately where the user stopped. We then trust
+  // a fresh status frame from the device after SUPPRESS_MS to reach the
+  // exact final value.
+  const sysVolPendingValuesRef = useRef<number[]>([]);
+  const sysVolFlushTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const SYS_VOL_COALESCE_MS = 350;
+  // Status-frame volume confirmation: only trust a device-reported volume
+  // that differs from local state.volume after we've seen the same value
+  // for several consecutive frames. The sofa's status frame keeps reporting
+  // its old volume for ~hundreds of ms after we BLE-write a new one; without
+  // this guard a single stale frame can snap the slider back.
+  const lastReportedVolRef = useRef<number | null>(null);
+  const reportedVolStableCountRef = useRef(0);
+  const VOL_STABLE_FRAMES_REQUIRED = 4;
   // Forward ref to sendAudioCommand. handleStatusReport is defined above
   // sendAudioCommand, so use a ref to break the ordering dependency.
   const sendAudioCommandRef = useRef<((profile: string, volume: number, treble: number, bass: number) => void) | null>(null);
@@ -259,22 +280,50 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           const sv = await MediaControl.addListener('systemVolumeChanged', (r: { volume: number }) => {
             console.log('[systemVolumeChanged]', r);
             if (typeof r?.volume !== 'number') return;
-            // Ignore system echoes while the user is actively dragging the
-            // volume slider — the slider itself is the source of truth, and
-            // OS quantization (STREAM_MUSIC max=15) / BT absolute-volume
-            // negotiation can emit a cascade of lower values that would
-            // otherwise drag state.volume down to 0 mid-drag.
             const dragging = (typeof window !== 'undefined' && (window as any).__audioDragging?.volume) === true;
             if (dragging) return;
             lastSysVolChangeAtMs.current = Date.now();
-            setState((p) => {
-              if (p.volume === r.volume) return p;
-              // Push to the sofa over BLE so its next status frame matches.
-              try {
-                sendAudioCommandRef.current?.(p.audioProfile, r.volume, p.treble, p.bass);
-              } catch (e) {}
-              return { ...p, volume: r.volume };
-            });
+            // Collect all values within a quiet window. We then pick the
+            // value that best represents user intent, robust against:
+            //   - Monotonic key-hold bursts (e.g. 80,73,67,60,53,47,40)
+            //   - BT abs-vol negotiation outliers (briefly reports 0 or 100)
+            //   - Self-triggered echoes from our own BLE writes
+            sysVolPendingValuesRef.current.push(r.volume);
+            if (sysVolFlushTimerRef.current) clearTimeout(sysVolFlushTimerRef.current);
+            sysVolFlushTimerRef.current = setTimeout(() => {
+              const values = sysVolPendingValuesRef.current.slice();
+              sysVolPendingValuesRef.current = [];
+              sysVolFlushTimerRef.current = null;
+              if (values.length === 0) return;
+              const stillDragging = (typeof window !== 'undefined' && (window as any).__audioDragging?.volume) === true;
+              if (stillDragging) return;
+              // Reject outliers: compute median, drop values that differ
+              // by more than 30%pts. This kills BT negotiation 0/100 spikes
+              // without breaking monotonic key-hold sequences.
+              const sorted = values.slice().sort((a, b) => a - b);
+              const median = sorted[Math.floor(sorted.length / 2)];
+              const filtered = values.filter((v) => Math.abs(v - median) <= 30);
+              // Apply the LAST non-outlier value — that's where the burst
+              // settled (closest to where the user stopped pressing).
+              const finalVol = filtered.length > 0 ? filtered[filtered.length - 1] : median;
+              console.log('[systemVolume] flush', { values, median, filtered, finalVol });
+              // Refresh suppress timestamp so status frames arriving right
+              // after the flush still get suppressed.
+              lastSysVolChangeAtMs.current = Date.now();
+              lastReportedVolRef.current = null;
+              reportedVolStableCountRef.current = 0;
+              // IMPORTANT: do NOT push BLE here. The sofa is the A2DP
+              // sink — it already learns the system volume via BT abs-vol
+              // protocol. Pushing BLE creates a feedback loop where the
+              // sofa re-negotiates the system volume back to our pushed
+              // value, triggering more systemVolumeChanged events. Just
+              // mirror to UI; the sofa's status frame will eventually
+              // converge.
+              setState((p) => {
+                if (p.volume === finalVol) return p;
+                return { ...p, volume: finalVol };
+              });
+            }, SYS_VOL_COALESCE_MS);
           });
           removeSysVolListener = sv.remove;
         } catch (e) {
@@ -301,6 +350,10 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       if (removeListener) removeListener();
       if (removeSysVolListener) removeSysVolListener();
       if (interval) clearInterval(interval);
+      if (sysVolFlushTimerRef.current) {
+        clearTimeout(sysVolFlushTimerRef.current);
+        sysVolFlushTimerRef.current = null;
+      }
     };
   }, []);
 
@@ -805,7 +858,25 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           // volume change event — the sofa's status frame may still carry the
           // pre-change value until our BLE write round-trips.
           const sysVolFresh = (Date.now() - lastSysVolChangeAtMs.current) < SYS_VOL_SUPPRESS_MS;
-          if (!dragging.volume && !sysVolFresh) updates.volume = vol;
+          // Require N consecutive identical reports before trusting a
+          // device-reported volume that differs from local state. The sofa's
+          // status frame keeps emitting the pre-write value for hundreds of
+          // ms after we BLE-push a new volume; a single stale frame must
+          // not snap the slider back.
+          let trustReportedVol = false;
+          if (vol === lastReportedVolRef.current) {
+            reportedVolStableCountRef.current += 1;
+          } else {
+            lastReportedVolRef.current = vol;
+            reportedVolStableCountRef.current = 1;
+          }
+          if (vol === prev.volume) {
+            // Already in sync; nothing to do.
+            trustReportedVol = false;
+          } else if (reportedVolStableCountRef.current >= VOL_STABLE_FRAMES_REQUIRED) {
+            trustReportedVol = true;
+          }
+          if (!dragging.volume && !sysVolFresh && trustReportedVol) updates.volume = vol;
           if (!dragging.treble) updates.treble = tre;
           if (!dragging.bass) updates.bass = bas;
           audioSyncedToDevice.current = true;

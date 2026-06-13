@@ -14,8 +14,7 @@ export function MassageTab() {
 
   const handleTimerConfirm = (val: number) => {
     if (val <= 0) {
-      // Selecting 0 = close countdown
-      updateState({ massageTimerOn: false, massageTimerRemaining: 0 });
+      // Selecting 0 = close countdown. UI 不本地立即更新，等设备响应回来再关。
       sendTimerCommand('massage', 0);
     } else {
       updateState({ massageTimerOn: true, massageTimerDuration: val, massageTimerRemaining: val * 60, massageTimerStartAt: Date.now() });
@@ -120,8 +119,7 @@ export function MassageTab() {
               }`}
               onClick={() => {
                 if (state.massageTimerOn) {
-                  // Turn off countdown immediately
-                  updateState({ massageTimerOn: false, massageTimerRemaining: 0 });
+                  // 关闭倒计时：只发命令，UI 等设备响应（remainingTime=0）再关
                   sendTimerCommand('massage', 0);
                 } else if (state.massageMode !== '') {
                   setIsTimerModalOpen(true);

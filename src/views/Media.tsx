@@ -54,7 +54,7 @@ export function MediaView() {
   useEffect(() => {
     stateRef.current = { volume: state.volume, treble: state.treble, bass: state.bass, audioProfile: state.audioProfile };
   }, [state.volume, state.treble, state.bass, state.audioProfile]);
-  // Throttle audio commands: enforce >= 100ms between BLE writes for VOLUME/TREBLE/BASS
+  // Throttle audio commands: enforce >= 100ms between BLE writes for VOLUME/TREBLE/BASS.
   const AUDIO_SEND_MIN_INTERVAL_MS = 100;
   const lastAudioSentAt = useRef(0);
   const audioSendTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -360,21 +360,21 @@ export function MediaView() {
                          // For volume, snap to the OS quantization grid so the
                          // slider, system volume and BLE-pushed value all agree.
                          const val = key === 'volume' ? snapVolumePct(raw) : raw;
+                         // Optimistic: update UI immediately for smooth drag.
                          updateState({ [key]: val });
                          pendingAudioValues.current[key] = val;
                          // Mirror to OS media volume only for the volume slider.
                          if (key === 'volume') {
                            MediaControl.setSystemVolume({ volume: val }).catch(() => {});
                          }
-                         // Send every 5% change during drag for responsiveness,
-                         // throttled to >= 100ms between BLE writes.
-                         if (Math.abs(val - lastSentAudioValues.current[key]) >= 5) {
+                         // Send every 20% change during drag, throttled to >= 100ms between BLE writes.
+                         if (Math.abs(val - lastSentAudioValues.current[key]) >= 20) {
                            scheduleAudioSend();
                          }
                        }}
                        onPointerUp={() => {
                          const key = slider.id as 'volume' | 'treble' | 'bass';
-                         // Final send when drag ends, also throttled to enforce >= 100ms spacing.
+                         // Final send when drag ends, throttled to enforce >= 100ms spacing.
                          scheduleAudioSend();
                          // Keep ignoring incoming reports for a brief window so
                          // the device's echoed status frame doesn't snap the
