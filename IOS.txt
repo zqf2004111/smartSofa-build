@@ -1,0 +1,78 @@
+Run 结果
+  • Run ID：27405600582
+  • 状态：completed / success
+  • 链接：https://github.com/zqf2004111/smartSofa/actions/runs/27405600582
+  生成的 Artifacts
+  • ios-ipa（可安装包）：https://api.github.com/repos/zqf2004111/smartSofa/actions/artifacts/7587339701/zip
+    • 解压后是 App.ipa，大小约 2.2 MB
+  • ios-archive（xcarchive）：https://api.github.com/repos/zqf2004111/smartSofa/actions/artifacts/7587339266/zip
+  本地备份 我也把 IPA 下载到了项目根目录：D:\code\czkaidi\smartSofa\ios-ipa.zip
+
+  注意 这次用的是 development 证书 + SmartHome_Control_Provisioning_Profile.mobileprovision，所以 App.ipa 只能安装到已在这个 provisioning pro
+  file 里注册过 UDID 的真机设备上。如果你的 iPhone UDID 没加进去，安装时会提示“无法验证 App”或需要到设置里信任。
+
+
+Development 证书的 IPA 安装到真机，最常用下面几种方式：
+
+  1. 有 Mac：用 Apple Configurator 2（推荐，免费）
+  ────────────────────────────────────────────────
+  1. Mac 上 App Store 下载 Apple Configurator 2。
+  2. iPhone 用数据线连到 Mac，信任这台电脑。
+  3. 打开 Apple Configurator 2，双击你的设备。
+  4. 菜单栏选 操作 → 添加 → App…，或者直接把 App.ipa 拖进设备窗口。
+  5. 等待安装完成，手机上即可打开。
+  2. 有 Mac：用 Xcode
+  ───────────────────
+  1. 打开 Xcode → Window → Devices and Simulators。
+  2. 左侧选中已连接的 iPhone。
+  3. 点击下面的 “+” 按钮，选择 App.ipa。
+  4. 等待安装。
+  3. 只有 Windows：用 iMazing
+  ───────────────────────────
+  1. 安装 iMazing（有试用版）。
+  2. iPhone 连电脑，信任。
+  3. 在 iMazing 里选择设备 → 管理 App → 右下角 “从文件安装”。
+  4. 选择 App.ipa，等待安装。
+  ⚠️ 重要前提
+  ──────────
+  这个 IPA 是用 iOS Development 证书 + Development Provisioning Profile 打的，只有 UDID 已加入该 profile 的设备才能安装
+  。
+
+  如果安装失败（提示“无法验证 App”或安装到一半卡住），说明你的 iPhone UDID 还没写进 SmartHome_Control_Provisioning_Profile.mobileprovision。
+  需要：
+  1. 到 Apple Developer 后台 Devices 里添加这台 iPhone 的 UDID；
+  2. 重新生成/下载 SmartHome_Control_Provisioning_Profile.mobileprovision；
+  3. 替换仓库里的 cert/SmartHome_Control_Provisioning_Profile.mobileprovision 文件，重新跑 GitHub Actions。
+
+  如果后续想不依赖 UDID、直接发给任何人安装，需要用 Ad Hoc 或 App Store Distribution 证书 + 对应的 Distribution Profile
+  。
+
+
+Windows 上安装 Development IPA，推荐下面两种方式：
+
+  1. iMazing（最简单，图形界面）
+  ──────────────────────────────
+  1. 下载安装 iMazing，有免费试用版。
+  2. iPhone 用数据线连到电脑，解锁并在手机上信任此电脑。
+  3. 打开 iMazing，左侧选择你的 iPhone。
+  4. 点击 “管理 App” → 右下角 “从文件安装”（Install from File）。
+  5. 选择 App.ipa，等待安装完成。
+  6. 安装成功后，去 iPhone 设置 → 通用 → VPN 与设备管理 里信任开发者证书（如果提示）。
+  2. 3uTools（爱思助手，免费）
+  ────────────────────────────
+  1. 下载安装 3uTools。
+  2. 连接 iPhone 并信任电脑。
+  3. 选择 “应用游戏” → “导入安装” → 选择 App.ipa。
+  4. 等待安装。
+  必须满足的前提
+  ──────────────
+  这个 IPA 是 Development 包，你的 iPhone UDID 必须已经在 SmartHome_Control_Provisioning_Profile.mobileprovision 里。否则无论用哪个工具，都会
+  安装失败或闪退。
+
+  怎么查 UDID 有没有加进去？
+  • 用 iMazing/3uTools 查看设备信息，复制 UDID。
+  • 如果安装失败，基本就是 UDID 没加进去。
+  UDID 没加怎么办？ 需要有人登录 Apple Developer 后台，在 Certificates, Identifiers & Profiles → Devices 里添加你的 UDID
+  ，然后重新下载 mobileprovision 文件，替换仓库里的 cert/SmartHome_Control_Provisioning_Profile.mobileprovision，再跑一次 GitHub Actions。
+
+  如果你把 UDID 发给我（可以私信/安全渠道），并且你有 Apple Developer 后台权限，我可以帮你更新 profile 并重新打包。

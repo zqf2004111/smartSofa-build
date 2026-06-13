@@ -123,7 +123,7 @@ export function HomeView({ onBackToDevices, selectedDevice, selectedDeviceName }
                     onPointerLeave={() => sendMotorCommand('head', 'stop')}
                     onContextMenu={(e) => e.preventDefault()}
                   >
-                    <img src="/headrest-up.svg" alt="Headrest Up" className="w-[42px] h-[42px] object-contain" />
+                    <img src="/headrest-up.svg" alt="Headrest Up" className="w-[42px] h-[42px] object-contain select-none pointer-events-none" draggable={false} onContextMenu={(e) => e.preventDefault()} style={{ WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }} />
                   </div>
                   {/* Top Right (Backrest) */}
                   <div
@@ -133,7 +133,7 @@ export function HomeView({ onBackToDevices, selectedDevice, selectedDeviceName }
                     onPointerLeave={() => sendMotorCommand('head', 'stop')}
                     onContextMenu={(e) => e.preventDefault()}
                   >
-                    <img src="/headrest-down.svg" alt="Headrest Down" className="w-[42px] h-[42px] object-contain" />
+                    <img src="/headrest-down.svg" alt="Headrest Down" className="w-[42px] h-[42px] object-contain select-none pointer-events-none" draggable={false} onContextMenu={(e) => e.preventDefault()} style={{ WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }} />
                   </div>
                 </>
               )}
@@ -147,7 +147,7 @@ export function HomeView({ onBackToDevices, selectedDevice, selectedDeviceName }
                     onPointerLeave={() => sendMotorCommand('seat', 'stop')}
                     onContextMenu={(e) => e.preventDefault()}
                   >
-                    <img src="/seat-up.svg" alt="Seat Up" className="w-[42px] h-[42px] object-contain" />
+                    <img src="/seat-up.svg" alt="Seat Up" className="w-[42px] h-[42px] object-contain select-none pointer-events-none" draggable={false} onContextMenu={(e) => e.preventDefault()} style={{ WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }} />
                   </div>
                   {/* Bottom Right (Legrest) */}
                   <div
@@ -157,7 +157,7 @@ export function HomeView({ onBackToDevices, selectedDevice, selectedDeviceName }
                     onPointerLeave={() => sendMotorCommand('seat', 'stop')}
                     onContextMenu={(e) => e.preventDefault()}
                   >
-                    <img src="/seat-down.svg" alt="Seat Down" className="w-[42px] h-[42px] object-contain" />
+                    <img src="/seat-down.svg" alt="Seat Down" className="w-[42px] h-[42px] object-contain select-none pointer-events-none" draggable={false} onContextMenu={(e) => e.preventDefault()} style={{ WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }} />
                   </div>
                 </>
               )}

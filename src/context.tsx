@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useRef, useCallback, useEffect } from 'react';
+import { registerPlugin } from '@capacitor/core';
 import { SofaState, type MediaBluetoothState } from './types';
 import { bleManager, type DiscoveredDevice, type BleConnectionState, type FullDeviceState } from './bluetooth';
 import { MediaControl } from './native/MediaControl';
@@ -129,6 +130,8 @@ const DeviceContext = createContext<DeviceContextType | undefined>(undefined);
 // Module-level ref for auto-connect to avoid TDZ issues in minified builds
 const autoConnectAttempted = { current: false };
 
+const BleBond = registerPlugin<{ removeBond: (options: { address: string }) => Promise<{ success: boolean }> }>('BleBond');
+
 export function DeviceProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<SofaState>(initialState);
   const [language, setLanguage] = useState<'en' | 'zh' | 'es'>('en');
@@ -160,6 +163,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   const bleInitialized = useRef(false);
   const motorSimInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const massageCmdPendingUntilRef = useRef<number>(0);
+  const isRemovingDevice = useRef(false);
 
   const [mediaState, setMediaState] = useState<MediaBluetoothState>({
     a2dpConnected: false,
@@ -484,6 +488,8 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   const removeSavedDevice = async (id: string) => {
     const connectedId = bleManager.getConnectedDeviceId();
     console.log('[Device] removeSavedDevice', id, 'connectedId', connectedId, 'bleState', bleState);
+    // Suppress auto-connect while removing so the removed device isn't reconnected
+    isRemovingDevice.current = true;
     // Prevent any automatic reconnect attempts while we are intentionally removing the device
     bleManager.disableReconnect();
     // Always release BLE resources on device removal so the device becomes discoverable again
@@ -493,6 +499,13 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       console.error('[Device] BLE disconnect on remove failed:', e);
     }
+    // Remove OS-level bond so Android doesn't keep a cached GATT connection/autoconnect
+    try {
+      const result = await BleBond.removeBond({ address: id });
+      console.log('[Device] removeBond result:', result);
+    } catch (e) {
+      console.warn('[Device] removeBond failed:', e);
+    }
     try {
       await bleManager.stopScan();
       console.log('[Device] BLE scan stopped after remove');
@@ -500,7 +513,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       console.error('[Device] BLE stopScan on remove failed:', e);
     }
     // Give Android time to drop the link and the peripheral time to resume advertising
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    await new Promise((resolve) => setTimeout(resolve, 1200));
     setSavedDevices((prev) => {
       const next = prev.filter((d) => d.id !== id);
       localStorage.setItem('smartSofa_savedDevices', JSON.stringify(next));
@@ -508,8 +521,8 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     });
     // Clear discovered devices so the scan list is fresh
     setDiscoveredDevices([]);
-    // Reset auto-connect flag so removed device won't auto-connect on restart
-    autoConnectAttempted.current = false;
+    // Allow auto-connect logic to run again now that the removal is complete
+    isRemovingDevice.current = false;
   };
 
   // Bluetooth
@@ -609,10 +622,10 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       if (report.lights.length > 0) {
         const l = report.lights[0];
         const lightMap: Record<number, string> = {
+          [LIGHT_MODE.RHYTHMIC]: 'rhythmic',
           [LIGHT_MODE.STEADY]: 'steady',
           [LIGHT_MODE.BREATH]: 'breath',
           [LIGHT_MODE.CYCLE]: 'cycle',
-          [LIGHT_MODE.RHYTHMIC]: 'rhythmic',
         };
         updates.lightOn = l.mode !== LIGHT_MODE.OFF;
         updates.lightMode = lightMap[l.mode] || prev.lightMode;
@@ -685,6 +698,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
 
   // Auto-connect saved device on app launch
   React.useEffect(() => {
+    if (isRemovingDevice.current) return;
     if (autoConnectAttempted.current) return;
     if (bleState === 'connected' || bleState === 'connecting') return;
     if (savedDevices.length === 0) return;

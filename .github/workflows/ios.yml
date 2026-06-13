@@ -111,7 +111,7 @@ jobs:
     - name: Install Provisioning Profile
       run: |
         mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-        cp cert/SmartHome_Control.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+        cp cert/SmartHome_Control_Provisioning_Profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
 
     - name: Build iOS Archive
       working-directory: ./ios/App

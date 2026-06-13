@@ -105,12 +105,13 @@ export const VENTILATION_MODE = {
 } as const;
 
 // ===== Light mode values =====
+// 0=灯光关闭 1=音律 2=常亮 3=呼吸 4=循环变色
 export const LIGHT_MODE = {
   OFF: 0x00,
-  STEADY: 0x01,
-  BREATH: 0x02,
-  CYCLE: 0x03,
-  RHYTHMIC: 0x04,
+  RHYTHMIC: 0x01,
+  STEADY: 0x02,
+  BREATH: 0x03,
+  CYCLE: 0x04,
 } as const;
 
 // ===== Audio mode values =====
@@ -132,11 +133,16 @@ export const POSITION_PRESET = {
 } as const;
 
 // ===== Vibro mode values =====
+// 0=震子关闭 1=音乐律动 2=固定振动低 3=固定振动高 4~7=按摩模式1~4
 export const VIBRO_MODE = {
   OFF: 0x00,
   MUSIC: 0x01,
+  FIXED_LOW: 0x02,
+  FIXED_HIGH: 0x03,
   MASSAGE1: 0x04,
   MASSAGE2: 0x05,
+  MASSAGE3: 0x06,
+  MASSAGE4: 0x07,
 } as const;
 
 // ===== Language values =====

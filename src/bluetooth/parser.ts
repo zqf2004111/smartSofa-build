@@ -592,8 +592,12 @@ export function audioModeToProtocol(mode: string): number {
 export function vibroModeToProtocol(mode: string): number {
   switch (mode) {
     case 'music': return 0x01;
+    case 'fixedLow': return 0x02;
+    case 'fixedHigh': return 0x03;
     case 'massage1': return 0x04;
     case 'massage2': return 0x05;
+    case 'massage3': return 0x06;
+    case 'massage4': return 0x07;
     case 'off':
     default: return 0x00;
   }
@@ -601,10 +605,10 @@ export function vibroModeToProtocol(mode: string): number {
 
 export function lightModeToProtocol(mode: string): number {
   switch (mode) {
-    case 'steady': return 0x01;
-    case 'breath': return 0x02;
-    case 'cycle': return 0x03;
-    case 'rhythmic': return 0x04;
+    case 'steady': return 0x02;
+    case 'breath': return 0x03;
+    case 'cycle': return 0x04;
+    case 'rhythmic': return 0x01;
     default: return 0x00;
   }
 }
