@@ -90,7 +90,7 @@ export function HomeView({ onBackToDevices, selectedDevice, selectedDeviceName }
   const ventilationSuspendIconSrc = getVentilationSuspendIconSrc();
 
   return (
-    <div className="flex flex-col min-h-full bg-gray-50 pt-2 pb-24 relative">
+    <div className="flex flex-col h-full bg-gray-50 pt-2 relative">
       
       {/* Title */}
       <div className="px-5 pb-4 flex items-center relative">
@@ -235,8 +235,8 @@ export function HomeView({ onBackToDevices, selectedDevice, selectedDeviceName }
         })}
       </div>
 
-      {/* Main White Content Area */}
-      <div className="flex-auto bg-white rounded-t-[32px] pt-8 px-5 pb-8 shadow-[0_-4px_20px_rgba(0,0,0,0.02)] min-h-[400px] overflow-y-auto">
+      {/* Main White Content Area (scrollable) */}
+      <div className="flex-1 min-h-0 bg-white rounded-t-[32px] pt-8 px-5 pb-8 shadow-[0_-4px_20px_rgba(0,0,0,0.02)] overflow-y-auto">
         {activeTab === 'posture' && <PostureTab />}
         {activeTab === 'massage' && <MassageTab />}
         {activeTab === 'heating' && <HeatingTab />}
