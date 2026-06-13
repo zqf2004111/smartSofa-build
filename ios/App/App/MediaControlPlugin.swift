@@ -8,6 +8,10 @@ import UIKit
 public class MediaControlPlugin: CAPPlugin {
     private var audioSessionContext = 0
     private var observingVolume = false
+    // Echo suppression for app-initiated writes
+    private var lastWrittenVolumePct: Int = -1
+    private var lastWrittenAt: TimeInterval = 0
+    private let echoSuppressInterval: TimeInterval = 0.8
 
     override public func load() {
         do {
@@ -41,6 +45,11 @@ public class MediaControlPlugin: CAPPlugin {
         if context == &audioSessionContext, keyPath == "outputVolume" {
             if let v = change?[.newKey] as? Float {
                 let pct = Int(round(v * 100))
+                let now = Date.timeIntervalSinceReferenceDate
+                if now - lastWrittenAt < echoSuppressInterval
+                    && abs(pct - lastWrittenVolumePct) <= 1 {
+                    return
+                }
                 self.notifyListeners("systemVolumeChanged", data: ["volume": pct])
             }
         } else {
@@ -56,6 +65,10 @@ public class MediaControlPlugin: CAPPlugin {
     @objc func setSystemVolume(_ call: CAPPluginCall) {
         let pct = call.getInt("volume") ?? 0
         let target = max(0.0, min(1.0, Float(pct) / 100.0))
+        // Mark window before main-thread dispatch so KVO callbacks during
+        // this write are suppressed.
+        self.lastWrittenVolumePct = pct
+        self.lastWrittenAt = Date.timeIntervalSinceReferenceDate
         DispatchQueue.main.async {
             var found = false
             let volumeView = MPVolumeView(frame: CGRect(x: -1000, y: -1000, width: 1, height: 1))
@@ -93,9 +106,13 @@ public class MediaControlPlugin: CAPPlugin {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     volumeView.removeFromSuperview()
                     let cur = AVAudioSession.sharedInstance().outputVolume
+                    let curPct = Int(round(cur * 100))
+                    // Refresh suppression window with actual value
+                    self.lastWrittenVolumePct = curPct
+                    self.lastWrittenAt = Date.timeIntervalSinceReferenceDate
                     call.resolve([
                         "success": found,
-                        "volume": Int(round(cur * 100))
+                        "volume": curPct
                     ])
                 }
             }

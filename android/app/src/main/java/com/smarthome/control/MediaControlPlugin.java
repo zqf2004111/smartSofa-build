@@ -59,6 +59,11 @@ public class MediaControlPlugin extends Plugin {
     // System volume tracking
     private ContentObserver volumeObserver;
     private int lastReportedVolumePct = -1;
+    // Echo suppression: when app writes system volume, ignore observer callbacks
+    // for a short window so the JS slider isn't bounced back by our own write.
+    private int lastWrittenVolumePct = -1;
+    private long lastWrittenAtMs = 0L;
+    private static final long ECHO_SUPPRESS_MS = 800L;
 
     @Override
     public void load() {
@@ -218,10 +223,21 @@ public class MediaControlPlugin extends Plugin {
             return;
         }
         int pct = Math.max(0, Math.min(100, volume));
+        // Mark as app-initiated write BEFORE actually writing so the observer
+        // callback (which fires synchronously on the same thread) sees it.
+        lastWrittenVolumePct = pct;
+        lastWrittenAtMs = System.currentTimeMillis();
         boolean ok = writeSystemVolumePct(pct);
+        int actual = readSystemVolumePct();
+        // Refresh window with the actual value too — the system may quantize
+        // our percentage to the nearest step (e.g. 15-step STREAM_MUSIC).
+        lastWrittenVolumePct = actual;
+        lastWrittenAtMs = System.currentTimeMillis();
+        // Keep lastReportedVolumePct in sync to suppress duplicate emits.
+        lastReportedVolumePct = actual;
         JSObject ret = new JSObject();
         ret.put("success", ok);
-        ret.put("volume", readSystemVolumePct());
+        ret.put("volume", actual);
         call.resolve(ret);
     }
 
@@ -628,12 +644,20 @@ public class MediaControlPlugin extends Plugin {
             @Override
             public void onChange(boolean selfChange, Uri uri) {
                 int pct = readSystemVolumePct();
-                if (pct != lastReportedVolumePct) {
+                if (pct == lastReportedVolumePct) return;
+                long now = System.currentTimeMillis();
+                // Suppress echo from app-initiated writes:
+                // ignore changes within the suppression window if they match
+                // (or are within 1 step of) the value we just wrote.
+                if (now - lastWrittenAtMs < ECHO_SUPPRESS_MS
+                        && Math.abs(pct - lastWrittenVolumePct) <= 1) {
                     lastReportedVolumePct = pct;
-                    JSObject ret = new JSObject();
-                    ret.put("volume", pct);
-                    notifyListeners("systemVolumeChanged", ret);
+                    return;
                 }
+                lastReportedVolumePct = pct;
+                JSObject ret = new JSObject();
+                ret.put("volume", pct);
+                notifyListeners("systemVolumeChanged", ret);
             }
         };
         // Settings.System.VOLUME_SETTINGS changes — observe whole table for simplicity
