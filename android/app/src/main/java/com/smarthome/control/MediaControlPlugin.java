@@ -9,14 +9,17 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.ContentObserver;
 import android.media.AudioManager;
 import android.media.MediaMetadata;
 import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
 import android.media.session.PlaybackState;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.KeyEvent;
 
@@ -52,6 +55,10 @@ public class MediaControlPlugin extends Plugin {
     private boolean isDiscovering = false;
     private final List<JSONObject> discoveredClassicDevices = Collections.synchronizedList(new ArrayList<>());
     private BroadcastReceiver discoveryReceiver;
+
+    // System volume tracking
+    private ContentObserver volumeObserver;
+    private int lastReportedVolumePct = -1;
 
     @Override
     public void load() {
@@ -94,6 +101,11 @@ public class MediaControlPlugin extends Plugin {
         } catch (Exception e) {
             Log.e(TAG, "registerReceivers failed", e);
         }
+        try {
+            registerVolumeObserver();
+        } catch (Exception e) {
+            Log.e(TAG, "registerVolumeObserver failed", e);
+        }
 
         if (mediaSessionManager != null) {
             try {
@@ -115,6 +127,12 @@ public class MediaControlPlugin extends Plugin {
             try {
                 getContext().unregisterReceiver(discoveryReceiver);
             } catch (Exception e) {}
+        }
+        if (volumeObserver != null) {
+            try {
+                getContext().getContentResolver().unregisterContentObserver(volumeObserver);
+            } catch (Exception e) {}
+            volumeObserver = null;
         }
         if (mediaSessionManager != null && sessionsListener != null) {
             try {
@@ -179,6 +197,31 @@ public class MediaControlPlugin extends Plugin {
     public void isNotificationListenerEnabled(PluginCall call) {
         JSObject ret = new JSObject();
         ret.put("enabled", isNotificationServiceEnabled());
+        call.resolve(ret);
+    }
+
+    // ===== System Volume (STREAM_MUSIC) =====
+
+    @PluginMethod
+    public void getSystemVolume(PluginCall call) {
+        JSObject ret = new JSObject();
+        int pct = readSystemVolumePct();
+        ret.put("volume", pct);
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void setSystemVolume(PluginCall call) {
+        Integer volume = call.getInt("volume");
+        if (volume == null) {
+            call.reject("volume is required");
+            return;
+        }
+        int pct = Math.max(0, Math.min(100, volume));
+        boolean ok = writeSystemVolumePct(pct);
+        JSObject ret = new JSObject();
+        ret.put("success", ok);
+        ret.put("volume", readSystemVolumePct());
         call.resolve(ret);
     }
 
@@ -552,6 +595,55 @@ public class MediaControlPlugin extends Plugin {
 
     private boolean isMusicActive() {
         return audioManager != null && audioManager.isMusicActive();
+    }
+
+    private int readSystemVolumePct() {
+        if (audioManager == null) return 0;
+        try {
+            int max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+            int cur = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+            if (max <= 0) return 0;
+            return Math.round(cur * 100f / max);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private boolean writeSystemVolumePct(int pct) {
+        if (audioManager == null) return false;
+        try {
+            int max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+            int target = Math.round(pct * max / 100f);
+            target = Math.max(0, Math.min(max, target));
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, target, 0);
+            return true;
+        } catch (Exception e) {
+            Log.w(TAG, "setStreamVolume failed", e);
+            return false;
+        }
+    }
+
+    private void registerVolumeObserver() {
+        volumeObserver = new ContentObserver(mainHandler) {
+            @Override
+            public void onChange(boolean selfChange, Uri uri) {
+                int pct = readSystemVolumePct();
+                if (pct != lastReportedVolumePct) {
+                    lastReportedVolumePct = pct;
+                    JSObject ret = new JSObject();
+                    ret.put("volume", pct);
+                    notifyListeners("systemVolumeChanged", ret);
+                }
+            }
+        };
+        // Settings.System.VOLUME_SETTINGS changes — observe whole table for simplicity
+        try {
+            getContext().getContentResolver().registerContentObserver(
+                Settings.System.CONTENT_URI, true, volumeObserver);
+            lastReportedVolumePct = readSystemVolumePct();
+        } catch (Exception e) {
+            Log.w(TAG, "registerContentObserver failed", e);
+        }
     }
 
     private boolean dispatchMediaButton(int keyCode) {

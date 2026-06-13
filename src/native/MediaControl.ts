@@ -33,6 +33,10 @@ export interface MediaControlPlugin {
   openNotificationSettings(): Promise<void>;
   isNotificationListenerEnabled(): Promise<{ enabled: boolean }>;
 
+  // System media volume (STREAM_MUSIC on Android, AVAudioSession.outputVolume on iOS)
+  getSystemVolume(): Promise<{ volume: number }>;
+  setSystemVolume(options: { volume: number }): Promise<{ success: boolean; volume: number }>;
+
   // Classic Bluetooth Discovery
   startDiscovery(): Promise<{ started: boolean }>;
   stopDiscovery(): Promise<void>;
@@ -51,6 +55,10 @@ export interface MediaControlPlugin {
   addListener(
     eventName: 'discoveryStateChanged',
     listenerFunc: (result: { isDiscovering: boolean }) => void
+  ): Promise<{ remove: () => void }>;
+  addListener(
+    eventName: 'systemVolumeChanged',
+    listenerFunc: (result: { volume: number }) => void
   ): Promise<{ remove: () => void }>;
   removeAllListeners(): Promise<void>;
 }
