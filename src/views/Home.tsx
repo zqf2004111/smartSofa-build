@@ -236,7 +236,7 @@ export function HomeView({ onBackToDevices, selectedDevice, selectedDeviceName }
       </div>
 
       {/* Main White Content Area (scrollable) */}
-      <div className="flex-1 min-h-0 bg-white rounded-t-[32px] pt-8 px-5 pb-8 shadow-[0_-4px_20px_rgba(0,0,0,0.02)] overflow-y-auto">
+      <div className="flex-1 min-h-0 bg-white rounded-t-[32px] pt-8 px-5 pb-28 shadow-[0_-4px_20px_rgba(0,0,0,0.02)] overflow-y-auto">
         {activeTab === 'posture' && <PostureTab />}
         {activeTab === 'massage' && <MassageTab />}
         {activeTab === 'heating' && <HeatingTab />}
