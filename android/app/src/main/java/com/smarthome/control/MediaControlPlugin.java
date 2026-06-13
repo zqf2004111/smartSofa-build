@@ -223,7 +223,12 @@ public class MediaControlPlugin extends Plugin {
     public void getSystemVolume(PluginCall call) {
         JSObject ret = new JSObject();
         int pct = readSystemVolumePct();
+        int max = 15;
+        try {
+            if (audioManager != null) max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        } catch (Exception e) {}
         ret.put("volume", pct);
+        ret.put("max", max);
         call.resolve(ret);
     }
 

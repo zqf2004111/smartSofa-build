@@ -34,7 +34,7 @@ export interface MediaControlPlugin {
   isNotificationListenerEnabled(): Promise<{ enabled: boolean }>;
 
   // System media volume (STREAM_MUSIC on Android, AVAudioSession.outputVolume on iOS)
-  getSystemVolume(): Promise<{ volume: number }>;
+  getSystemVolume(): Promise<{ volume: number; max?: number }>;
   setSystemVolume(options: { volume: number }): Promise<{ success: boolean; volume: number }>;
 
   // Classic Bluetooth Discovery

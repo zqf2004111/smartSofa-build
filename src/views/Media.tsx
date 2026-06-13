@@ -30,6 +30,21 @@ export function MediaView() {
   const [angle, setAngle] = useState(210); // Matches initial blue color
   const wheelRef = useRef<HTMLDivElement>(null);
   const isDraggingColor = useRef(false);
+  // System STREAM_MUSIC max steps (15 on most Samsung devices). Loaded on
+  // mount so the volume slider can snap to the actual quantization grid the
+  // OS will round to anyway. Otherwise UI shows e.g. 30% but system rounds
+  // to 27% — visible 3% gap.
+  const [sysVolMax, setSysVolMax] = useState<number>(15);
+  useEffect(() => {
+    MediaControl.getSystemVolume().then((r) => {
+      if (typeof r?.max === 'number' && r.max > 0) setSysVolMax(r.max);
+    }).catch(() => {});
+  }, []);
+  const snapVolumePct = (pct: number): number => {
+    const max = sysVolMax > 0 ? sysVolMax : 15;
+    const step = Math.round(pct * max / 100);
+    return Math.round(step * 100 / max);
+  };
   const pendingAudioValues = useRef({ volume: state.volume, treble: state.treble, bass: state.bass });
   const lastSentAudioValues = useRef({ volume: state.volume, treble: state.treble, bass: state.bass });
   // Always-fresh mirror of the relevant state fields, so flushAudioSend can
@@ -340,8 +355,11 @@ export function MediaView() {
                          w.__audioDragging[key] = true;
                        }}
                        onChange={(e) => {
-                         const val = parseInt(e.target.value);
+                         const raw = parseInt(e.target.value);
                          const key = slider.id as 'volume' | 'treble' | 'bass';
+                         // For volume, snap to the OS quantization grid so the
+                         // slider, system volume and BLE-pushed value all agree.
+                         const val = key === 'volume' ? snapVolumePct(raw) : raw;
                          updateState({ [key]: val });
                          pendingAudioValues.current[key] = val;
                          // Mirror to OS media volume only for the volume slider.
