@@ -2,7 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '../i18n';
 import { useDevice } from '../context';
 import { MediaControl, type ClassicBluetoothDevice } from '../native/MediaControl';
+import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
 import { Headphones, Speaker, Bluetooth, Check, Loader2 } from 'lucide-react';
+
+const IS_IOS = Capacitor.getPlatform() === 'ios';
 
 interface BluetoothSearchModalProps {
   isOpen: boolean;
@@ -37,6 +41,8 @@ export const BluetoothSearchModal: React.FC<BluetoothSearchModalProps> = ({ isOp
 
   useEffect(() => {
     if (!isOpen) return;
+    // iOS does not expose classic-BT discovery; show settings hint instead.
+    if (IS_IOS) return;
 
     let removeResultListener: (() => void) | undefined;
     let removeStateListener: (() => void) | undefined;
@@ -117,7 +123,7 @@ export const BluetoothSearchModal: React.FC<BluetoothSearchModalProps> = ({ isOp
         {/* Header */}
         <div className="px-5 pt-5 pb-3 flex items-center justify-between shrink-0">
           <h2 className="text-[15px] font-semibold text-gray-900">{t('search')}</h2>
-          {isScanning && (
+          {isScanning && !IS_IOS && (
             <div className="flex items-center space-x-1.5 text-[#0A5BC4]">
               <Loader2 size={14} className="animate-spin" />
               <span className="text-[11px] font-medium">{t('scanning')}</span>
@@ -125,7 +131,30 @@ export const BluetoothSearchModal: React.FC<BluetoothSearchModalProps> = ({ isOp
           )}
         </div>
 
-        {/* Device List */}
+        {IS_IOS ? (
+          <div className="flex-1 px-6 pb-3 flex flex-col items-center justify-center text-center">
+            <div className="w-[60px] h-[60px] rounded-full bg-[#0A5BC4]/5 flex items-center justify-center mb-4">
+              <Bluetooth size={28} className="text-[#0A5BC4]" />
+            </div>
+            <p className="text-[12px] text-gray-600 leading-relaxed mb-4">
+              {t('iosBluetoothHint')}
+            </p>
+            <button
+              onClick={() => {
+                // App-Prefs:Bluetooth jumps to iOS Settings > Bluetooth (works on
+                // physical devices). If the URL scheme is rejected, fall back to
+                // the generic settings page.
+                App.openUrl({ url: 'App-Prefs:Bluetooth' }).catch(() => {
+                  App.openUrl({ url: 'app-settings:' }).catch(() => {});
+                });
+              }}
+              className="px-5 h-[36px] bg-[#0A5BC4] text-white rounded-[18px] text-[13px] font-medium"
+            >
+              {t('openSettings')}
+            </button>
+          </div>
+        ) : (
+        /* Device List (Android) */
         <div className="flex-1 overflow-y-auto px-3 pb-3">
           {devices.length === 0 && isScanning && (
             <div className="flex flex-col items-center justify-center py-10">
@@ -186,6 +215,7 @@ export const BluetoothSearchModal: React.FC<BluetoothSearchModalProps> = ({ isOp
             ))}
           </div>
         </div>
+        )}
 
         {/* Footer */}
         <div className="px-4 pb-4 pt-2 shrink-0">

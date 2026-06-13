@@ -9,6 +9,13 @@ import {
   type ScanResult,
   type BleDevice,
 } from '@capacitor-community/bluetooth-le';
+import { Capacitor } from '@capacitor/core';
+
+const IS_IOS = Capacitor.getPlatform() === 'ios';
+// iOS CoreBluetooth requires writes to be serialized; back-to-back
+// writeWithoutResponse calls without awaiting + a tiny gap can be silently
+// dropped. Android handles them via its own internal queue.
+const IOS_WRITE_GAP_MS = 30;
 
 import {
   SERVICE_UUID,
@@ -58,6 +65,10 @@ class BleManager {
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private reconnectEnabled = true;
   private rxBuffer: number[] = [];
+  // Serialized write queue (especially needed on iOS). Each enqueued write
+  // resolves after the actual BLE write completes (with a small inter-write
+  // gap on iOS).
+  private writeQueue: Promise<void> = Promise.resolve();
 
   async initialize(): Promise<void> {
     try {
@@ -351,7 +362,19 @@ class BleManager {
       console.warn('[BLE] Not connected, cannot send');
       return;
     }
+    // Chain onto the queue so multiple back-to-back send() calls execute
+    // sequentially. This is critical on iOS where firing several
+    // writeWithoutResponse calls in parallel causes CoreBluetooth to drop
+    // all but the first/last.
+    const job = this.writeQueue.then(() => this.doWrite(data));
+    // Swallow errors in the chain itself so one failure doesn't poison
+    // subsequent writes; doWrite handles its own error reporting.
+    this.writeQueue = job.catch(() => undefined);
+    return job;
+  }
 
+  private async doWrite(data: Uint8Array): Promise<void> {
+    if (!this.connectedDeviceId) return;
     const hex = bytesToHex(data);
     console.log(`[BLE] TX: ${hex}`);
     this.callbacks.onLog?.('TX', hex);
@@ -363,6 +386,11 @@ class BleManager {
         CHARACTERISTIC_TX,
         numbersToDataView(Array.from(data)),
       );
+      if (IS_IOS) {
+        // Small gap lets CoreBluetooth flush the previous packet before the
+        // next writeWithoutResponse is issued.
+        await new Promise((r) => setTimeout(r, IOS_WRITE_GAP_MS));
+      }
     } catch (e) {
       console.error('[BLE] Write failed:', e);
       this.callbacks.onError?.('Write failed: ' + String(e));

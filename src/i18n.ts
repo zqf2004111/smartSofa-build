@@ -113,7 +113,9 @@ export const translations = {
     deviceAlreadyConnected: 'Device already connected!',
     deviceNotFoundTimeout: 'Device not found, please make sure it is powered on and nearby',
     invalidQrCode: 'Invalid QR code format',
-    qrScanSuccess: 'Recognized {name}, searching and auto-connecting...'
+    qrScanSuccess: 'Recognized {name}, searching and auto-connecting...',
+    iosBluetoothHint: 'iOS does not allow in-app audio Bluetooth pairing. Please pair your device in iOS Settings → Bluetooth, then return here.',
+    openSettings: 'Open Settings'
   },
   zh: {
     position: '位置',
@@ -227,7 +229,9 @@ export const translations = {
     deviceAlreadyConnected: '设备已连接！',
     deviceNotFoundTimeout: '未找到设备，请确保设备已开启并在附近',
     invalidQrCode: '二维码格式无效',
-    qrScanSuccess: '已识别 {name}，正在搜索并自动连接...'
+    qrScanSuccess: '已识别 {name}，正在搜索并自动连接...',
+    iosBluetoothHint: 'iOS 不支持在 App 内搜索/配对音频蓝牙。请到 iOS 设置 → 蓝牙 配对沙发，然后返回此页面。',
+    openSettings: '打开设置'
   },
   es: {
     position: 'Posición',
@@ -341,7 +345,9 @@ export const translations = {
     deviceAlreadyConnected: '¡Dispositivo ya conectado!',
     deviceNotFoundTimeout: 'Dispositivo no encontrado, asegúrese de que esté encendido y cerca',
     invalidQrCode: 'Formato de código QR inválido',
-    qrScanSuccess: 'Reconocido {name}, buscando y conectando automáticamente...'
+    qrScanSuccess: 'Reconocido {name}, buscando y conectando automáticamente...',
+    iosBluetoothHint: 'iOS no permite emparejar Bluetooth de audio dentro de la app. Vaya a Ajustes → Bluetooth para emparejar el dispositivo y vuelva aquí.',
+    openSettings: 'Abrir Ajustes'
   }
 };
 
