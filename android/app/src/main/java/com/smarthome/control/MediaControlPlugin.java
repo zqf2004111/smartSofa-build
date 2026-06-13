@@ -58,6 +58,7 @@ public class MediaControlPlugin extends Plugin {
 
     // System volume tracking
     private ContentObserver volumeObserver;
+    private BroadcastReceiver volumeBroadcastReceiver;
     private int lastReportedVolumePct = -1;
     // Echo suppression: when app writes system volume, ignore observer callbacks
     // for a short window so the JS slider isn't bounced back by our own write.
@@ -143,6 +144,12 @@ public class MediaControlPlugin extends Plugin {
                 getContext().getContentResolver().unregisterContentObserver(volumeObserver);
             } catch (Exception e) {}
             volumeObserver = null;
+        }
+        if (volumeBroadcastReceiver != null) {
+            try {
+                getContext().unregisterReceiver(volumeBroadcastReceiver);
+            } catch (Exception e) {}
+            volumeBroadcastReceiver = null;
         }
         if (mediaSessionManager != null && sessionsListener != null) {
             try {
@@ -645,46 +652,64 @@ public class MediaControlPlugin extends Plugin {
     }
 
     private void registerVolumeObserver() {
+        // Primary path: AudioManager broadcasts VOLUME_CHANGED_ACTION whenever
+        // any stream's volume changes (hardware keys, AudioManager.setStreamVolume,
+        // SystemUI panel, etc.). This is more reliable than ContentObserver on
+        // Settings.System on many OEM ROMs (e.g., Samsung One UI).
+        try {
+            IntentFilter filter = new IntentFilter("android.media.VOLUME_CHANGED_ACTION");
+            volumeBroadcastReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    int streamType = intent.getIntExtra("android.media.EXTRA_VOLUME_STREAM_TYPE", -1);
+                    if (streamType != AudioManager.STREAM_MUSIC) return;
+                    emitSystemVolumeDebounced();
+                }
+            };
+            getContext().registerReceiver(volumeBroadcastReceiver, filter);
+            Log.d(TAG, "VOLUME_CHANGED_ACTION receiver registered");
+        } catch (Exception e) {
+            Log.w(TAG, "VOLUME_CHANGED_ACTION receiver register failed", e);
+        }
+
+        // Fallback path: ContentObserver on Settings.System. Some ROMs do
+        // notify here, others don't — keeping it as backup is harmless.
         volumeObserver = new ContentObserver(mainHandler) {
             @Override
             public void onChange(boolean selfChange, Uri uri) {
-                // Coalesce bursts of callbacks (system fires multiple while
-                // animating between volume steps) so JS only sees the settled
-                // final value.
-                if (pendingVolumeEmit != null) {
-                    mainHandler.removeCallbacks(pendingVolumeEmit);
-                }
-                pendingVolumeEmit = () -> {
-                    pendingVolumeEmit = null;
-                    int pct = readSystemVolumePct();
-                    if (pct == lastReportedVolumePct) return;
-                    long now = System.currentTimeMillis();
-                    // Suppress echo from app-initiated writes: within the
-                    // suppression window, drop any observer callback. The
-                    // system may quantize our percentage to the nearest step
-                    // (STREAM_MUSIC has ~15 steps), so the observed value can
-                    // differ from what we wrote by more than 1 — we still
-                    // don't want to bounce it back to JS.
-                    if (now - lastWrittenAtMs < ECHO_SUPPRESS_MS) {
-                        lastReportedVolumePct = pct;
-                        return;
-                    }
-                    lastReportedVolumePct = pct;
-                    JSObject ret = new JSObject();
-                    ret.put("volume", pct);
-                    notifyListeners("systemVolumeChanged", ret);
-                };
-                mainHandler.postDelayed(pendingVolumeEmit, VOLUME_EMIT_DEBOUNCE_MS);
+                emitSystemVolumeDebounced();
             }
         };
-        // Settings.System.VOLUME_SETTINGS changes — observe whole table for simplicity
         try {
             getContext().getContentResolver().registerContentObserver(
                 Settings.System.CONTENT_URI, true, volumeObserver);
             lastReportedVolumePct = readSystemVolumePct();
+            Log.d(TAG, "Settings ContentObserver registered, initial pct=" + lastReportedVolumePct);
         } catch (Exception e) {
             Log.w(TAG, "registerContentObserver failed", e);
         }
+    }
+
+    private void emitSystemVolumeDebounced() {
+        if (pendingVolumeEmit != null) {
+            mainHandler.removeCallbacks(pendingVolumeEmit);
+        }
+        pendingVolumeEmit = () -> {
+            pendingVolumeEmit = null;
+            int pct = readSystemVolumePct();
+            if (pct == lastReportedVolumePct) return;
+            long now = System.currentTimeMillis();
+            if (now - lastWrittenAtMs < ECHO_SUPPRESS_MS) {
+                lastReportedVolumePct = pct;
+                return;
+            }
+            lastReportedVolumePct = pct;
+            JSObject ret = new JSObject();
+            ret.put("volume", pct);
+            Log.d(TAG, "emit systemVolumeChanged pct=" + pct);
+            notifyListeners("systemVolumeChanged", ret);
+        };
+        mainHandler.postDelayed(pendingVolumeEmit, VOLUME_EMIT_DEBOUNCE_MS);
     }
 
     private boolean dispatchMediaButton(int keyCode) {

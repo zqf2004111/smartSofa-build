@@ -194,6 +194,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   // Media bluetooth state listener
   React.useEffect(() => {
     let removeListener: (() => void) | undefined;
+    let removeSysVolListener: (() => void) | undefined;
     let interval: NodeJS.Timeout;
 
     const initMediaListener = async () => {
@@ -207,6 +208,31 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           setMediaState(state);
         });
         removeListener = listener.remove;
+
+        // Listen for system media volume changes (hardware keys / SystemUI
+        // panel / other apps). Mirror into state.volume so the slider in the
+        // Media page follows. We do NOT send BLE here — the sofa's BT
+        // middleware perceives the system volume change itself and will
+        // report it back via its status frame.
+        try {
+          const sv = await MediaControl.addListener('systemVolumeChanged', (r: { volume: number }) => {
+            console.log('[systemVolumeChanged]', r);
+            if (typeof r?.volume === 'number') {
+              setState((p) => {
+                if (p.volume === r.volume) return p;
+                // Also push to the sofa over BLE so its next status frame
+                // doesn't snap the slider back to the device's stale value.
+                try {
+                  sendAudioCommandRef.current?.(p.audioProfile, r.volume, p.treble, p.bass);
+                } catch (e) {}
+                return { ...p, volume: r.volume };
+              });
+            }
+          });
+          removeSysVolListener = sv.remove;
+        } catch (e) {
+          // listener not supported on this platform
+        }
 
         // Poll as fallback
         interval = setInterval(async () => {
@@ -226,6 +252,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
 
     return () => {
       if (removeListener) removeListener();
+      if (removeSysVolListener) removeSysVolListener();
       if (interval) clearInterval(interval);
     };
   }, []);

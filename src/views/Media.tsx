@@ -77,40 +77,8 @@ export function MediaView() {
   // the local value immediately for responsiveness, BLE command is sent, and
   // the device's status report is the source of truth — incoming reports
   // overwrite local state. We no longer touch the OS media volume.
-
-  // System volume key listener: when the user presses the hardware volume
-  // keys, mirror the new system volume into the slider position only.
-  // We do NOT send BLE here — the sofa's BT middleware perceives the system
-  // volume change on its own and will report back via its status frame.
-  useEffect(() => {
-    let mounted = true;
-    let removeListener: (() => void) | null = null;
-    (async () => {
-      try {
-        const handle = await MediaControl.addListener(
-          'systemVolumeChanged',
-          (r: { volume: number }) => {
-            if (!mounted) return;
-            if (typeof r?.volume === 'number') {
-              updateState({ volume: r.volume });
-              // Keep throttle bookkeeping in sync so a subsequent app drag
-              // doesn't re-send a stale value.
-              pendingAudioValues.current.volume = r.volume;
-              lastSentAudioValues.current.volume = r.volume;
-            }
-          }
-        );
-        removeListener = () => handle.remove();
-      } catch {
-        // listener not supported (web, or older native)
-      }
-    })();
-    return () => {
-      mounted = false;
-      if (removeListener) removeListener();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // The systemVolumeChanged listener is registered globally in DeviceProvider
+  // so it works regardless of which page is visible.
 
   const [isBluetoothModalOpen, setIsBluetoothModalOpen] = useState(false);
   const totalSeconds = mediaState.duration > 0 ? mediaState.duration : 0;
