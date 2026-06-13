@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DeviceProvider, useDevice } from './context';
 import { BottomNav } from './components/BottomNav';
 import { HomeView } from './views/Home';
