@@ -170,6 +170,12 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   // all zeros on cold boot; in that case we keep our last value and re-send
   // it to the device exactly once so they stay in sync.
   const audioSyncedToDevice = useRef(false);
+  // Echo suppression for BLE status reports: when we just wrote audio values
+  // locally, the device may keep echoing stale values for a short window
+  // before its own state catches up. Ignore status report audio blocks for a
+  // brief window after a local write so the slider doesn't flap.
+  const lastLocalAudioWriteAtMs = useRef(0);
+  const AUDIO_BLE_ECHO_SUPPRESS_MS = 2000;
   // Forward ref to sendAudioCommand. handleStatusReport is defined above
   // sendAudioCommand, so use a ref to break the ordering dependency.
   const sendAudioCommandRef = useRef<((profile: string, volume: number, treble: number, bass: number) => void) | null>(null);
@@ -489,6 +495,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
 
   const sendAudioCommand = (profile: string, volume: number, treble: number, bass: number) => {
     if (bleState !== 'connected') return;
+    lastLocalAudioWriteAtMs.current = Date.now();
     const modeVal = audioModeToProtocol(profile);
     bleManager.send(buildAudioModeCmd(modeVal));
     bleManager.send(buildAudioVolumeCmd(Math.round(volume)));
@@ -714,7 +721,9 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           typeof mode === 'number' && typeof vol === 'number' &&
           typeof tre === 'number' && typeof bas === 'number';
         const allZero = mode === 0 && vol === 0 && tre === 0 && bas === 0;
-        if (allDefined && !allZero) {
+        const recentLocalWrite =
+          Date.now() - lastLocalAudioWriteAtMs.current < AUDIO_BLE_ECHO_SUPPRESS_MS;
+        if (allDefined && !allZero && !recentLocalWrite) {
           const audioMap: Record<number, string> = {
             [AUDIO_MODE.GENERAL]: 'general',
             [AUDIO_MODE.ROCK]: 'rock',
@@ -727,7 +736,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           updates.treble = tre;
           updates.bass = bas;
           audioSyncedToDevice.current = true;
-        } else if (!audioSyncedToDevice.current) {
+        } else if (!audioSyncedToDevice.current && !recentLocalWrite) {
           // Device reported invalid/blank audio. Schedule a one-shot push of
           // our current local values so the device matches the UI.
           audioSyncedToDevice.current = true;

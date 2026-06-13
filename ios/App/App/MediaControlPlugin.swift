@@ -46,8 +46,10 @@ public class MediaControlPlugin: CAPPlugin {
             if let v = change?[.newKey] as? Float {
                 let pct = Int(round(v * 100))
                 let now = Date.timeIntervalSinceReferenceDate
-                if now - lastWrittenAt < echoSuppressInterval
-                    && abs(pct - lastWrittenVolumePct) <= 1 {
+                // Within echo suppression window after app-initiated write,
+                // drop ALL KVO callbacks regardless of value diff (system may
+                // quantize our target to the nearest hardware step).
+                if now - lastWrittenAt < echoSuppressInterval {
                     return
                 }
                 self.notifyListeners("systemVolumeChanged", data: ["volume": pct])

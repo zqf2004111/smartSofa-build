@@ -659,9 +659,13 @@ public class MediaControlPlugin extends Plugin {
                     int pct = readSystemVolumePct();
                     if (pct == lastReportedVolumePct) return;
                     long now = System.currentTimeMillis();
-                    // Suppress echo from app-initiated writes.
-                    if (now - lastWrittenAtMs < ECHO_SUPPRESS_MS
-                            && Math.abs(pct - lastWrittenVolumePct) <= 1) {
+                    // Suppress echo from app-initiated writes: within the
+                    // suppression window, drop any observer callback. The
+                    // system may quantize our percentage to the nearest step
+                    // (STREAM_MUSIC has ~15 steps), so the observed value can
+                    // differ from what we wrote by more than 1 — we still
+                    // don't want to bounce it back to JS.
+                    if (now - lastWrittenAtMs < ECHO_SUPPRESS_MS) {
                         lastReportedVolumePct = pct;
                         return;
                     }
