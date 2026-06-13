@@ -303,7 +303,9 @@ export function MediaView() {
                          <div className="h-full bg-[#0A5BC4] rounded-full absolute left-0 top-0 transition-all duration-150" style={{ width: `${slider.value}%` }}></div>
                        )}
                      </div>
-                     {/* Native range input — full row, large hit area, always-visible thumb */}
+                     {/* Native range input — large hit area, thumb vertically
+                         centered on the row by sizing the input to the thumb
+                         height and absolutely centering it. */}
                      <input
                        type="range"
                        min="0" max="100"

@@ -476,16 +476,37 @@ export function parseStatusReport(data: number[]): FullDeviceState | null {
     }
 
     // Audio
-    const audioCount = data[idx++];
+    // Bounds-check: each audio entry is 4 bytes (mode + treble + bass + volume).
+    // If audioCount byte itself is past the end (undefined), or there isn't
+    // enough data left for the claimed count, skip the block entirely. This
+    // prevents reading `undefined` values that get coerced to 0 downstream.
+    const audioCountRaw = data[idx];
     const audios: AudioState[] = [];
-    for (let i = 0; i < audioCount; i++) {
-      audios.push({
-        mode: data[idx],
-        treble: data[idx + 1],
-        bass: data[idx + 2],
-        volume: data[idx + 3],
-      });
-      idx += 4;
+    if (typeof audioCountRaw === 'number') {
+      idx++;
+      if (audioCountRaw > 0 && idx + audioCountRaw * 4 <= data.length) {
+        for (let i = 0; i < audioCountRaw; i++) {
+          audios.push({
+            mode: data[idx],
+            treble: data[idx + 1],
+            bass: data[idx + 2],
+            volume: data[idx + 3],
+          });
+          idx += 4;
+        }
+      } else if (audioCountRaw > 0) {
+        // Claimed count exceeds remaining buffer -> malformed/abbreviated frame.
+        // Don't advance idx into garbage; abort downstream parsing.
+        console.warn(
+          `[BLE] Audio block truncated: count=${audioCountRaw} but only ${data.length - idx} bytes left; skipping.`
+        );
+        return {
+          motors, massage, heating, ventilation, lights, waists, vibros,
+          audios, // empty
+          pairing: { ble: 0, tv24g: 0, mesh: 0 },
+          languages: [],
+        };
+      }
     }
 
     // Pairing

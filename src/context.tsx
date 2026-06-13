@@ -165,6 +165,14 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   const motorSimInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const massageCmdPendingUntilRef = useRef<number>(0);
   const isRemovingDevice = useRef(false);
+  // Track whether we've pushed our local audio settings (volume/treble/bass)
+  // to the device after connecting. Some firmware reports an audio block of
+  // all zeros on cold boot; in that case we keep our last value and re-send
+  // it to the device exactly once so they stay in sync.
+  const audioSyncedToDevice = useRef(false);
+  // Forward ref to sendAudioCommand. handleStatusReport is defined above
+  // sendAudioCommand, so use a ref to break the ordering dependency.
+  const sendAudioCommandRef = useRef<((profile: string, volume: number, treble: number, bass: number) => void) | null>(null);
   // Suppress device-driven timer auto-trigger for a short window after the user
   // manually turns the countdown off. Otherwise a stale status report (still
   // carrying remainingTime>0 because the device hasn't applied the timer=0
@@ -487,6 +495,9 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     bleManager.send(buildAudioTrebleCmd(Math.round(treble)));
     bleManager.send(buildAudioBassCmd(Math.round(bass)));
   };
+  // Keep the ref in sync so handleStatusReport can call it without depending
+  // on hook ordering.
+  sendAudioCommandRef.current = sendAudioCommand;
 
   const sendAudioModeCommand = (profile: string) => {
     if (bleState !== 'connected') return;
@@ -688,19 +699,50 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
         }
       }
       // Audio
+      // Defensive: only update audio state when the device reports a meaningful
+      // audio block. Some devices/firmwares report audioCount > 0 with all zero
+      // bytes (or the parser may have read past the buffer end), which would
+      // wrongly stomp the user's last value with 0. In that case we keep the
+      // previous values AND push them to the device once so they re-sync.
       if (report.audios.length > 0) {
         const a = report.audios[0];
-        const audioMap: Record<number, string> = {
-          [AUDIO_MODE.GENERAL]: 'general',
-          [AUDIO_MODE.ROCK]: 'rock',
-          [AUDIO_MODE.POP]: 'pop',
-          [AUDIO_MODE.CLASSIC]: 'classic',
-          [AUDIO_MODE.JAZZ]: 'jazz',
-        };
-        updates.audioProfile = audioMap[a.mode] || prev.audioProfile;
-        updates.volume = a.volume;
-        updates.treble = a.treble;
-        updates.bass = a.bass;
+        const mode = a.mode;
+        const vol = a.volume;
+        const tre = a.treble;
+        const bas = a.bass;
+        const allDefined =
+          typeof mode === 'number' && typeof vol === 'number' &&
+          typeof tre === 'number' && typeof bas === 'number';
+        const allZero = mode === 0 && vol === 0 && tre === 0 && bas === 0;
+        if (allDefined && !allZero) {
+          const audioMap: Record<number, string> = {
+            [AUDIO_MODE.GENERAL]: 'general',
+            [AUDIO_MODE.ROCK]: 'rock',
+            [AUDIO_MODE.POP]: 'pop',
+            [AUDIO_MODE.CLASSIC]: 'classic',
+            [AUDIO_MODE.JAZZ]: 'jazz',
+          };
+          updates.audioProfile = audioMap[mode] || prev.audioProfile;
+          updates.volume = vol;
+          updates.treble = tre;
+          updates.bass = bas;
+          audioSyncedToDevice.current = true;
+        } else if (!audioSyncedToDevice.current) {
+          // Device reported invalid/blank audio. Schedule a one-shot push of
+          // our current local values so the device matches the UI.
+          audioSyncedToDevice.current = true;
+          const profileToSync = prev.audioProfile;
+          const volToSync = prev.volume;
+          const treToSync = prev.treble;
+          const basToSync = prev.bass;
+          // Defer to next tick to avoid sending inside a setState callback.
+          setTimeout(() => {
+            console.log(
+              `[BLE] Device reported blank audio block; pushing local values: profile=${profileToSync} vol=${volToSync} treble=${treToSync} bass=${basToSync}`
+            );
+            sendAudioCommandRef.current?.(profileToSync, volToSync, treToSync, basToSync);
+          }, 0);
+        }
       }
       // Light
       if (report.lights.length > 0) {
@@ -758,7 +800,14 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     bleInitialized.current = true;
 
     bleManager.setCallbacks({
-      onStateChange: (state) => setBleState(state),
+      onStateChange: (state) => {
+        setBleState(state);
+        // Reset the audio-sync flag whenever the link goes down so we re-sync
+        // on the next connect.
+        if (state === 'disconnected' || state === 'connecting') {
+          audioSyncedToDevice.current = false;
+        }
+      },
       onDeviceFound: (device) => {
         setDiscoveredDevices((prev) => {
           const exists = prev.find((d) => d.deviceId === device.deviceId);
