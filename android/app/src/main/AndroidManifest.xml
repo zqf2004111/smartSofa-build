@@ -40,6 +40,20 @@
                 <data android:scheme="smartsofa" android:host="pair" />
             </intent-filter>
 
+            <!-- NFC NDEF: AAR (Android Application Record) directly launches this app, no URL/network needed -->
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="https"
+                      android:host="zqf2004111.github.io"
+                      android:pathPrefix="/pair" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="smartsofa" android:host="pair" />
+            </intent-filter>
+
         </activity>
 
         <!-- Notification Listener Service for Media Session access -->
@@ -78,4 +92,7 @@
 
     <!-- Media notification listener permission -->
     <uses-permission android:name="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" />
+
+    <!-- NFC: receive NDEF tags directly (AAR launches app without URL) -->
+    <uses-permission android:name="android.permission.NFC" />
 </manifest>
