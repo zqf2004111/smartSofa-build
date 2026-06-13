@@ -21,7 +21,14 @@ function AppContent() {
   const [isManaging, setIsManaging] = useState(false);
   const [isDeviceSwitchModalOpen, setIsDeviceSwitchModalOpen] = useState(false);
   const [currentDeviceId, setCurrentDeviceId] = useState<string | null>(null);
-  const { savedDevices } = useDevice();
+  const { savedDevices, pairTarget, clearPairTarget } = useDevice();
+
+  // NFC App Link auto-pair: open AddDeviceModal whenever pairTarget is set
+  useEffect(() => {
+    if (pairTarget) {
+      setIsAddDeviceModalOpen(true);
+    }
+  }, [pairTarget]);
 
   const currentDevice = savedDevices.find(d => d.id === currentDeviceId) || savedDevices[0];
   const deviceName = currentDevice?.name || 'Recliner Plus';
@@ -39,8 +46,9 @@ function AppContent() {
           />
           <AddDeviceModal 
             isOpen={isAddDeviceModalOpen} 
-            onClose={() => setIsAddDeviceModalOpen(false)}
+            onClose={() => { setIsAddDeviceModalOpen(false); clearPairTarget(); }}
             onDeviceAdded={() => setIsManaging(false)}
+            autoPairName={pairTarget}
           />
         </div>
       ) : (
@@ -80,8 +88,9 @@ function AppContent() {
 
         <AddDeviceModal 
           isOpen={isAddDeviceModalOpen} 
-          onClose={() => setIsAddDeviceModalOpen(false)}
+          onClose={() => { setIsAddDeviceModalOpen(false); clearPairTarget(); }}
           onDeviceAdded={() => setIsManaging(false)}
+          autoPairName={pairTarget}
         />
         <DeviceSwitchModal
           isOpen={isDeviceSwitchModalOpen}

@@ -10,11 +10,13 @@ interface AddDeviceModalProps {
   isOpen: boolean;
   onClose: () => void;
   onDeviceAdded?: () => void;
+  /** Auto-pair target BLE name (from NFC App Link). When isOpen+set, modal auto-scans and connects. */
+  autoPairName?: string | null;
 }
 
 type QrStatus = 'idle' | 'searching' | 'found';
 
-export const AddDeviceModal: React.FC<AddDeviceModalProps> = ({ isOpen, onClose, onDeviceAdded }) => {
+export const AddDeviceModal: React.FC<AddDeviceModalProps> = ({ isOpen, onClose, onDeviceAdded, autoPairName }) => {
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [isQrScanning, setIsQrScanning] = useState(false);
   const [qrTargetName, setQrTargetName] = useState<string>('');
@@ -31,6 +33,12 @@ export const AddDeviceModal: React.FC<AddDeviceModalProps> = ({ isOpen, onClose,
       return;
     }
     clearDiscoveredDevices();
+    // NFC auto-pair: seed target name and start searching state immediately.
+    if (autoPairName) {
+      setQrTargetName(autoPairName);
+      setQrStatus('searching');
+      setQrError('');
+    }
     const timer = setTimeout(() => {
       startScan().catch(() => {});
     }, 300);
@@ -38,7 +46,7 @@ export const AddDeviceModal: React.FC<AddDeviceModalProps> = ({ isOpen, onClose,
       clearTimeout(timer);
       stopScan().catch(() => {});
     };
-  }, [isOpen, startScan, stopScan, clearDiscoveredDevices]);
+  }, [isOpen, autoPairName, startScan, stopScan, clearDiscoveredDevices]);
 
   const handleDeviceClick = async (device: DiscoveredDevice) => {
     if (connectingId) return;

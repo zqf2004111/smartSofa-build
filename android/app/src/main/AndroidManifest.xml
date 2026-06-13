@@ -22,6 +22,24 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- NFC / App Link: tag carries https://zqf2004111.github.io/pair?name=KD_xxx -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https"
+                      android:host="zqf2004111.github.io"
+                      android:pathPrefix="/pair" />
+            </intent-filter>
+
+            <!-- Fallback custom scheme so NFC tags written without a domain still work -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="smartsofa" android:host="pair" />
+            </intent-filter>
+
         </activity>
 
         <!-- Notification Listener Service for Media Session access -->

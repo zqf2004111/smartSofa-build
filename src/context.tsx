@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useRef, useCallback, useEffect } from 'react';
 import { registerPlugin } from '@capacitor/core';
+import { App as CapApp } from '@capacitor/app';
 import { SofaState, type MediaBluetoothState } from './types';
 import { bleManager, type DiscoveredDevice, type BleConnectionState, type FullDeviceState } from './bluetooth';
 import { MediaControl } from './native/MediaControl';
@@ -68,6 +69,9 @@ interface DeviceContextType {
   mediaState: MediaBluetoothState;
   sendMediaCommand: (action: 'playPause' | 'next' | 'previous') => Promise<void>;
   openNotificationSettings: () => Promise<void>;
+  // NFC / App Link auto-pair: BLE name parsed from launch URL.
+  pairTarget: string | null;
+  clearPairTarget: () => void;
 }
 
 const initialState: SofaState = {
@@ -147,6 +151,30 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   const [discoveredDevices, setDiscoveredDevices] = useState<DiscoveredDevice[]>([]);
   const [bleState, setBleState] = useState<BleConnectionState>('disconnected');
   const [deviceConfig, setDeviceConfig] = useState<DeviceConfig | null>(null);
+  // NFC / App Link auto-pair target (BLE name parsed from launch URL like .../pair?name=KD_SOF)
+  const [pairTarget, setPairTarget] = useState<string | null>(null);
+  const clearPairTarget = useCallback(() => setPairTarget(null), []);
+  useEffect(() => {
+    const parseUrl = (url: string | null | undefined) => {
+      if (!url) return;
+      try {
+        const u = new URL(url);
+        if (!u.pathname.includes('/pair')) return;
+        const name = u.searchParams.get('name');
+        if (name) {
+          console.log('[NFC] pair target from URL:', name);
+          setPairTarget(name);
+        }
+      } catch (e) {
+        console.warn('[NFC] bad launch URL', url, e);
+      }
+    };
+    CapApp.getLaunchUrl().then((res) => parseUrl(res?.url)).catch(() => {});
+    const subPromise = CapApp.addListener('appUrlOpen', (data) => parseUrl(data.url));
+    return () => {
+      subPromise.then((s) => s.remove()).catch(() => {});
+    };
+  }, []);
   // Restore deviceConfig from savedDevices on mount (for auto-connect scenarios)
   useEffect(() => {
     if (!deviceConfig && savedDevices.length > 0) {
@@ -971,6 +999,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       sendMassageCommand, sendTimerCommand, sendHeatingCommand, sendVentilationCommand,
       sendVibroCommand, sendAudioCommand, sendAudioModeCommand, sendLightCommand, sendLightColorCommand,
       mediaState, sendMediaCommand, openNotificationSettings,
+      pairTarget, clearPairTarget,
     }}>
       {children}
     </DeviceContext.Provider>
