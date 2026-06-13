@@ -170,6 +170,13 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   // all zeros on cold boot; in that case we keep our last value and re-send
   // it to the device exactly once so they stay in sync.
   const audioSyncedToDevice = useRef(false);
+  // After we observe a system-volume change (hardware keys / SystemUI / our
+  // own setSystemVolume), suppress incoming device-audio-report overwrites of
+  // state.volume for a short window. Otherwise the sofa's status frame will
+  // snap the slider back to the device's stale value before our BLE write
+  // round-trips.
+  const lastSysVolChangeAtMs = useRef(0);
+  const SYS_VOL_SUPPRESS_MS = 1500;
   // Forward ref to sendAudioCommand. handleStatusReport is defined above
   // sendAudioCommand, so use a ref to break the ordering dependency.
   const sendAudioCommandRef = useRef<((profile: string, volume: number, treble: number, bass: number) => void) | null>(null);
@@ -218,10 +225,10 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           const sv = await MediaControl.addListener('systemVolumeChanged', (r: { volume: number }) => {
             console.log('[systemVolumeChanged]', r);
             if (typeof r?.volume === 'number') {
+              lastSysVolChangeAtMs.current = Date.now();
               setState((p) => {
                 if (p.volume === r.volume) return p;
-                // Also push to the sofa over BLE so its next status frame
-                // doesn't snap the slider back to the device's stale value.
+                // Push to the sofa over BLE so its next status frame matches.
                 try {
                   sendAudioCommandRef.current?.(p.audioProfile, r.volume, p.treble, p.bass);
                 } catch (e) {}
@@ -754,7 +761,11 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           // their sliders — otherwise echoed status frames would fight the
           // drag and make the slider jitter.
           const dragging = (typeof window !== 'undefined' && (window as any).__audioDragging) || {};
-          if (!dragging.volume) updates.volume = vol;
+          // Also skip volume overwrite for a short window after a system
+          // volume change event — the sofa's status frame may still carry the
+          // pre-change value until our BLE write round-trips.
+          const sysVolFresh = (Date.now() - lastSysVolChangeAtMs.current) < SYS_VOL_SUPPRESS_MS;
+          if (!dragging.volume && !sysVolFresh) updates.volume = vol;
           if (!dragging.treble) updates.treble = tre;
           if (!dragging.bass) updates.bass = bas;
           audioSyncedToDevice.current = true;

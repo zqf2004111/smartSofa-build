@@ -698,11 +698,6 @@ public class MediaControlPlugin extends Plugin {
             pendingVolumeEmit = null;
             int pct = readSystemVolumePct();
             if (pct == lastReportedVolumePct) return;
-            long now = System.currentTimeMillis();
-            if (now - lastWrittenAtMs < ECHO_SUPPRESS_MS) {
-                lastReportedVolumePct = pct;
-                return;
-            }
             lastReportedVolumePct = pct;
             JSObject ret = new JSObject();
             ret.put("volume", pct);
