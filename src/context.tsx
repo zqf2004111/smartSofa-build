@@ -26,6 +26,7 @@ import {
   getDefaultMassageModeId,
   isMassageModeSupported,
 } from './massageConfig';
+import { pushDebug } from './debug/debugLog';
 
 interface SavedDevice {
   id: string;
@@ -564,7 +565,8 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     }
     // Arm pending suppression so incoming status frames during the BLE
     // round-trip don't stomp the optimistic UI back to OFF.
-    heatingCmdPendingUntilRef.current = Date.now() + 1500;
+    heatingCmdPendingUntilRef.current = Date.now() + 3000;
+    pushDebug('HEAT-TX', `mode=${mode} on=${on} zones=${targetZones.join(',')} modeVal=0x${modeVal.toString(16)} pendingUntil=+3000ms`);
     targetZones.forEach((zone) => {
       bleManager.send(buildHeatingCmd(zone, modeVal));
     });
@@ -596,7 +598,8 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       }
       targetZones = supported;
     }
-    ventilationCmdPendingUntilRef.current = Date.now() + 1500;
+    ventilationCmdPendingUntilRef.current = Date.now() + 3000;
+    pushDebug('VENT-TX', `mode=${mode} on=${on} zones=${targetZones.join(',')} modeVal=0x${modeVal.toString(16)} pendingUntil=+3000ms`);
     targetZones.forEach((zone) => {
       bleManager.send(buildVentilationCmd(zone, modeVal));
     });
@@ -775,6 +778,9 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           }
         });
         const anyOn = onZones.length > 0;
+        const remainPending = heatingCmdPendingUntilRef.current - Date.now();
+        pushDebug('HEAT-RX',
+          `frames=${report.heating.length} anyOn=${anyOn} onZones=[${onZones.join(',')}] cmnMode=${commonMode} pending=${isHeatingPending ? remainPending + 'ms' : 'no'} prevOn=${prev.heatingOn} prevMode=${prev.heatingMode}`);
         // Skip overwriting optimistic UI state during the pending window;
         // still allow timer/remainingTime to update below.
         if (!isHeatingPending) {
@@ -821,6 +827,9 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           }
         });
         const anyOn = onZones.length > 0;
+        const remainPendingV = ventilationCmdPendingUntilRef.current - Date.now();
+        pushDebug('VENT-RX',
+          `frames=${report.ventilation.length} anyOn=${anyOn} onZones=[${onZones.join(',')}] cmnMode=${commonMode} pending=${isVentilationPending ? remainPendingV + 'ms' : 'no'} prevOn=${prev.ventilationOn} prevMode=${prev.ventilationMode}`);
         if (!isVentilationPending) {
           updates.ventilationOn = anyOn;
           updates.ventilationMode = anyOn

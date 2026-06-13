@@ -13,6 +13,7 @@ import { AddDeviceModal } from './components/AddDeviceModal';
 import { DeviceSwitchModal } from './components/DeviceSwitchModal';
 import { DeviceSelectionView } from './views/DeviceSelection';
 import { ConnectionBanner } from './components/ConnectionBanner';
+import { DebugOverlay } from './debug/DebugOverlay';
 
 function AppContent() {
   const [currentScreen, setCurrentScreen] = useState<'main' | 'devices'>('devices');
@@ -107,6 +108,7 @@ export default function App() {
   return (
     <DeviceProvider>
       <AppContent />
+      <DebugOverlay />
     </DeviceProvider>
   );
 }
