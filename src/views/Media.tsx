@@ -4,7 +4,6 @@ import { Bluetooth, Play, Pause, SkipBack, SkipForward, Repeat, RadioReceiver, M
 import { BluetoothModal } from '../components/BluetoothModal';
 import { MarqueeText } from '../components/MarqueeText';
 import { useTranslation } from '../i18n';
-import { MediaControl } from '../native/MediaControl';
 
 const SteadyIcon = ({ size, className, strokeWidth }: any) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} className={className}>
@@ -73,52 +72,11 @@ export function MediaView() {
     };
   }, []);
 
-  // === System volume bidirectional sync ===
-  // On mount: read current system media volume into state.volume.
-  // While mounted: listen for system volume changes (e.g. hardware keys) and mirror into state.volume.
-  // When user drags slider: write back to system volume (in addition to BLE 0x83).
-  const systemVolumeAvailable = useRef(true);
-  useEffect(() => {
-    let mounted = true;
-    let removeListener: (() => void) | null = null;
+  // Audio sliders (volume / treble / bass) are device-driven: dragging shows
+  // the local value immediately for responsiveness, BLE command is sent, and
+  // the device's status report is the source of truth — incoming reports
+  // overwrite local state. We no longer touch the OS media volume.
 
-    (async () => {
-      try {
-        const res = await MediaControl.getSystemVolume();
-        if (!mounted) return;
-        if (typeof res?.volume === 'number') {
-          updateState({ volume: res.volume });
-          pendingAudioValues.current.volume = res.volume;
-          lastSentAudioValues.current.volume = res.volume;
-        }
-      } catch (e) {
-        // Plugin method not available (e.g. iOS without native impl, or web). Disable system sync silently.
-        systemVolumeAvailable.current = false;
-      }
-
-      try {
-        const handle = await MediaControl.addListener('systemVolumeChanged', (r: { volume: number }) => {
-          if (!mounted) return;
-          if (typeof r?.volume === 'number') {
-            updateState({ volume: r.volume });
-            pendingAudioValues.current.volume = r.volume;
-            // Also push to device BLE so sofa speakers track system volume
-            lastSentAudioValues.current.volume = r.volume;
-            sendAudioCommand(state.audioProfile, r.volume, state.treble, state.bass);
-          }
-        });
-        removeListener = () => handle.remove();
-      } catch (e) {
-        // listener not supported
-      }
-    })();
-
-    return () => {
-      mounted = false;
-      if (removeListener) removeListener();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
   const [isBluetoothModalOpen, setIsBluetoothModalOpen] = useState(false);
   const totalSeconds = mediaState.duration > 0 ? mediaState.duration : 0;
   const progress = totalSeconds > 0 ? (mediaState.position / totalSeconds) * 100 : 0;
@@ -363,12 +321,6 @@ export function MediaView() {
                          const key = slider.id as 'volume' | 'treble' | 'bass';
                          updateState({ [key]: val });
                          pendingAudioValues.current[key] = val;
-                         // For volume: mirror into system media volume immediately.
-                         if (key === 'volume' && systemVolumeAvailable.current) {
-                           MediaControl.setSystemVolume({ volume: val }).catch(() => {
-                             systemVolumeAvailable.current = false;
-                           });
-                         }
                          // Send every 5% change during drag for responsiveness,
                          // throttled to >= 100ms between BLE writes.
                          if (Math.abs(val - lastSentAudioValues.current[key]) >= 5) {
