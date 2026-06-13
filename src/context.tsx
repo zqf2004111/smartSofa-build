@@ -224,17 +224,23 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
         try {
           const sv = await MediaControl.addListener('systemVolumeChanged', (r: { volume: number }) => {
             console.log('[systemVolumeChanged]', r);
-            if (typeof r?.volume === 'number') {
-              lastSysVolChangeAtMs.current = Date.now();
-              setState((p) => {
-                if (p.volume === r.volume) return p;
-                // Push to the sofa over BLE so its next status frame matches.
-                try {
-                  sendAudioCommandRef.current?.(p.audioProfile, r.volume, p.treble, p.bass);
-                } catch (e) {}
-                return { ...p, volume: r.volume };
-              });
-            }
+            if (typeof r?.volume !== 'number') return;
+            // Ignore system echoes while the user is actively dragging the
+            // volume slider — the slider itself is the source of truth, and
+            // OS quantization (STREAM_MUSIC max=15) / BT absolute-volume
+            // negotiation can emit a cascade of lower values that would
+            // otherwise drag state.volume down to 0 mid-drag.
+            const dragging = (typeof window !== 'undefined' && (window as any).__audioDragging?.volume) === true;
+            if (dragging) return;
+            lastSysVolChangeAtMs.current = Date.now();
+            setState((p) => {
+              if (p.volume === r.volume) return p;
+              // Push to the sofa over BLE so its next status frame matches.
+              try {
+                sendAudioCommandRef.current?.(p.audioProfile, r.volume, p.treble, p.bass);
+              } catch (e) {}
+              return { ...p, volume: r.volume };
+            });
           });
           removeSysVolListener = sv.remove;
         } catch (e) {
