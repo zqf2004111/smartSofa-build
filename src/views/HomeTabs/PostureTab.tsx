@@ -26,7 +26,11 @@ export function PostureTab() {
     }
   }, []);
 
-  const hasZeroGravity = deviceConfig?.sofaFrameType !== 'normal';
+  // Zero-gravity preset is only available on 4-zero sofas and elderly chairs.
+  // Regular sofas ('normal') and 3-zero sofas ('three_zero') fall back to the recline preset.
+  const hasZeroGravity =
+    deviceConfig?.sofaFrameType === 'four_zero' ||
+    deviceConfig?.sofaFrameType === 'elderly';
 
   const posturePreset = hasZeroGravity
     ? { id: 'zg', label: t('zg'), icon: '/posture-icon/zg.svg', iconSelected: '/posture-icon/zg-selected.svg', code: 'zg' as const }
