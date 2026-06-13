@@ -64,6 +64,11 @@ public class MediaControlPlugin extends Plugin {
     private int lastWrittenVolumePct = -1;
     private long lastWrittenAtMs = 0L;
     private static final long ECHO_SUPPRESS_MS = 800L;
+    // Debounce observer emits: a single hardware key press fires multiple
+    // ContentObserver callbacks (intermediate values during the OS animation).
+    // Coalesce them so JS receives only the final, settled value.
+    private Runnable pendingVolumeEmit;
+    private static final long VOLUME_EMIT_DEBOUNCE_MS = 80L;
 
     @Override
     public void load() {
@@ -643,21 +648,29 @@ public class MediaControlPlugin extends Plugin {
         volumeObserver = new ContentObserver(mainHandler) {
             @Override
             public void onChange(boolean selfChange, Uri uri) {
-                int pct = readSystemVolumePct();
-                if (pct == lastReportedVolumePct) return;
-                long now = System.currentTimeMillis();
-                // Suppress echo from app-initiated writes:
-                // ignore changes within the suppression window if they match
-                // (or are within 1 step of) the value we just wrote.
-                if (now - lastWrittenAtMs < ECHO_SUPPRESS_MS
-                        && Math.abs(pct - lastWrittenVolumePct) <= 1) {
-                    lastReportedVolumePct = pct;
-                    return;
+                // Coalesce bursts of callbacks (system fires multiple while
+                // animating between volume steps) so JS only sees the settled
+                // final value.
+                if (pendingVolumeEmit != null) {
+                    mainHandler.removeCallbacks(pendingVolumeEmit);
                 }
-                lastReportedVolumePct = pct;
-                JSObject ret = new JSObject();
-                ret.put("volume", pct);
-                notifyListeners("systemVolumeChanged", ret);
+                pendingVolumeEmit = () -> {
+                    pendingVolumeEmit = null;
+                    int pct = readSystemVolumePct();
+                    if (pct == lastReportedVolumePct) return;
+                    long now = System.currentTimeMillis();
+                    // Suppress echo from app-initiated writes.
+                    if (now - lastWrittenAtMs < ECHO_SUPPRESS_MS
+                            && Math.abs(pct - lastWrittenVolumePct) <= 1) {
+                        lastReportedVolumePct = pct;
+                        return;
+                    }
+                    lastReportedVolumePct = pct;
+                    JSObject ret = new JSObject();
+                    ret.put("volume", pct);
+                    notifyListeners("systemVolumeChanged", ret);
+                };
+                mainHandler.postDelayed(pendingVolumeEmit, VOLUME_EMIT_DEBOUNCE_MS);
             }
         };
         // Settings.System.VOLUME_SETTINGS changes — observe whole table for simplicity
