@@ -31,6 +31,46 @@ export function MediaView() {
   const isDraggingColor = useRef(false);
   const pendingAudioValues = useRef({ volume: state.volume, treble: state.treble, bass: state.bass });
   const lastSentAudioValues = useRef({ volume: state.volume, treble: state.treble, bass: state.bass });
+  // Throttle audio commands: enforce >= 100ms between BLE writes for VOLUME/TREBLE/BASS
+  const AUDIO_SEND_MIN_INTERVAL_MS = 100;
+  const lastAudioSentAt = useRef(0);
+  const audioSendTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const flushAudioSend = () => {
+    const { volume, treble, bass } = pendingAudioValues.current;
+    lastSentAudioValues.current = { volume, treble, bass };
+    lastAudioSentAt.current = Date.now();
+    audioSendTimer.current = null;
+    sendAudioCommand(state.audioProfile, volume, treble, bass);
+  };
+
+  // Schedule an audio command send respecting the min interval.
+  // - If enough time has passed since last send, send immediately.
+  // - Otherwise, (re)schedule a single trailing send at the earliest allowed time;
+  //   the latest pendingAudioValues will be used when it fires.
+  const scheduleAudioSend = () => {
+    const now = Date.now();
+    const elapsed = now - lastAudioSentAt.current;
+    if (elapsed >= AUDIO_SEND_MIN_INTERVAL_MS) {
+      if (audioSendTimer.current) {
+        clearTimeout(audioSendTimer.current);
+        audioSendTimer.current = null;
+      }
+      flushAudioSend();
+    } else if (!audioSendTimer.current) {
+      audioSendTimer.current = setTimeout(flushAudioSend, AUDIO_SEND_MIN_INTERVAL_MS - elapsed);
+    }
+    // else: a trailing send is already pending; it will pick up the latest pending values.
+  };
+
+  useEffect(() => {
+    return () => {
+      if (audioSendTimer.current) {
+        clearTimeout(audioSendTimer.current);
+        audioSendTimer.current = null;
+      }
+    };
+  }, []);
   const [isBluetoothModalOpen, setIsBluetoothModalOpen] = useState(false);
   const totalSeconds = mediaState.duration > 0 ? mediaState.duration : 0;
   const progress = totalSeconds > 0 ? (mediaState.position / totalSeconds) * 100 : 0;
@@ -90,8 +130,8 @@ export function MediaView() {
     if (!isDraggingColor.current) return;
     isDraggingColor.current = false;
     (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-    // Send light color command when dragging ends (steady mode only)
-    if (state.lightOn && state.lightMode === 'steady') {
+    // Send light color command when dragging ends (steady or breath mode)
+    if (state.lightOn && (state.lightMode === 'steady' || state.lightMode === 'breath')) {
       const h = angle;
       const x = 1 - Math.abs((h / 60) % 2 - 1);
       let r = 0, g = 0, b = 0;
@@ -265,19 +305,15 @@ export function MediaView() {
                          const key = slider.id as 'volume' | 'treble' | 'bass';
                          updateState({ [key]: val });
                          pendingAudioValues.current[key] = val;
-                         // Send every 5% change during drag for responsiveness
+                         // Send every 5% change during drag for responsiveness,
+                         // throttled to >= 100ms between BLE writes.
                          if (Math.abs(val - lastSentAudioValues.current[key]) >= 5) {
-                           lastSentAudioValues.current[key] = val;
-                           sendAudioCommand(state.audioProfile, 
-                             key === 'volume' ? val : pendingAudioValues.current.volume,
-                             key === 'treble' ? val : pendingAudioValues.current.treble,
-                             key === 'bass' ? val : pendingAudioValues.current.bass);
+                           scheduleAudioSend();
                          }
                        }}
                        onPointerUp={() => {
-                         const { volume, treble, bass } = pendingAudioValues.current;
-                         lastSentAudioValues.current = { volume, treble, bass };
-                         sendAudioCommand(state.audioProfile, volume, treble, bass);
+                         // Final send when drag ends, also throttled to enforce >= 100ms spacing.
+                         scheduleAudioSend();
                        }}
                        className="absolute top-1/2 -translate-y-1/2 left-0 w-full h-5 accent-[#0A5BC4] cursor-pointer" 
                      />

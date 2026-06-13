@@ -88,8 +88,8 @@ export function PostureTab() {
       setMemoryPosition(1); // Save to slot 1
       setMemoryCountdown(null);
       clearMemoryTimers();
-      // Visual feedback
-      setActivePreset('memory');
+      // Saving the memory is not a posture activation, so do not keep the slot highlighted
+      setActivePreset('');
       // Show toast
       setToast(t('memorySaved'));
       if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -101,11 +101,15 @@ export function PostureTab() {
     clearMemoryTimers();
     setMemoryCountdown(null);
     if (!isLongPress.current) {
-      // Short press: run memory
-      sendPositionCommand('memory');
-      setActivePreset('memory');
+      // Short press: toggle memory selection
+      if (activePreset === 'memory') {
+        setActivePreset('');
+      } else {
+        sendPositionCommand('memory');
+        setActivePreset('memory');
+      }
     }
-  }, [sendPositionCommand, clearMemoryTimers]);
+  }, [sendPositionCommand, clearMemoryTimers, activePreset]);
 
   const handleMemoryPointerLeave = useCallback(() => {
     clearMemoryTimers();

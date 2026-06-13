@@ -205,25 +205,30 @@ class BleManager {
     }
     this.currentMotorCmd = null;
 
+    // Prevent automatic reconnect from firing while we are intentionally disconnecting.
+    this.reconnectEnabled = false;
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
 
-    if (this.connectedDeviceId) {
+    const deviceId = this.connectedDeviceId;
+    // Drop the reference immediately so the disconnect callback won't trigger a reconnect.
+    this.connectedDeviceId = null;
+
+    if (deviceId) {
       try {
-        await BleClient.stopNotifications(this.connectedDeviceId, SERVICE_UUID, CHARACTERISTIC_RX);
+        await BleClient.stopNotifications(deviceId, SERVICE_UUID, CHARACTERISTIC_RX);
       } catch (e) {
         // ignore
       }
       try {
-        await BleClient.disconnect(this.connectedDeviceId);
+        await BleClient.disconnect(deviceId);
       } catch (e) {
         // ignore
       }
     }
 
-    this.connectedDeviceId = null;
     this.setState('disconnected');
     console.log('[BLE] Disconnected');
   }

@@ -13,6 +13,7 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         WebView.setWebContentsDebuggingEnabled(true);
         registerPlugin(MediaControlPlugin.class);
+        registerPlugin(BleBondPlugin.class);
         super.onCreate(savedInstanceState);
 
         // Immersive status bar
