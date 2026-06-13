@@ -7,3 +7,31 @@ coverage/
 .env*
 !.env.example
 github.txt
+
+# Build artifacts (APK / IPA)
+*.apk
+*.ipa
+
+# CDP / debug helper scripts (ad-hoc test tooling, not part of the app)
+cdp_*.cjs
+cdp_*.js
+debug-media.cjs
+
+# Screenshots / UI dumps captured during manual or automated testing
+screen.png
+screen[0-9]*.png
+screen_*.png
+ss[0-9]*.png
+arrow_screen*.png
+autotest.png
+test_*.png
+you_screen.png
+window_dump.xml
+
+# iOS signing / provisioning artifacts (do NOT commit secrets)
+ios_dev.der
+provision.plist
+ios_run_status*.txt
+
+# Local archives
+smartSofa.zip
