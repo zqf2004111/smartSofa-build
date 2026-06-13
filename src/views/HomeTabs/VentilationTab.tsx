@@ -6,7 +6,7 @@ import type { VentilationZoneKey } from '../../bluetooth/parser';
 import { VENTILATION_ZONE_ORDER } from '../../bluetooth/parser';
 
 export function VentilationTab() {
-  const { state, updateState, language, sendVentilationCommand, sendTimerCommand, deviceConfig } = useDevice();
+  const { state, updateState, language, sendVentilationCommand, sendHeatingCommand, sendTimerCommand, deviceConfig } = useDevice();
   const t = useTranslation(language);
   const [isTimerModalOpen, setIsTimerModalOpen] = useState(false);
 
@@ -32,11 +32,22 @@ export function VentilationTab() {
     { id: 'rapid', label: t('rapid'), icon: '/ventilation-icon/rapid.svg', iconSelected: '/ventilation-icon/rapid-selected.svg' },
   ];
 
+  const turnOffHeatingIfOn = () => {
+    if (state.heatingOn) {
+      sendHeatingCommand(state.heatingMode, false);
+    }
+    if (state.heatingTimerOn) {
+      updateState({ heatingTimerOn: false, heatingTimerRemaining: 0 });
+      sendTimerCommand('heating', 0);
+    }
+  };
+
   const handleModeClick = (modeId: string) => {
     if (state.ventilationMode === modeId && state.ventilationOn) {
       updateState({ ventilationOn: false });
       sendVentilationCommand(modeId, false);
     } else {
+      turnOffHeatingIfOn();
       const targetZones = state.ventilationSelectedZones.length > 0 ? state.ventilationSelectedZones : supportedZones;
       updateState({ ventilationMode: modeId, ventilationOn: true, ventilationSelectedZones: targetZones });
       sendVentilationCommand(modeId, true, targetZones);
@@ -50,6 +61,7 @@ export function VentilationTab() {
       updateState({ ventilationSelectedZones: nextSelected });
       sendVentilationCommand(state.ventilationMode, false, [zone]);
     } else {
+      turnOffHeatingIfOn();
       const nextSelected = [...state.ventilationSelectedZones, zone];
       updateState({ ventilationSelectedZones: nextSelected, ventilationOn: true });
       sendVentilationCommand(state.ventilationMode, true, [zone]);

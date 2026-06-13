@@ -6,7 +6,7 @@ import type { HeatingZoneKey } from '../../bluetooth/parser';
 import { HEATING_ZONE_ORDER } from '../../bluetooth/parser';
 
 export function HeatingTab() {
-  const { state, updateState, language, sendHeatingCommand, sendTimerCommand, deviceConfig } = useDevice();
+  const { state, updateState, language, sendHeatingCommand, sendVentilationCommand, sendTimerCommand, deviceConfig } = useDevice();
   const t = useTranslation(language);
   const [isTimerModalOpen, setIsTimerModalOpen] = useState(false);
 
@@ -32,11 +32,22 @@ export function HeatingTab() {
     { id: 'rapid', label: t('rapid'), icon: '/heating-icon/rapid.svg', iconSelected: '/heating-icon/rapid-selected.svg' },
   ];
 
+  const turnOffVentilationIfOn = () => {
+    if (state.ventilationOn) {
+      sendVentilationCommand(state.ventilationMode, false);
+    }
+    if (state.ventilationTimerOn) {
+      updateState({ ventilationTimerOn: false, ventilationTimerRemaining: 0 });
+      sendTimerCommand('ventilation', 0);
+    }
+  };
+
   const handleModeClick = (modeId: string) => {
     if (state.heatingMode === modeId && state.heatingOn) {
       updateState({ heatingOn: false });
       sendHeatingCommand(modeId, false);
     } else {
+      turnOffVentilationIfOn();
       const targetZones = state.heatingSelectedZones.length > 0 ? state.heatingSelectedZones : supportedZones;
       updateState({ heatingMode: modeId, heatingOn: true, heatingSelectedZones: targetZones });
       sendHeatingCommand(modeId, true, targetZones);
@@ -50,6 +61,7 @@ export function HeatingTab() {
       updateState({ heatingSelectedZones: nextSelected });
       sendHeatingCommand(state.heatingMode, false, [zone]);
     } else {
+      turnOffVentilationIfOn();
       const nextSelected = [...state.heatingSelectedZones, zone];
       updateState({ heatingSelectedZones: nextSelected, heatingOn: true });
       sendHeatingCommand(state.heatingMode, true, [zone]);
