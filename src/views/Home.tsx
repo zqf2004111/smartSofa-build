@@ -90,24 +90,23 @@ export function HomeView({ onBackToDevices, selectedDevice, selectedDeviceName }
   const ventilationSuspendIconSrc = getVentilationSuspendIconSrc();
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 pt-2 relative">
+    <div className="flex flex-col h-full bg-gray-50 relative">
       
-      {/* Title */}
-      <div className="px-5 pb-4 flex items-center relative">
+      {/* Back button (title removed) */}
+      <div className="px-5 pt-2 flex items-center relative h-8">
         <button onClick={onBackToDevices} className="absolute left-4 p-1">
           <ChevronLeft className="w-5 h-5 text-black" strokeWidth={2.5} />
         </button>
-        <h1 className="flex-1 text-center text-lg font-medium text-gray-900 tracking-tight">{selectedDevice?.name || selectedDeviceName || 'Smart Recliner Pro'}</h1>
       </div>
 
       {/* Sofa Graphic */}
-      <div className="w-full relative px-5 mb-6 mt-2 h-56 flex items-center justify-center">
+      <div className="w-full relative px-5 mb-4 mt-1 h-44 flex items-center justify-center">
         {/* Recliner Graphic Area */}
-        <div className="relative w-full max-w-[280px] mx-auto h-[220px] flex justify-center items-center">
+        <div className="relative w-full max-w-[240px] mx-auto h-[180px] flex justify-center items-center">
           {activeTab === 'posture' ? (
             <SofaAnimation motorPositions={state.motorPositions} activeMotorAnim={state.activeMotorAnim} />
           ) : (
-            <img src="/sofa.svg" alt="Sofa" className="h-[200px] w-auto object-contain opacity-90" />
+            <img src="/sofa.svg" alt="Sofa" className="h-[160px] w-auto object-contain opacity-90" />
           )}
           
           {/* Faux control circles typical of the recliner interface */}
@@ -213,7 +212,7 @@ export function HomeView({ onBackToDevices, selectedDevice, selectedDeviceName }
       </div>
 
       {/* Tabs */}
-      <div className="px-5 grid grid-cols-4 gap-3 mb-6 relative z-10">
+      <div className="px-5 grid grid-cols-4 gap-3 mb-4 relative z-10">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
