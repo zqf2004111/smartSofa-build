@@ -10,6 +10,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.Log;
+
+import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
 import android.view.View;
 import android.view.WindowInsetsController;
 import android.webkit.WebView;
@@ -17,6 +21,8 @@ import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
     private static final String TAG = "SmartSofaNFC";
+    /** External Type record domain:type — present in NDEF tags written by us. */
+    private static final String EXT_TYPE = "vnd.smartsofa.com:pair";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -83,15 +89,68 @@ public class MainActivity extends BridgeActivity {
             // Fallback: TAG_DISCOVERED without parsed NDEF — use intent's data if any
             return intent.getData();
         }
+        // Pass 1: prefer our External Type record (vnd.smartsofa.com:pair)
+        // — carries structured payload that may include data not present in the URI record.
         for (Parcelable raw : rawMessages) {
             if (!(raw instanceof NdefMessage)) continue;
-            NdefMessage msg = (NdefMessage) raw;
-            for (NdefRecord rec : msg.getRecords()) {
+            for (NdefRecord rec : ((NdefMessage) raw).getRecords()) {
+                Uri u = externalRecordToUri(rec);
+                if (u != null) {
+                    Log.i(TAG, "NFC external record matched: " + u);
+                    return u;
+                }
+            }
+        }
+        // Pass 2: fall back to first URI record (works for tags written without our external type)
+        for (Parcelable raw : rawMessages) {
+            if (!(raw instanceof NdefMessage)) continue;
+            for (NdefRecord rec : ((NdefMessage) raw).getRecords()) {
                 Uri u = recordToUri(rec);
                 if (u != null) return u;
             }
         }
         return intent.getData();
+    }
+
+    /**
+     * Decode a vnd.smartsofa.com:pair external record. Payload is expected to be a UTF-8
+     * JSON object like {"name":"KD_SOF","serial":"...","model":"..."}; returns a synthesized
+     * smartsofa://pair?name=...&serial=...&model=... Uri so the existing JS handler
+     * (src/context.tsx) can consume it via standard URL parsing.
+     *
+     * For forward compatibility, also accepts a plain string payload (treated as name).
+     */
+    private Uri externalRecordToUri(NdefRecord rec) {
+        if (rec.getTnf() != NdefRecord.TNF_EXTERNAL_TYPE) return null;
+        String type = new String(rec.getType(), StandardCharsets.US_ASCII);
+        if (!EXT_TYPE.equalsIgnoreCase(type)) return null;
+        byte[] payload = rec.getPayload();
+        if (payload == null || payload.length == 0) return null;
+        String text = new String(payload, StandardCharsets.UTF_8).trim();
+
+        Uri.Builder b = new Uri.Builder().scheme("smartsofa").authority("pair");
+        boolean any = false;
+        if (text.startsWith("{")) {
+            try {
+                JSONObject obj = new JSONObject(text);
+                java.util.Iterator<String> keys = obj.keys();
+                while (keys.hasNext()) {
+                    String k = keys.next();
+                    String v = obj.optString(k, null);
+                    if (v != null && !v.isEmpty()) {
+                        b.appendQueryParameter(k, v);
+                        any = true;
+                    }
+                }
+            } catch (Throwable t) {
+                Log.w(TAG, "external payload not JSON, treating as name: " + text);
+            }
+        }
+        if (!any) {
+            // Fallback: bare string → treat as device name
+            b.appendQueryParameter("name", text);
+        }
+        return b.build();
     }
 
     private Uri recordToUri(NdefRecord rec) {

@@ -159,10 +159,16 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       if (!url) return;
       try {
         const u = new URL(url);
-        if (!u.pathname.includes('/pair')) return;
+        // Accept either https://<host>/pair?... or smartsofa://pair?...
+        const isPair = u.pathname.includes('/pair') || u.host === 'pair';
+        if (!isPair) return;
         const name = u.searchParams.get('name');
         if (name) {
-          console.log('[NFC] pair target from URL:', name);
+          // Future-proof: log all params (serial/model/...) so factory tags carrying
+          // structured data are visible during pairing diagnostics.
+          const extras: Record<string, string> = {};
+          u.searchParams.forEach((v, k) => { if (k !== 'name') extras[k] = v; });
+          console.log('[NFC] pair target from URL:', name, JSON.stringify(extras));
           setPairTarget(name);
         }
       } catch (e) {
