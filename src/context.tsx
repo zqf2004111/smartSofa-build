@@ -198,6 +198,13 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   const bleInitialized = useRef(false);
   const motorSimInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const massageCmdPendingUntilRef = useRef<number>(0);
+  // Suppression windows for heating/ventilation: after sending a mode write,
+  // the sofa may emit a status frame echoing the OLD state for a brief
+  // moment (firmware hasn't applied the write yet, especially with multi-zone
+  // serialized writes on iOS). Without this guard the optimistic UI state
+  // gets stomped and the mode button looks like it deselects.
+  const heatingCmdPendingUntilRef = useRef<number>(0);
+  const ventilationCmdPendingUntilRef = useRef<number>(0);
   const isRemovingDevice = useRef(false);
   // Track whether we've pushed our local audio settings (volume/treble/bass)
   // to the device after connecting. Some firmware reports an audio block of
@@ -555,6 +562,9 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       }
       targetZones = supported;
     }
+    // Arm pending suppression so incoming status frames during the BLE
+    // round-trip don't stomp the optimistic UI back to OFF.
+    heatingCmdPendingUntilRef.current = Date.now() + 1500;
     targetZones.forEach((zone) => {
       bleManager.send(buildHeatingCmd(zone, modeVal));
     });
@@ -586,6 +596,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       }
       targetZones = supported;
     }
+    ventilationCmdPendingUntilRef.current = Date.now() + 1500;
     targetZones.forEach((zone) => {
       bleManager.send(buildVentilationCmd(zone, modeVal));
     });
@@ -744,6 +755,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       }
       // Heating (multi-zone)
       if (report.heating.length > 0) {
+        const isHeatingPending = Date.now() < heatingCmdPendingUntilRef.current;
         const supported = getSupportedHeatingZones(deviceConfigRef.current);
         const zoneStates: SofaState['heatingZoneStates'] = { ...prev.heatingZoneStates };
         const onZones: HeatingZoneKey[] = [];
@@ -763,13 +775,17 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           }
         });
         const anyOn = onZones.length > 0;
-        updates.heatingOn = anyOn;
-        updates.heatingMode = anyOn
-          ? (commonMode === HEATING_MODE.RAPID ? 'rapid' : commonMode === HEATING_MODE.GENTLE ? 'gentle' : prev.heatingMode)
-          : prev.heatingMode;
-        updates.heatingZoneStates = zoneStates;
-        if (anyOn) {
-          updates.heatingSelectedZones = onZones;
+        // Skip overwriting optimistic UI state during the pending window;
+        // still allow timer/remainingTime to update below.
+        if (!isHeatingPending) {
+          updates.heatingOn = anyOn;
+          updates.heatingMode = anyOn
+            ? (commonMode === HEATING_MODE.RAPID ? 'rapid' : commonMode === HEATING_MODE.GENTLE ? 'gentle' : prev.heatingMode)
+            : prev.heatingMode;
+          updates.heatingZoneStates = zoneStates;
+          if (anyOn) {
+            updates.heatingSelectedZones = onZones;
+          }
         }
         // 设备 remainingTime 驱动本地倒计时（同 massage）
         if (maxRemaining > 0) {
@@ -779,13 +795,14 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
             updates.heatingTimerDuration = Math.max(1, Math.round(maxRemaining / 60));
             updates.heatingTimerStartAt = Date.now();
           }
-        } else if (prev.heatingTimerOn) {
+        } else if (prev.heatingTimerOn && !isHeatingPending) {
           updates.heatingTimerOn = false;
           updates.heatingTimerRemaining = 0;
         }
       }
       // Ventilation (multi-zone)
       if (report.ventilation.length > 0) {
+        const isVentilationPending = Date.now() < ventilationCmdPendingUntilRef.current;
         const supportedVent = getSupportedVentilationZones(deviceConfigRef.current);
         const zoneStates: SofaState['ventilationZoneStates'] = { ...prev.ventilationZoneStates };
         const onZones: VentilationZoneKey[] = [];
@@ -804,13 +821,15 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           }
         });
         const anyOn = onZones.length > 0;
-        updates.ventilationOn = anyOn;
-        updates.ventilationMode = anyOn
-          ? (commonMode === VENTILATION_MODE.RAPID ? 'rapid' : commonMode === VENTILATION_MODE.GENTLE ? 'gentle' : prev.ventilationMode)
-          : prev.ventilationMode;
-        updates.ventilationZoneStates = zoneStates;
-        if (anyOn) {
-          updates.ventilationSelectedZones = onZones;
+        if (!isVentilationPending) {
+          updates.ventilationOn = anyOn;
+          updates.ventilationMode = anyOn
+            ? (commonMode === VENTILATION_MODE.RAPID ? 'rapid' : commonMode === VENTILATION_MODE.GENTLE ? 'gentle' : prev.ventilationMode)
+            : prev.ventilationMode;
+          updates.ventilationZoneStates = zoneStates;
+          if (anyOn) {
+            updates.ventilationSelectedZones = onZones;
+          }
         }
         // 设备 remainingTime 驱动本地倒计时（同 massage）
         if (maxRemaining > 0) {
@@ -820,7 +839,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
             updates.ventilationTimerDuration = Math.max(1, Math.round(maxRemaining / 60));
             updates.ventilationTimerStartAt = Date.now();
           }
-        } else if (prev.ventilationTimerOn) {
+        } else if (prev.ventilationTimerOn && !isVentilationPending) {
           updates.ventilationTimerOn = false;
           updates.ventilationTimerRemaining = 0;
         }

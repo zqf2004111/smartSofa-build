@@ -3,7 +3,6 @@ import { useTranslation } from '../i18n';
 import { useDevice } from '../context';
 import { MediaControl, type ClassicBluetoothDevice } from '../native/MediaControl';
 import { Capacitor } from '@capacitor/core';
-import { App } from '@capacitor/app';
 import { Headphones, Speaker, Bluetooth, Check, Loader2 } from 'lucide-react';
 
 const IS_IOS = Capacitor.getPlatform() === 'ios';
@@ -141,12 +140,11 @@ export const BluetoothSearchModal: React.FC<BluetoothSearchModalProps> = ({ isOp
             </p>
             <button
               onClick={() => {
-                // App-Prefs:Bluetooth jumps to iOS Settings > Bluetooth (works on
-                // physical devices). If the URL scheme is rejected, fall back to
-                // the generic settings page.
-                App.openUrl({ url: 'App-Prefs:Bluetooth' }).catch(() => {
-                  App.openUrl({ url: 'app-settings:' }).catch(() => {});
-                });
+                // Open this app's Settings page on iOS. Apple does not allow
+                // deep-linking directly to Settings > Bluetooth from a regular
+                // app (App-Prefs: is private API and rejected at App Review).
+                // From the app's settings page the user taps Bluetooth manually.
+                window.location.href = 'app-settings:';
               }}
               className="px-5 h-[36px] bg-[#0A5BC4] text-white rounded-[18px] text-[13px] font-medium"
             >
