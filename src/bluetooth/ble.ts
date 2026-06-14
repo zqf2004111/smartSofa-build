@@ -76,8 +76,10 @@ class BleManager {
     try {
       await BleClient.initialize({ androidNeverForLocation: true });
       console.log('[BLE] Initialized');
+      try { pushDebug('BLE', 'initialized'); } catch {}
     } catch (e) {
       console.error('[BLE] Init failed:', e);
+      try { pushDebug('BLE', `init ERR ${String(e)}`); } catch {}
       this.callbacks.onError?.('Bluetooth initialization failed: ' + String(e));
     }
   }
@@ -118,6 +120,7 @@ class BleManager {
 
     this.setState('scanning');
     console.log('[BLE] Start scanning...');
+    try { pushDebug('BLE', 'startScan'); } catch {}
 
     try {
       await BleClient.requestLEScan(
@@ -194,6 +197,7 @@ class BleManager {
       );
 
       this.setState('connected');
+      try { pushDebug('BLE', `connected ${deviceId}`); } catch {}
       console.log('[BLE] Connected and notifications started');
 
       // Query the full device state so the UI can initialize from real data
@@ -206,6 +210,7 @@ class BleManager {
       return true;
     } catch (e) {
       console.error('[BLE] Connect failed:', e);
+      try { pushDebug('BLE', `connect ERR ${String(e)}`); } catch {}
       this.callbacks.onError?.('Connection failed: ' + String(e));
       this.setState('disconnected');
       return false;
@@ -244,6 +249,7 @@ class BleManager {
     }
 
     this.setState('disconnected');
+    try { pushDebug('BLE', 'disconnect completed'); } catch {}
     console.log('[BLE] Disconnected');
   }
 
