@@ -291,6 +291,37 @@ class BleManager {
     }
   }
 
+  /**
+   * App-launch auto-connect. On iOS we cannot call connect(deviceId) directly
+   * after a fresh start because the plugin's deviceMap is empty; we must either
+   * retrieve the peripheral from the OS cache (getDevices) or scan for it.
+   */
+  async autoConnect(deviceId: string): Promise<boolean> {
+    if (!IS_IOS) {
+      return this.connect(deviceId);
+    }
+
+    // First try to restore the peripheral from iOS cache without scanning.
+    try {
+      const restored = await BleClient.getDevices([deviceId]);
+      if (restored && restored.length > 0) {
+        try { pushDebug('BLE', `autoConnect getDevices found ${deviceId}`); } catch {}
+        return this.connect(deviceId);
+      }
+    } catch (e) {
+      try { pushDebug('BLE', `autoConnect getDevices ERR ${String(e)}`); } catch {}
+    }
+
+    // Not in cache: fall back to scan-first reconnect.
+    try { pushDebug('BLE', `autoConnect start scan for ${deviceId}`); } catch {}
+    this.connectedDeviceId = deviceId;
+    this.reconnectEnabled = true;
+    this.reconnectAttempts = 0;
+    this.reconnectBackoffMs = 5000;
+    this.attemptReconnect();
+    return false;
+  }
+
   private handleConnectionStatus(deviceId: string): void {
     console.log('[BLE] Disconnected from:', deviceId);
     try { pushDebug('BLE', `handleConnectionStatus deviceId=${deviceId} connected=${this.connectedDeviceId} enabled=${this.reconnectEnabled}`); } catch {}

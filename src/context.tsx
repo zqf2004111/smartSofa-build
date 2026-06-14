@@ -1125,9 +1125,11 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       try {
         await initializeBle();
         const device = savedDevices[0];
-        const ok = await bleManager.connect(device.id);
+        const ok = await bleManager.autoConnect(device.id);
         if (ok) {
           console.log('[BLE] Auto-connected to', device.name);
+        } else {
+          console.log('[BLE] Auto-connect delegated to scan/reconnect');
         }
       } catch (e) {
         console.error('[BLE] Auto-connect failed', e);
