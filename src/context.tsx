@@ -276,9 +276,12 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     let lastPolledSysVol: number | null = null;
 
     const initMediaListener = async () => {
+      pushDebug('VOL', 'effect enter');
       try {
         // Initial fetch
+        pushDebug('VOL', 'before getStatus');
         const status = await MediaControl.getStatus();
+        pushDebug('VOL', `after getStatus ok`);
         setMediaState(status);
 
         // Listen for events
@@ -413,6 +416,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
         }, 3000);
       } catch (e) {
         console.error('[MediaControl] init failed', e);
+        pushDebug('VOL', `effect ERR ${String(e)}`);
       }
     };
 
