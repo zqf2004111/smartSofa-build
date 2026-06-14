@@ -149,6 +149,7 @@ export function HeatingTab() {
               onClick={() => {
                 if (state.heatingTimerOn) {
                   // 关闭倒计时：只发命令，等响应驱动 UI
+                  pushDebug('HEAT-TIMER-CLICK', 'off');
                   sendTimerCommand('heating', 0);
                 } else if (state.heatingOn) {
                   setIsTimerModalOpen(true);

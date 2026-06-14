@@ -640,7 +640,11 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   };
 
   const sendTimerCommand = (type: 'massage' | 'heating' | 'ventilation', minutes: number) => {
-    if (bleState !== 'connected') return;
+    if (bleState !== 'connected') {
+      pushDebug('TIMER', `sendTimer skip ble=${bleState}`);
+      return;
+    }
+    pushDebug('TIMER', `sendTimer type=${type} minutes=${minutes}`);
     bleManager.send(buildTimerCmd(type, minutes));
   };
 
@@ -893,6 +897,8 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           }
         }
         // 设备 remainingTime 驱动本地倒计时（同 massage）
+        const heatTimerTurnsOff = maxRemaining === 0 && prev.heatingTimerOn && !isHeatingPending;
+        pushDebug('HEAT-RX', `anyOn=${anyOn} maxRemaining=${maxRemaining} pending=${isHeatingPending} prevTimerOn=${prev.heatingTimerOn} -> setTimerOff=${heatTimerTurnsOff}`);
         if (maxRemaining > 0) {
           if (!prev.heatingTimerOn) {
             updates.heatingTimerOn = true;
@@ -937,6 +943,8 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           }
         }
         // 设备 remainingTime 驱动本地倒计时（同 massage）
+        const ventTimerTurnsOff = maxRemaining === 0 && prev.ventilationTimerOn && !isVentilationPending;
+        pushDebug('VENT-RX', `anyOn=${anyOn} maxRemaining=${maxRemaining} pending=${isVentilationPending} prevTimerOn=${prev.ventilationTimerOn} -> setTimerOff=${ventTimerTurnsOff}`);
         if (maxRemaining > 0) {
           if (!prev.ventilationTimerOn) {
             updates.ventilationTimerOn = true;

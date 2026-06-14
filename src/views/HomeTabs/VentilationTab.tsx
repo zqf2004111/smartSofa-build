@@ -4,6 +4,7 @@ import { TimerModal } from '../../components/TimerModal';
 import { useTranslation } from '../../i18n';
 import type { VentilationZoneKey } from '../../bluetooth/parser';
 import { VENTILATION_ZONE_ORDER } from '../../bluetooth/parser';
+import { pushDebug } from '../../debug/debugLog';
 
 export function VentilationTab() {
   const { state, updateState, language, sendVentilationCommand, sendHeatingCommand, sendTimerCommand, deviceConfig } = useDevice();
@@ -146,6 +147,7 @@ export function VentilationTab() {
                 onClick={() => {
                   if (state.ventilationTimerOn) {
                     // 关闭倒计时：只发命令，等响应驱动 UI
+                    pushDebug('VENT-TIMER-CLICK', 'off');
                     sendTimerCommand('ventilation', 0);
                   } else if (state.ventilationOn) {
                     setIsTimerModalOpen(true);
