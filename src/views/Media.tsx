@@ -199,7 +199,8 @@ export function MediaView() {
       {activeTab === 'audio' && (
         <div className="px-6 space-y-6 animate-in slide-in-from-right-4 duration-300">
           
-          {/* Player Card */}
+          {/* Player Card (Android only — iOS cannot read system music info or A2DP status) */}
+          {!IS_IOS && (
           <div className="bg-white rounded-[28px] p-6 shadow-sm border border-gray-100 flex flex-col relative h-[360px]">
              {/* Bluetooth */}
              <button 
@@ -318,15 +319,26 @@ export function MediaView() {
                </button>
              </div>
           </div>
+          )}
 
           {/* Audio Profile */}
           <div className="bg-white rounded-[28px] p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center space-x-2.5 mb-7">
-              {/* Custom Audio Lines SVG */}
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0A5BC4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M2 10v4" /><path d="M6 6v12" /><path d="M10 3v18" /><path d="M14 8v8" /><path d="M18 5v14" /><path d="M22 10v4" />
-              </svg>
-              <h3 className="text-[16px] font-medium text-gray-900 tracking-tight">{t('audioProfile')}</h3>
+            <div className="flex items-center justify-between mb-7">
+              <div className="flex items-center space-x-2.5">
+                {/* Custom Audio Lines SVG */}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0A5BC4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 10v4" /><path d="M6 6v12" /><path d="M10 3v18" /><path d="M14 8v8" /><path d="M18 5v14" /><path d="M22 10v4" />
+                </svg>
+                <h3 className="text-[16px] font-medium text-gray-900 tracking-tight">{t('audioProfile')}</h3>
+              </div>
+              {IS_IOS && (
+                <button
+                  onClick={() => setIsBluetoothModalOpen(true)}
+                  className="w-[33px] h-[33px] flex items-center justify-center"
+                >
+                  <img src="/bluetooth-btn.svg" alt="Bluetooth" className="w-full h-full" />
+                </button>
+              )}
             </div>
             
             <div className="space-y-7 mb-8">
@@ -404,6 +416,31 @@ export function MediaView() {
                 </div>
               ))}
             </div>
+
+            {/* Sync Sensing (iOS: shown here since Player Card is hidden) */}
+            {IS_IOS && (
+              <div className="flex items-center justify-between mb-7">
+                <button onClick={handleVibroClick} className="flex items-center space-x-3 text-left">
+                  <img
+                    src={state.vibroState > 0 ? '/music-vibrate-active.svg' : '/music-vibrate-normal.svg'}
+                    alt="Sync"
+                    className="w-[38px] h-[38px] object-contain -mt-[8px]"
+                  />
+                  <span className={`text-[13px] font-medium transition-colors ${state.vibroState > 0 ? 'text-gray-900' : 'text-gray-500'}`}>{t('syncSensing')}</span>
+                </button>
+                <button
+                  onClick={handleVibroClick}
+                  className="flex items-center space-x-2 p-2"
+                >
+                  {[1, 2, 3].map((dot) => (
+                    <div
+                      key={dot}
+                      className={`w-5 h-1.5 rounded-full transition-colors ${state.vibroState >= dot ? 'bg-[#0A5BC4]' : 'bg-[#E5E7EB]'}`}
+                    />
+                  ))}
+                </button>
+              </div>
+            )}
 
             {/* EQ Modes */}
             <div className="grid grid-cols-2 gap-3">
