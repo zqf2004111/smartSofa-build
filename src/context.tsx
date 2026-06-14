@@ -426,7 +426,23 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
         interval = setInterval(async () => {
           try {
             const s = await MediaControl.getStatus();
-            setMediaState(s);
+            setMediaState((prev) => {
+              if (
+                prev.a2dpConnected === s.a2dpConnected &&
+                prev.deviceName === s.deviceName &&
+                prev.musicActive === s.musicActive &&
+                prev.notificationEnabled === s.notificationEnabled &&
+                prev.title === s.title &&
+                prev.artist === s.artist &&
+                prev.album === s.album &&
+                prev.isPlaying === s.isPlaying &&
+                prev.duration === s.duration &&
+                prev.position === s.position
+              ) {
+                return prev;
+              }
+              return s;
+            });
           } catch (e) {
             // ignore
           }

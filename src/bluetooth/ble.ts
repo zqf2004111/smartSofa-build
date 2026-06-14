@@ -110,8 +110,18 @@ class BleManager {
   }
 
   async startScan(): Promise<void> {
-    if (this.state === 'scanning' || this.state === 'connecting') {
-      console.log('[BLE] Already scanning/connecting, skip');
+    // If a reconnect loop is running, pause it so the user-driven scan can run.
+    if (this.state === 'reconnecting') {
+      this.disableReconnect();
+      this.reconnectAttempts = 0;
+      this.reconnectBackoffMs = 2000;
+    }
+    if (this.state === 'scanning') {
+      console.log('[BLE] Already scanning, skip');
+      return;
+    }
+    if (this.state === 'connecting') {
+      console.log('[BLE] Connecting, skip scan');
       return;
     }
 
@@ -132,6 +142,7 @@ class BleManager {
       );
     } catch (e) {
       console.error('[BLE] Scan failed:', e);
+      try { pushDebug('BLE', `scan ERR ${String(e)}`); } catch {}
       this.callbacks.onError?.('Scan failed: ' + String(e));
       this.setState('disconnected');
     }
@@ -311,7 +322,7 @@ class BleManager {
         try {
           try { pushDebug('BLE', 'reconnect startScan'); } catch {}
           await this.startScan();
-          // Give the scan a window to find the device, then stop and retry.
+          // Give the scan a generous window to find the device, then stop and retry.
           setTimeout(() => {
             if (this.state === 'reconnecting') {
               try { pushDebug('BLE', 'reconnect scan window timeout'); } catch {}
@@ -319,7 +330,7 @@ class BleManager {
               this.reconnectBackoffMs = Math.min(this.reconnectBackoffMs * 2, this.maxReconnectBackoffMs);
               this.attemptReconnect();
             }
-          }, 5000);
+          }, 15000);
           return;
         } catch (e) {
           try { pushDebug('BLE', `reconnect scan ERR ${String(e)}`); } catch {}

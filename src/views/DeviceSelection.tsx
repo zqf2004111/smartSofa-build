@@ -20,7 +20,7 @@ export function DeviceSelectionView({ onSelectDevice, onAddDevice, isManaging = 
 
   return (
     <div className="w-full h-screen bg-[#f4f4f4] flex flex-col items-center">
-      <div style={{ paddingTop: 'max(0.7rem, calc(env(safe-area-inset-top) + 0.3rem))' }} className="w-full max-w-md bg-white pb-3 flex items-center justify-between px-4 mb-2">
+      <div style={{ paddingTop: 'max(0.5rem, calc(env(safe-area-inset-top) + 0.15rem))' }} className="w-full max-w-md bg-white pb-2 flex items-center justify-between px-4 mb-2">
         <button 
           onClick={() => setIsManaging(!isManaging)}
           className="text-[15px] font-medium text-[#0A5BC4] px-2 py-1"
