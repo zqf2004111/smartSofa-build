@@ -264,6 +264,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
 
   // Media bluetooth state listener
   React.useEffect(() => {
+    pushDebug('VOL', 'effect MOUNT');
     let removeListener: (() => void) | undefined;
     let removeSysVolListener: (() => void) | undefined;
     let interval: NodeJS.Timeout;
