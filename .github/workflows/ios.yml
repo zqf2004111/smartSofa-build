@@ -41,6 +41,11 @@ jobs:
     - name: Sync Capacitor iOS
       run: npx cap sync ios
 
+    - name: Register local MediaControl plugin
+      run: |
+        jq '.packageClassList += ["MediaControlPlugin"]' ios/App/App/capacitor.config.json > /tmp/cap-config.json && mv /tmp/cap-config.json ios/App/App/capacitor.config.json
+        cat ios/App/App/capacitor.config.json
+
     - name: Resolve Swift Packages
       working-directory: ./ios/App
       run: xcodebuild -project App.xcodeproj -scheme App -resolvePackageDependencies
@@ -90,6 +95,11 @@ jobs:
 
     - name: Sync Capacitor iOS
       run: npx cap sync ios
+
+    - name: Register local MediaControl plugin
+      run: |
+        jq '.packageClassList += ["MediaControlPlugin"]' ios/App/App/capacitor.config.json > /tmp/cap-config.json && mv /tmp/cap-config.json ios/App/App/capacitor.config.json
+        cat ios/App/App/capacitor.config.json
 
     - name: Resolve Swift Packages
       working-directory: ./ios/App
