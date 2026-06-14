@@ -559,13 +559,9 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     if (targetZones.length === 0) {
       const supported = getSupportedHeatingZones(deviceConfigRef.current);
       pushDebug('HEAT-TX', `no zones, supported=[${supported.join(',')}]`);
-      if (supported.length === 0) {
-        // 无配置时回退到全局模式命令，保证兼容
-        pushDebug('HEAT-TX', `fallback global modeVal=0x${modeVal.toString(16)}`);
-        bleManager.send(buildHeatingModeCmd(modeVal));
-        return;
-      }
-      targetZones = supported;
+      // 无配置时兜底为协议支持的全部 zone（按 zone 发命令，硬件不响应全局 0x35 帧）
+      targetZones = supported.length > 0 ? supported : [...HEATING_ZONE_ORDER];
+      pushDebug('HEAT-TX', `fallback zones=[${targetZones.join(',')}]`);
     }
     // Arm pending suppression so incoming status frames during the BLE
     // round-trip don't stomp the optimistic UI back to OFF.
@@ -598,11 +594,8 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     let targetZones = zones ?? state.ventilationSelectedZones;
     if (targetZones.length === 0) {
       const supported = getSupportedVentilationZones(deviceConfigRef.current);
-      if (supported.length === 0) {
-        bleManager.send(buildVentilationModeCmd(modeVal));
-        return;
-      }
-      targetZones = supported;
+      // 无配置时兜底为协议支持的全部 zone（按 zone 发命令，硬件不响应全局 0x25 帧）
+      targetZones = supported.length > 0 ? supported : [...VENTILATION_ZONE_ORDER];
     }
     ventilationCmdPendingUntilRef.current = Date.now() + 3000;
     targetZones.forEach((zone) => {
