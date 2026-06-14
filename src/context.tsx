@@ -500,6 +500,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   const updateState = (updates: Partial<SofaState>) => {
     setState((prev) => ({ ...prev, ...updates }));
   };
+  try { pushDebug('VOL', 'mid500'); } catch {}
 
   // When the device config (massage system type) becomes known, make sure the
   // selected massage mode actually belongs to that system. Do not override a
@@ -795,6 +796,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   };
 
   // Bluetooth
+  try { pushDebug('VOL', 'mid800'); } catch {}
   const handleStatusReport = useCallback((report: FullDeviceState) => {
     console.log('[BLE] Status report:', report);
     // 同步设备状态到 UI
@@ -1082,6 +1084,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   }, [handleStatusReport]);
 
   // Auto-connect saved device on app launch
+  try { pushDebug('VOL', 'mid1086 before effect4'); } catch {}
   React.useEffect(() => {
     pushDebug('VOL', `effect4 MOUNT (autoconn) ble=${bleState} saved=${savedDevices.length}`);
     if (isRemovingDevice.current) return;
