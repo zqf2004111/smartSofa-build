@@ -267,6 +267,13 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     let removeListener: (() => void) | undefined;
     let removeSysVolListener: (() => void) | undefined;
     let interval: NodeJS.Timeout;
+    // iOS fallback: AVAudioSession outputVolume KVO can miss events when the
+    // session isn't actively playing audio (hardware keys may then route to
+    // ringer instead of media). Poll getSystemVolume() at 1Hz and synthesize a
+    // systemVolumeChanged into the same coalesce pipeline whenever the value
+    // differs from what we last observed.
+    let sysVolPollInterval: NodeJS.Timeout | undefined;
+    let lastPolledSysVol: number | null = null;
 
     const initMediaListener = async () => {
       try {
@@ -339,6 +346,58 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           // listener not supported on this platform
         }
 
+        // 1Hz polling fallback for outputVolume. We do NOT replace the KVO
+        // listener — when KVO fires we still want immediate UI sync. Polling
+        // catches the cases where KVO is silent (e.g. iOS hardware keys when
+        // the audio session isn't playing). Drive into the same pipeline as
+        // systemVolumeChanged so dragging/coalesce/suppression all apply.
+        try {
+          const r0 = await MediaControl.getSystemVolume();
+          if (typeof r0?.volume === 'number') lastPolledSysVol = r0.volume;
+        } catch {}
+        sysVolPollInterval = setInterval(async () => {
+          try {
+            const r = await MediaControl.getSystemVolume();
+            const v = r?.volume;
+            if (typeof v !== 'number') return;
+            if (lastPolledSysVol === v) return;
+            const prev = lastPolledSysVol;
+            lastPolledSysVol = v;
+            // First reading after init: just record, don't synthesize an event.
+            if (prev === null) return;
+            const dragging = (typeof window !== 'undefined' && (window as any).__audioDragging?.volume) === true;
+            if (dragging) return;
+            // Synthesize the same path as KVO: push to coalesce buffer and
+            // schedule the flush. The flush will update state.volume and
+            // refresh the suppress timestamp so device status frames don't
+            // snap us back.
+            lastSysVolChangeAtMs.current = Date.now();
+            sysVolPendingValuesRef.current.push(v);
+            if (sysVolFlushTimerRef.current) clearTimeout(sysVolFlushTimerRef.current);
+            sysVolFlushTimerRef.current = setTimeout(() => {
+              const values = sysVolPendingValuesRef.current.slice();
+              sysVolPendingValuesRef.current = [];
+              sysVolFlushTimerRef.current = null;
+              if (values.length === 0) return;
+              const stillDragging = (typeof window !== 'undefined' && (window as any).__audioDragging?.volume) === true;
+              if (stillDragging) return;
+              const sorted = values.slice().sort((a, b) => a - b);
+              const median = sorted[Math.floor(sorted.length / 2)];
+              const filtered = values.filter((vv) => Math.abs(vv - median) <= 30);
+              const finalVol = filtered.length > 0 ? filtered[filtered.length - 1] : median;
+              lastSysVolChangeAtMs.current = Date.now();
+              lastReportedVolRef.current = null;
+              reportedVolStableCountRef.current = 0;
+              setState((p) => {
+                if (p.volume === finalVol) return p;
+                return { ...p, volume: finalVol };
+              });
+            }, SYS_VOL_COALESCE_MS);
+          } catch {
+            // ignore
+          }
+        }, 1000);
+
         // Poll as fallback
         interval = setInterval(async () => {
           try {
@@ -359,6 +418,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       if (removeListener) removeListener();
       if (removeSysVolListener) removeSysVolListener();
       if (interval) clearInterval(interval);
+      if (sysVolPollInterval) clearInterval(sysVolPollInterval);
       if (sysVolFlushTimerRef.current) {
         clearTimeout(sysVolFlushTimerRef.current);
         sysVolFlushTimerRef.current = null;
