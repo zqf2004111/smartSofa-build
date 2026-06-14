@@ -115,6 +115,8 @@ export const translations = {
     invalidQrCode: 'Invalid QR code format',
     qrScanSuccess: 'Recognized {name}, searching and auto-connecting...',
     iosBluetoothHint: 'iOS does not allow in-app audio Bluetooth pairing. Please pair your device in iOS Settings → Bluetooth, then return here.',
+    iosMediaUnsupportedTitle: 'Media not available on iOS',
+    iosMediaUnsupportedDesc: 'iOS does not allow apps to read system music info or A2DP status. Please control playback from the iOS Control Center.',
     openSettings: 'Open Settings'
   },
   zh: {
@@ -231,6 +233,8 @@ export const translations = {
     invalidQrCode: '二维码格式无效',
     qrScanSuccess: '已识别 {name}，正在搜索并自动连接...',
     iosBluetoothHint: 'iOS 不支持在 App 内搜索/配对音频蓝牙。请到 iOS 设置 → 蓝牙 配对沙发，然后返回此页面。',
+    iosMediaUnsupportedTitle: 'iOS 不支持媒体功能',
+    iosMediaUnsupportedDesc: 'iOS 系统不允许 App 读取其他应用的播放信息或音频蓝牙状态，请直接在 iOS 控制中心控制播放。',
     openSettings: '打开设置'
   },
   es: {
@@ -347,6 +351,8 @@ export const translations = {
     invalidQrCode: 'Formato de código QR inválido',
     qrScanSuccess: 'Reconocido {name}, buscando y conectando automáticamente...',
     iosBluetoothHint: 'iOS no permite emparejar Bluetooth de audio dentro de la app. Vaya a Ajustes → Bluetooth para emparejar el dispositivo y vuelva aquí.',
+    iosMediaUnsupportedTitle: 'Medios no disponibles en iOS',
+    iosMediaUnsupportedDesc: 'iOS no permite que las apps lean la información de reproducción del sistema ni el estado del Bluetooth A2DP. Use el Centro de control de iOS para controlar la reproducción.',
     openSettings: 'Abrir Ajustes'
   }
 };

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { useDevice } from '../context';
 import { MediaControl } from '../native/MediaControl';
 import { Bluetooth, Play, Pause, SkipBack, SkipForward, Repeat, RadioReceiver, Music, Wind, Power, Sun, RefreshCw } from 'lucide-react';
@@ -23,6 +24,7 @@ const RhythmicIcon = ({ size, className, strokeWidth }: any) => (
 
 
 export function MediaView() {
+  const IS_IOS = Capacitor.getPlatform() === 'ios';
   const [activeTab, setActiveTab] = useState<'audio'|'light'>('audio');
   const { state, updateState, language, sendVibroCommand, sendAudioCommand, sendAudioModeCommand, sendLightCommand, sendLightColorCommand, mediaState, sendMediaCommand, openNotificationSettings } = useDevice();
 
@@ -209,7 +211,12 @@ export function MediaView() {
              
              {/* Track Info */}
              <div className="text-center mt-3 mb-8 px-2">
-               {mediaState.a2dpConnected ? (
+               {IS_IOS ? (
+                 <>
+                   <h2 className="text-[20px] font-medium text-gray-400 tracking-tight">{t('iosMediaUnsupportedTitle')}</h2>
+                   <p className="text-[12px] text-gray-400 mt-1 leading-relaxed">{t('iosMediaUnsupportedDesc')}</p>
+                 </>
+               ) : mediaState.a2dpConnected ? (
                  <>
                    <MarqueeText className="text-[20px] font-medium text-gray-900 tracking-tight" speed={50}>
                      {mediaState.title || mediaState.deviceName || t('unknownTitle')}
