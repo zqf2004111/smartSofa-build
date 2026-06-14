@@ -253,6 +253,18 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   // carrying remainingTime>0 because the device hasn't applied the timer=0
   // command yet) would re-open the countdown, requiring a second tap.
 
+  // Helper to decide whether device-driven volume updates should be ignored.
+  // User drag: suppressed while the pointer is down. After pointer up: keep
+  // suppressing echoed status frames for a short window so the slider doesn't
+  // snap back before the BLE write round-trips.
+  function isAudioSuppressed(key: 'volume' | 'treble' | 'bass'): boolean {
+    const w = typeof window !== 'undefined' ? (window as any) : null;
+    if (!w) return false;
+    if (w.__audioDragging?.[key]) return true;
+    const until = w.__audioSuppressUntilMs?.[key] || 0;
+    return Date.now() < until;
+  }
+
   const [mediaState, setMediaState] = useState<MediaBluetoothState>({
     a2dpConnected: false,
     deviceName: '',
@@ -309,8 +321,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
             console.log('[systemVolumeChanged]', r);
             pushDebug('VOL', `KVO fire v=${r?.volume}`);
             if (typeof r?.volume !== 'number') return;
-            const dragging = (typeof window !== 'undefined' && (window as any).__audioDragging?.volume) === true;
-            if (dragging) { pushDebug('VOL', 'KVO drop dragging'); return; }
+            if (isAudioSuppressed('volume')) { pushDebug('VOL', 'KVO drop suppressed'); return; }
             lastSysVolChangeAtMs.current = Date.now();
             // Collect all values within a quiet window. We then pick the
             // value that best represents user intent, robust against:
@@ -324,8 +335,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
               sysVolPendingValuesRef.current = [];
               sysVolFlushTimerRef.current = null;
               if (values.length === 0) return;
-              const stillDragging = (typeof window !== 'undefined' && (window as any).__audioDragging?.volume) === true;
-              if (stillDragging) return;
+              if (isAudioSuppressed('volume')) return;
               // Reject outliers: compute median, drop values that differ
               // by more than 30%pts. This kills BT negotiation 0/100 spikes
               // without breaking monotonic key-hold sequences.
@@ -380,8 +390,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
             lastPolledSysVol = v;
             // First reading after init: just record, don't synthesize an event.
             if (prev === null) return;
-            const dragging = (typeof window !== 'undefined' && (window as any).__audioDragging?.volume) === true;
-            if (dragging) { pushDebug('VOL', 'poll drop dragging'); return; }
+            if (isAudioSuppressed('volume')) { pushDebug('VOL', 'poll drop suppressed'); return; }
             // Synthesize the same path as KVO: push to coalesce buffer and
             // schedule the flush. The flush will update state.volume and
             // refresh the suppress timestamp so device status frames don't
@@ -394,8 +403,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
               sysVolPendingValuesRef.current = [];
               sysVolFlushTimerRef.current = null;
               if (values.length === 0) return;
-              const stillDragging = (typeof window !== 'undefined' && (window as any).__audioDragging?.volume) === true;
-              if (stillDragging) return;
+              if (isAudioSuppressed('volume')) return;
               const sorted = values.slice().sort((a, b) => a - b);
               const median = sorted[Math.floor(sorted.length / 2)];
               const filtered = values.filter((vv) => Math.abs(vv - median) <= 30);
@@ -953,11 +961,11 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           // Skip overwriting volume/treble/bass while the user is dragging
           // their sliders — otherwise echoed status frames would fight the
           // drag and make the slider jitter.
-          const dragging = (typeof window !== 'undefined' && (window as any).__audioDragging) || {};
           // Also skip volume overwrite for a short window after a system
           // volume change event — the sofa's status frame may still carry the
           // pre-change value until our BLE write round-trips.
           const sysVolFresh = (Date.now() - lastSysVolChangeAtMs.current) < SYS_VOL_SUPPRESS_MS;
+          const suppressVol = isAudioSuppressed('volume');
           // Require N consecutive identical reports before trusting a
           // device-reported volume that differs from local state. The sofa's
           // status frame keeps emitting the pre-write value for hundreds of
@@ -976,14 +984,14 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           } else if (reportedVolStableCountRef.current >= VOL_STABLE_FRAMES_REQUIRED) {
             trustReportedVol = true;
           }
-          if (!dragging.volume && !sysVolFresh && trustReportedVol) {
+          if (!suppressVol && !sysVolFresh && trustReportedVol) {
             updates.volume = vol;
             pushDebug('VOL', `report set ${prev.volume}->${vol}`);
           } else if (vol !== prev.volume) {
-            pushDebug('VOL', `report skip vol=${vol} prev=${prev.volume} drag=${!!dragging.volume} sysFresh=${sysVolFresh} trust=${trustReportedVol}`);
+            pushDebug('VOL', `report skip vol=${vol} prev=${prev.volume} suppressed=${suppressVol} sysFresh=${sysVolFresh} trust=${trustReportedVol}`);
           }
-          if (!dragging.treble) updates.treble = tre;
-          if (!dragging.bass) updates.bass = bas;
+          if (!isAudioSuppressed('treble')) updates.treble = tre;
+          if (!isAudioSuppressed('bass')) updates.bass = bas;
           audioSyncedToDevice.current = true;
         } else if (!audioSyncedToDevice.current) {
           // Device reported invalid/blank audio. Schedule a one-shot push of

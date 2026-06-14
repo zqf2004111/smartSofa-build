@@ -367,11 +367,14 @@ export function MediaView() {
                        type="range"
                        min="0" max="100"
                        value={slider.value}
-                       onPointerDown={() => {
+                       onPointerDown={(e) => {
                          const key = slider.id as 'volume' | 'treble' | 'bass';
                          const w: any = window as any;
                          w.__audioDragging = w.__audioDragging || {};
+                         w.__audioSuppressUntilMs = w.__audioSuppressUntilMs || {};
                          w.__audioDragging[key] = true;
+                         w.__audioSuppressUntilMs[key] = Infinity;
+                         try { (e.target as HTMLElement).setPointerCapture(e.pointerId); } catch {}
                        }}
                        onChange={(e) => {
                          const raw = parseInt(e.target.value);
@@ -391,24 +394,25 @@ export function MediaView() {
                            scheduleAudioSend();
                          }
                        }}
-                       onPointerUp={() => {
+                       onPointerUp={(e) => {
                          const key = slider.id as 'volume' | 'treble' | 'bass';
-                         // Final send when drag ends, throttled to enforce >= 100ms spacing.
+                         const w: any = window as any;
+                         w.__audioDragging = w.__audioDragging || {};
+                         w.__audioSuppressUntilMs = w.__audioSuppressUntilMs || {};
+                         w.__audioDragging[key] = false;
+                         w.__audioSuppressUntilMs[key] = Date.now() + 600;
                          scheduleAudioSend();
-                         // Keep ignoring incoming reports for a brief window so
-                         // the device's echoed status frame doesn't snap the
-                         // slider back to a stale value.
-                         setTimeout(() => {
-                           const w: any = window as any;
-                           if (w.__audioDragging) w.__audioDragging[key] = false;
-                         }, 600);
+                         try { (e.target as HTMLElement).releasePointerCapture(e.pointerId); } catch {}
                        }}
-                       onPointerCancel={() => {
+                       onPointerCancel={(e) => {
                          const key = slider.id as 'volume' | 'treble' | 'bass';
-                         setTimeout(() => {
-                           const w: any = window as any;
-                           if (w.__audioDragging) w.__audioDragging[key] = false;
-                         }, 600);
+                         const w: any = window as any;
+                         w.__audioDragging = w.__audioDragging || {};
+                         w.__audioSuppressUntilMs = w.__audioSuppressUntilMs || {};
+                         w.__audioDragging[key] = false;
+                         w.__audioSuppressUntilMs[key] = Date.now() + 600;
+                         scheduleAudioSend();
+                         try { (e.target as HTMLElement).releasePointerCapture(e.pointerId); } catch {}
                        }}
                        className="audio-slider absolute inset-0 w-full h-full cursor-pointer"
                      />
