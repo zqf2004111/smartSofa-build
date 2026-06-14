@@ -44,7 +44,7 @@ export function VentilationTab() {
 
   const handleModeClick = (modeId: string) => {
     if (state.ventilationMode === modeId && state.ventilationOn) {
-      updateState({ ventilationOn: false });
+      // 关闭命令只发送，不乐观更新 UI；等设备状态报告驱动关闭
       sendVentilationCommand(modeId, false);
     } else {
       turnOffHeatingIfOn();

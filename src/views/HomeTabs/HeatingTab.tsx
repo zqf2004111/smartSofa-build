@@ -47,7 +47,7 @@ export function HeatingTab() {
     pushDebug('HEAT-CLICK', `mode=${modeId} stMode=${state.heatingMode} stOn=${state.heatingOn} sel=[${state.heatingSelectedZones.join(',')}] sup=[${supportedZones.join(',')}]`);
     if (state.heatingMode === modeId && state.heatingOn) {
       pushDebug('HEAT-CLICK', 'branch=OFF');
-      updateState({ heatingOn: false });
+      // 关闭命令只发送，不乐观更新 UI；等设备状态报告驱动关闭
       sendHeatingCommand(modeId, false);
     } else {
       pushDebug('HEAT-CLICK', 'branch=ON');
