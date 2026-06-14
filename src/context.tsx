@@ -295,9 +295,10 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
         try {
           const sv = await MediaControl.addListener('systemVolumeChanged', (r: { volume: number }) => {
             console.log('[systemVolumeChanged]', r);
+            pushDebug('VOL', `KVO fire v=${r?.volume}`);
             if (typeof r?.volume !== 'number') return;
             const dragging = (typeof window !== 'undefined' && (window as any).__audioDragging?.volume) === true;
-            if (dragging) return;
+            if (dragging) { pushDebug('VOL', 'KVO drop dragging'); return; }
             lastSysVolChangeAtMs.current = Date.now();
             // Collect all values within a quiet window. We then pick the
             // value that best represents user intent, robust against:
@@ -353,20 +354,22 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
         // systemVolumeChanged so dragging/coalesce/suppression all apply.
         try {
           const r0 = await MediaControl.getSystemVolume();
+          pushDebug('VOL', `init read=${r0?.volume}`);
           if (typeof r0?.volume === 'number') lastPolledSysVol = r0.volume;
-        } catch {}
+        } catch (e) { pushDebug('VOL', `init ERR ${String(e)}`); }
         sysVolPollInterval = setInterval(async () => {
           try {
             const r = await MediaControl.getSystemVolume();
             const v = r?.volume;
-            if (typeof v !== 'number') return;
+            if (typeof v !== 'number') { pushDebug('VOL', `poll bad=${JSON.stringify(r)}`); return; }
             if (lastPolledSysVol === v) return;
             const prev = lastPolledSysVol;
+            pushDebug('VOL', `poll diff ${prev}->${v}`);
             lastPolledSysVol = v;
             // First reading after init: just record, don't synthesize an event.
             if (prev === null) return;
             const dragging = (typeof window !== 'undefined' && (window as any).__audioDragging?.volume) === true;
-            if (dragging) return;
+            if (dragging) { pushDebug('VOL', 'poll drop dragging'); return; }
             // Synthesize the same path as KVO: push to coalesce buffer and
             // schedule the flush. The flush will update state.volume and
             // refresh the suppress timestamp so device status frames don't
@@ -389,12 +392,13 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
               lastReportedVolRef.current = null;
               reportedVolStableCountRef.current = 0;
               setState((p) => {
-                if (p.volume === finalVol) return p;
+                if (p.volume === finalVol) { pushDebug('VOL', `flush skip same=${finalVol}`); return p; }
+                pushDebug('VOL', `flush set ${p.volume}->${finalVol}`);
                 return { ...p, volume: finalVol };
               });
             }, SYS_VOL_COALESCE_MS);
-          } catch {
-            // ignore
+          } catch (e) {
+            pushDebug('VOL', `poll ERR ${String(e)}`);
           }
         }, 1000);
 
@@ -956,7 +960,12 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           } else if (reportedVolStableCountRef.current >= VOL_STABLE_FRAMES_REQUIRED) {
             trustReportedVol = true;
           }
-          if (!dragging.volume && !sysVolFresh && trustReportedVol) updates.volume = vol;
+          if (!dragging.volume && !sysVolFresh && trustReportedVol) {
+            updates.volume = vol;
+            pushDebug('VOL', `report set ${prev.volume}->${vol}`);
+          } else if (vol !== prev.volume) {
+            pushDebug('VOL', `report skip vol=${vol} prev=${prev.volume} drag=${!!dragging.volume} sysFresh=${sysVolFresh} trust=${trustReportedVol}`);
+          }
           if (!dragging.treble) updates.treble = tre;
           if (!dragging.bass) updates.bass = bas;
           audioSyncedToDevice.current = true;
