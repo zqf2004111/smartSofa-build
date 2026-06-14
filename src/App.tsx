@@ -59,7 +59,7 @@ function AppContent() {
         
         <ConnectionBanner />
         {/* Top Header */}
-        <div style={{ paddingTop: 'max(0.85rem, calc(env(safe-area-inset-top) + 0.35rem))' }} className={`px-5 pb-4 bg-white flex-shrink-0 z-40 flex items-center justify-between ${currentTab === 'media' ? '' : 'border-b border-gray-100/50 shadow-[0_4px_12px_rgba(0,0,0,0.02)]'}`}>
+        <div style={{ paddingTop: 'max(0.7rem, calc(env(safe-area-inset-top) + 0.3rem))' }} className={`px-5 pb-4 bg-white flex-shrink-0 z-40 flex items-center justify-between ${currentTab === 'media' ? '' : 'border-b border-gray-100/50 shadow-[0_4px_12px_rgba(0,0,0,0.02)]'}`}>
           <div 
             className="flex items-center space-x-1 cursor-pointer"
             onClick={() => setIsDeviceSwitchModalOpen(true)}

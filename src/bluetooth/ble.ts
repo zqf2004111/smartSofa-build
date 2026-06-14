@@ -175,6 +175,19 @@ class BleManager {
 
     console.log(`[BLE] Found device: ${displayName} (${device.deviceId}) RSSI:${result.rssi}`);
     this.callbacks.onDeviceFound?.(discovered);
+
+    // During reconnect we are not allowed to connect by deviceId on iOS until
+    // the peripheral has been discovered. If this scan result is our target,
+    // stop scanning and connect immediately.
+    if (this.state === 'reconnecting' && this.connectedDeviceId === device.deviceId) {
+      console.log('[BLE] Reconnect scan found target, connecting...');
+      try { pushDebug('BLE', `reconnect scan found ${device.deviceId}`); } catch {}
+      this.stopScan().catch(() => {}).then(() => {
+        if (this.reconnectEnabled && this.connectedDeviceId === device.deviceId) {
+          this.connect(device.deviceId);
+        }
+      });
+    }
   }
 
   async connect(deviceId: string): Promise<boolean> {
@@ -291,6 +304,27 @@ class BleManager {
 
     this.reconnectTimer = setTimeout(async () => {
       if (!this.reconnectEnabled || !this.connectedDeviceId) return;
+      // On iOS CoreBluetooth we must discover the peripheral via scan before
+      // connect(deviceId) is allowed ("Device not found" error after reinstall).
+      // Start a short scan; handleScanResult will connect when the target is found.
+      if (IS_IOS) {
+        try {
+          try { pushDebug('BLE', 'reconnect startScan'); } catch {}
+          await this.startScan();
+          // Give the scan a window to find the device, then stop and retry.
+          setTimeout(() => {
+            if (this.state === 'reconnecting') {
+              try { pushDebug('BLE', 'reconnect scan window timeout'); } catch {}
+              this.stopScan().catch(() => {});
+              this.reconnectBackoffMs = Math.min(this.reconnectBackoffMs * 2, this.maxReconnectBackoffMs);
+              this.attemptReconnect();
+            }
+          }, 5000);
+          return;
+        } catch (e) {
+          try { pushDebug('BLE', `reconnect scan ERR ${String(e)}`); } catch {}
+        }
+      }
       const ok = await this.connect(this.connectedDeviceId);
       if (ok) {
         // Reset backoff on success.
