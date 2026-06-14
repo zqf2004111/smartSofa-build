@@ -213,6 +213,12 @@ class BleManager {
       try { pushDebug('BLE', `connect ERR ${String(e)}`); } catch {}
       this.callbacks.onError?.('Connection failed: ' + String(e));
       this.setState('disconnected');
+      // If auto-reconnect is enabled, schedule retries (e.g. app reinstall,
+      // device out of range, or transient BLE failure).
+      if (this.reconnectEnabled) {
+        this.connectedDeviceId = deviceId;
+        this.attemptReconnect();
+      }
       return false;
     }
   }
