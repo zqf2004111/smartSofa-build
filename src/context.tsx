@@ -1166,6 +1166,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     (window as any).__connectBleDevice = connectBleDevice;
   }, [startScan, connectBleDevice]);
 
+  try { pushDebug('VOL', 'render return JSX'); } catch {}
   return (
     <DeviceContext.Provider value={{
       state, language, setLanguage, updateState,

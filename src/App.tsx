@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { DeviceProvider, useDevice } from './context';
+import { pushDebug } from './debug/debugLog';
 import { BottomNav } from './components/BottomNav';
 import { HomeView } from './views/Home';
 import { MediaView } from './views/Media';
@@ -15,6 +16,7 @@ import { DeviceSelectionView } from './views/DeviceSelection';
 import { ConnectionBanner } from './components/ConnectionBanner';
 
 function AppContent() {
+  try { pushDebug('VOL', 'AppContent enter'); } catch {}
   const [currentScreen, setCurrentScreen] = useState<'main' | 'devices'>('devices');
   const [currentTab, setCurrentTab] = useState('home');
   const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
@@ -22,6 +24,7 @@ function AppContent() {
   const [isDeviceSwitchModalOpen, setIsDeviceSwitchModalOpen] = useState(false);
   const [currentDeviceId, setCurrentDeviceId] = useState<string | null>(null);
   const { savedDevices, pairTarget, clearPairTarget } = useDevice();
+  try { pushDebug('VOL', 'AppContent after useDevice'); } catch {}
 
   // NFC App Link auto-pair: open AddDeviceModal whenever pairTarget is set
   useEffect(() => {
