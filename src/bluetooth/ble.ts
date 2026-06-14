@@ -65,7 +65,7 @@ class BleManager {
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private reconnectEnabled = true;
   private reconnectBackoffMs = 2000;
-  private readonly maxReconnectBackoffMs = 30000;
+  private readonly maxReconnectBackoffMs = 5000;
   private rxBuffer: number[] = [];
   // Serialized write queue (especially needed on iOS). Each enqueued write
   // resolves after the actual BLE write completes (with a small inter-write
