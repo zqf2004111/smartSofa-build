@@ -75,7 +75,7 @@ export function VentilationTab() {
         {/* Modes */}
         <div className="flex flex-wrap gap-4 mt-2 mb-4">
           {modes.map((mode) => {
-            const isActive = state.ventilationMode === mode.id;
+            const isActive = state.ventilationMode === mode.id && state.ventilationOn;
             return (
               <button
                 key={mode.id}

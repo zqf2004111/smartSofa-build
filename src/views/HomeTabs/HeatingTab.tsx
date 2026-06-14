@@ -78,7 +78,7 @@ export function HeatingTab() {
       {/* Modes */}
       <div className="flex flex-wrap gap-4 mt-2 mb-4">
         {modes.map((mode) => {
-          const isActive = state.heatingMode === mode.id;
+          const isActive = state.heatingMode === mode.id && state.heatingOn;
           return (
             <button
               key={mode.id}
