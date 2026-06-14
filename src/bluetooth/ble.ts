@@ -35,6 +35,7 @@ import {
   type DeviceConfig,
   type FullDeviceState,
 } from './parser';
+import { pushDebug } from '../debug/debugLog';
 
 export interface DiscoveredDevice {
   deviceId: string;
@@ -256,6 +257,7 @@ class BleManager {
 
   private handleConnectionStatus(deviceId: string): void {
     console.log('[BLE] Disconnected from:', deviceId);
+    try { pushDebug('BLE', `handleConnectionStatus deviceId=${deviceId} connected=${this.connectedDeviceId} enabled=${this.reconnectEnabled}`); } catch {}
     if (this.connectedDeviceId === deviceId) {
       this.setState('disconnected');
       if (this.reconnectEnabled) {
@@ -265,10 +267,14 @@ class BleManager {
   }
 
   private attemptReconnect(): void {
-    if (!this.reconnectEnabled || !this.connectedDeviceId) return;
+    if (!this.reconnectEnabled || !this.connectedDeviceId) {
+      try { pushDebug('BLE', `attemptReconnect skip enabled=${this.reconnectEnabled} deviceId=${this.connectedDeviceId}`); } catch {}
+      return;
+    }
 
     this.reconnectAttempts++;
     this.setState('reconnecting');
+    try { pushDebug('BLE', `attemptReconnect #${this.reconnectAttempts} backoff=${this.reconnectBackoffMs}ms`); } catch {}
     console.log(`[BLE] Reconnecting... attempt ${this.reconnectAttempts}, backoff=${this.reconnectBackoffMs}ms`);
 
     this.reconnectTimer = setTimeout(async () => {
@@ -354,6 +360,7 @@ class BleManager {
 
   private setState(state: BleConnectionState): void {
     this.state = state;
+    try { pushDebug('BLE', `state ${state}`); } catch {}
     this.callbacks.onStateChange?.(state);
   }
 
@@ -408,6 +415,7 @@ class BleManager {
    */
   private handleWriteFailure(): void {
     if (this.state !== 'connected') return; // already handling
+    try { pushDebug('BLE', `handleWriteFailure reconnectEnabled=${this.reconnectEnabled} deviceId=${this.connectedDeviceId}`); } catch {}
     // Stop any motor repeat to avoid spamming failed writes.
     if (this.motorInterval) {
       clearInterval(this.motorInterval);
