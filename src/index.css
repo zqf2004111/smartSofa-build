@@ -41,6 +41,16 @@ textarea,
   user-select: auto;
 }
 
+/* Prevent iOS long-press menus on all images used as buttons. */
+img {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  pointer-events: none;
+}
+
 /* Audio sliders (Volume/Treble/Bass): always-visible thumb,
    large iOS-friendly hit area, transparent track (visual track is the
    div underneath). Used in Media.tsx. */

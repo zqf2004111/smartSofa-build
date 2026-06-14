@@ -61,9 +61,10 @@ class BleManager {
   private motorInterval: ReturnType<typeof setInterval> | null = null;
   private currentMotorCmd: Uint8Array | null = null;
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 3;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private reconnectEnabled = true;
+  private reconnectBackoffMs = 2000;
+  private readonly maxReconnectBackoffMs = 30000;
   private rxBuffer: number[] = [];
   // Serialized write queue (especially needed on iOS). Each enqueued write
   // resolves after the actual BLE write completes (with a small inter-write
@@ -180,6 +181,7 @@ class BleManager {
       await BleClient.connect(deviceId, (disconnectedDeviceId) => this.handleConnectionStatus(disconnectedDeviceId));
       this.connectedDeviceId = deviceId;
       this.reconnectAttempts = 0;
+      this.reconnectBackoffMs = 2000;
       this.reconnectEnabled = true;
 
       // Start notifications
@@ -263,24 +265,24 @@ class BleManager {
   }
 
   private attemptReconnect(): void {
-    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.log('[BLE] Max reconnect attempts reached');
-      this.callbacks.onError?.('Connection lost. Please reconnect manually.');
-      return;
-    }
+    if (!this.reconnectEnabled || !this.connectedDeviceId) return;
 
     this.reconnectAttempts++;
     this.setState('reconnecting');
-    console.log(`[BLE] Reconnecting... attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
+    console.log(`[BLE] Reconnecting... attempt ${this.reconnectAttempts}, backoff=${this.reconnectBackoffMs}ms`);
 
     this.reconnectTimer = setTimeout(async () => {
-      if (this.connectedDeviceId) {
-        const ok = await this.connect(this.connectedDeviceId);
-        if (!ok) {
-          this.attemptReconnect();
-        }
+      if (!this.reconnectEnabled || !this.connectedDeviceId) return;
+      const ok = await this.connect(this.connectedDeviceId);
+      if (ok) {
+        // Reset backoff on success.
+        this.reconnectBackoffMs = 2000;
+        return;
       }
-    }, 2000);
+      // Exponential backoff, capped at maxReconnectBackoffMs.
+      this.reconnectBackoffMs = Math.min(this.reconnectBackoffMs * 2, this.maxReconnectBackoffMs);
+      this.attemptReconnect();
+    }, this.reconnectBackoffMs);
   }
 
   private handleNotification(value: DataView): void {
