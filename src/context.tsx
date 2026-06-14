@@ -1117,7 +1117,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     pushDebug('VOL', `effect4 MOUNT (autoconn) ble=${bleState} saved=${savedDevices.length}`);
     if (isRemovingDevice.current) return;
     if (autoConnectAttempted.current) return;
-    if (bleState === 'connected' || bleState === 'connecting') return;
+    if (bleState === 'connected' || bleState === 'connecting' || bleState === 'scanning' || bleState === 'reconnecting') return;
     if (savedDevices.length === 0) return;
 
     const tryAutoConnect = async () => {

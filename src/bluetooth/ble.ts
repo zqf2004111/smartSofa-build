@@ -136,7 +136,7 @@ class BleManager {
       await BleClient.requestLEScan(
         {
           services: [],
-          allowDuplicates: false,
+          allowDuplicates: true,
         },
         (result) => this.handleScanResult(result)
       );
@@ -330,7 +330,7 @@ class BleManager {
               this.reconnectBackoffMs = Math.min(this.reconnectBackoffMs * 2, this.maxReconnectBackoffMs);
               this.attemptReconnect();
             }
-          }, 15000);
+          }, 30000);
           return;
         } catch (e) {
           try { pushDebug('BLE', `reconnect scan ERR ${String(e)}`); } catch {}
