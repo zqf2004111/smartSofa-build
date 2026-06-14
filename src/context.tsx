@@ -140,6 +140,9 @@ const autoConnectAttempted = { current: false };
 const BleBond = registerPlugin<{ removeBond: (options: { address: string }) => Promise<{ success: boolean }> }>('BleBond');
 
 export function DeviceProvider({ children }: { children: ReactNode }) {
+  // ULTRA-EARLY render trace (synchronous, runs every render).
+  // If this fires but 'effect MOUNT' below doesn't, hook order / minifier issue.
+  try { pushDebug('VOL', 'render'); } catch {}
   const [state, setState] = useState<SofaState>(initialState);
   const [language, setLanguage] = useState<'en' | 'zh' | 'es'>('en');
   const [savedDevices, setSavedDevices] = useState<SavedDevice[]>(() => {
@@ -263,6 +266,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   });
 
   // Media bluetooth state listener
+  pushDebug('VOL', 'before useEffect call');
   React.useEffect(() => {
     pushDebug('VOL', 'effect MOUNT');
     let removeListener: (() => void) | undefined;
@@ -436,6 +440,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   }, []);
 
   React.useEffect(() => {
+    pushDebug('VOL', 'effect2 MOUNT (timer)');
     let interval: NodeJS.Timeout;
     if (state.timerOn && state.timerRemaining > 0) {
       interval = setInterval(() => {
@@ -1078,6 +1083,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
 
   // Auto-connect saved device on app launch
   React.useEffect(() => {
+    pushDebug('VOL', `effect4 MOUNT (autoconn) ble=${bleState} saved=${savedDevices.length}`);
     if (isRemovingDevice.current) return;
     if (autoConnectAttempted.current) return;
     if (bleState === 'connected' || bleState === 'connecting') return;
