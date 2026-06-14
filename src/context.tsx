@@ -28,6 +28,7 @@ import {
 } from './massageConfig';
 import { useTranslation } from './i18n';
 import { pushDebug } from './debug/debugLog';
+import buildInfo from './build-info.json';
 
 interface SavedDevice {
   id: string;
@@ -142,7 +143,7 @@ const BleBond = registerPlugin<{ removeBond: (options: { address: string }) => P
 export function DeviceProvider({ children }: { children: ReactNode }) {
   // ULTRA-EARLY render trace (synchronous, runs every render).
   // If this fires but 'effect MOUNT' below doesn't, hook order / minifier issue.
-  try { pushDebug('VOL', 'render'); } catch {}
+  try { pushDebug('VOL', `render sha=${buildInfo.sha}`); } catch {}
   const [state, setState] = useState<SofaState>(initialState);
   const [language, setLanguage] = useState<'en' | 'zh' | 'es'>('en');
   const [savedDevices, setSavedDevices] = useState<SavedDevice[]>(() => {

@@ -3,8 +3,9 @@ import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { pushDebug } from './debug/debugLog';
+import buildInfo from './build-info.json';
 
-try { pushDebug('VOL', 'main.tsx eval'); } catch {}
+try { pushDebug('VOL', `main.tsx eval sha=${buildInfo.sha}`); } catch {}
 const rootEl = document.getElementById('root')!;
 try { pushDebug('VOL', `root el=${rootEl ? 'ok' : 'null'}`); } catch {}
 const _root = createRoot(rootEl);
