@@ -282,6 +282,9 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     let lastPolledSysVol: number | null = null;
 
     const initMediaListener = async () => {
+      // Delay init so the remote sink is ready and we can see early errors.
+      await new Promise((r) => setTimeout(r, 2000));
+
       pushDebug('VOL', 'effect enter');
       try {
         // Initial fetch
