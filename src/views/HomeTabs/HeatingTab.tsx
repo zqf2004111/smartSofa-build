@@ -19,7 +19,7 @@ export function HeatingTab() {
 
   const handleTimerConfirm = (val: number) => {
     if (val <= 0) {
-      updateState({ heatingTimerOn: false, heatingTimerRemaining: 0 });
+      // 关闭倒计时：只发命令，等响应驱动 UI
       sendTimerCommand('heating', 0);
     } else {
       updateState({ heatingTimerOn: true, heatingTimerDuration: val, heatingTimerRemaining: val * 60, heatingTimerStartAt: Date.now() });
@@ -148,7 +148,7 @@ export function HeatingTab() {
               }`}
               onClick={() => {
                 if (state.heatingTimerOn) {
-                  updateState({ heatingTimerOn: false, heatingTimerRemaining: 0 });
+                  // 关闭倒计时：只发命令，等响应驱动 UI
                   sendTimerCommand('heating', 0);
                 } else if (state.heatingOn) {
                   setIsTimerModalOpen(true);
