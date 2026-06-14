@@ -2,14 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { getDebugEntries, subscribeDebug, clearDebugEntries } from './debugLog';
 
 // Compact, draggable debug overlay.
-// - Defaults to COLLAPSED (header bar only) so it never blocks the sofa
-//   image or any button.
-// - Anchored to the very top of the screen by default, can be dragged
-//   anywhere by long-pressing the header bar.
-// - Filters noisy low-level RX/TX frames by default. Toggle "all" in the
-//   header to see them.
-// - "pause" stops re-rendering so the screen stays still while the user
-//   reads the trace.
+// - Default position: centered horizontally, anchored over the sofa
+//   image area (~33% from top) so it sits where there's no button.
+// - Default COLLAPSED to a tiny pill (~24px) that doesn't block buttons.
+// - Drag the pill (long-press anywhere on it except the icons) to move.
+// - "evt"/"all" toggles RX/TX low-level frame filtering.
+// - "⏸/▶" pauses re-renders so the trace stays still.
 // Remove (or guard with __DEV__) before shipping to App Store.
 
 const NOISY_TAGS = new Set(['RX', 'TX']);
@@ -19,9 +17,20 @@ interface Pos {
   left: number;
 }
 
-const POS_KEY = 'debug-overlay-pos';
+const POS_KEY = 'debug-overlay-pos-v2';
 const COLLAPSED_KEY = 'debug-overlay-collapsed';
 const SHOW_ALL_KEY = 'debug-overlay-show-all';
+
+function defaultPos(): Pos {
+  // Center horizontally, anchored ~33% from the top (over the sofa graphic).
+  // Pill is ~120px wide when collapsed.
+  const vw = typeof window !== 'undefined' ? window.innerWidth : 390;
+  const vh = typeof window !== 'undefined' ? window.innerHeight : 844;
+  return {
+    left: Math.max(0, Math.round(vw / 2 - 60)),
+    top: Math.round(vh * 0.33),
+  };
+}
 
 function loadPos(): Pos {
   try {
@@ -33,7 +42,7 @@ function loadPos(): Pos {
   } catch {
     /* ignore */
   }
-  return { top: 4, left: 8 };
+  return defaultPos();
 }
 
 export function DebugOverlay() {
@@ -46,7 +55,9 @@ export function DebugOverlay() {
   });
   const [paused, setPaused] = useState(false);
   const [pos, setPos] = useState<Pos>(() => loadPos());
+  const [dragging, setDragging] = useState(false);
   const dragRef = useRef<{
+    pointerId: number;
     startX: number;
     startY: number;
     origTop: number;
@@ -76,24 +87,34 @@ export function DebugOverlay() {
     : allEntries.filter((e) => !NOISY_TAGS.has(e.tag));
   const latest = filtered.slice(-30);
 
+  // Drag handlers: attached to the entire header bar.
   const onPointerDown = (e: React.PointerEvent) => {
-    // Don't start drag from buttons
-    if ((e.target as HTMLElement).tagName === 'BUTTON') return;
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    const tag = (e.target as HTMLElement).tagName;
+    if (tag === 'BUTTON') return; // let buttons handle their own clicks
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      /* ignore */
+    }
     dragRef.current = {
+      pointerId: e.pointerId,
       startX: e.clientX,
       startY: e.clientY,
       origTop: pos.top,
       origLeft: pos.left,
       moved: false,
     };
+    setDragging(true);
   };
   const onPointerMove = (e: React.PointerEvent) => {
     const d = dragRef.current;
-    if (!d) return;
+    if (!d || d.pointerId !== e.pointerId) return;
+    e.preventDefault();
     const dx = e.clientX - d.startX;
     const dy = e.clientY - d.startY;
-    if (Math.abs(dx) + Math.abs(dy) > 4) d.moved = true;
+    if (Math.abs(dx) + Math.abs(dy) > 3) d.moved = true;
     if (!d.moved) return;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
@@ -101,13 +122,16 @@ export function DebugOverlay() {
     const newTop = Math.max(0, Math.min(vh - 24, d.origTop + dy));
     setPos({ top: newTop, left: newLeft });
   };
-  const onPointerUp = (e: React.PointerEvent) => {
+  const endDrag = (e: React.PointerEvent) => {
+    const d = dragRef.current;
+    if (!d || d.pointerId !== e.pointerId) return;
     try {
       (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     } catch {
       /* ignore */
     }
     dragRef.current = null;
+    setDragging(false);
   };
 
   const width = collapsed ? 'auto' : 'min(420px, calc(100vw - 16px))';
@@ -119,8 +143,8 @@ export function DebugOverlay() {
         top: pos.top,
         left: pos.left,
         width,
-        maxHeight: collapsed ? 24 : '38vh',
-        background: 'rgba(0,0,0,0.78)',
+        maxHeight: collapsed ? 28 : '38vh',
+        background: dragging ? 'rgba(60,120,60,0.92)' : 'rgba(0,0,0,0.78)',
         color: '#0f0',
         fontFamily: 'Menlo, Consolas, monospace',
         fontSize: 10,
@@ -128,28 +152,33 @@ export function DebugOverlay() {
         borderRadius: 6,
         zIndex: 99999,
         overflow: 'hidden',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+        boxShadow: dragging
+          ? '0 0 0 2px #0f0, 0 4px 16px rgba(0,0,0,0.7)'
+          : '0 2px 8px rgba(0,0,0,0.5)',
         pointerEvents: 'auto',
         touchAction: 'none',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        WebkitTouchCallout: 'none',
       }}
     >
       <div
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: 6,
-          padding: '2px 6px',
+          padding: '4px 8px',
           background: 'rgba(255,255,255,0.08)',
           cursor: 'move',
-          userSelect: 'none',
+          touchAction: 'none',
         }}
       >
-        <span style={{ color: '#fff', fontWeight: 600 }}>
-          DBG {filtered.length}/{allEntries.length}
+        <span style={{ color: '#fff', fontWeight: 600, pointerEvents: 'none' }}>
+          ⠿ DBG {filtered.length}/{allEntries.length}
         </span>
         <button onClick={() => setCollapsed((c) => !c)} style={btnStyle}>
           {collapsed ? '▲' : '▼'}
@@ -178,9 +207,9 @@ export function DebugOverlay() {
       {!collapsed && (
         <div
           style={{
-            padding: '4px 6px',
+            padding: '4px 8px',
             overflowY: 'auto',
-            maxHeight: 'calc(38vh - 24px)',
+            maxHeight: 'calc(38vh - 28px)',
             WebkitOverflowScrolling: 'touch',
           }}
         >
@@ -218,7 +247,8 @@ const btnStyle: React.CSSProperties = {
   border: 'none',
   color: '#fff',
   fontSize: 11,
-  padding: '1px 6px',
+  padding: '2px 8px',
   borderRadius: 4,
   lineHeight: 1.1,
+  touchAction: 'manipulation',
 };

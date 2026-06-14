@@ -10,7 +10,6 @@ import {
   type BleDevice,
 } from '@capacitor-community/bluetooth-le';
 import { Capacitor } from '@capacitor/core';
-import { pushDebug } from '../debug/debugLog';
 
 const IS_IOS = Capacitor.getPlatform() === 'ios';
 // iOS CoreBluetooth requires writes to be serialized; back-to-back
@@ -289,7 +288,6 @@ class BleManager {
     const bytes = new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
     const hex = bytesToHex(bytes);
     console.log(`[BLE] RX raw (${bytes.length} bytes): ${hex}`);
-    pushDebug('RX', hex);
     this.callbacks.onLog?.('RX', hex);
 
     // Accumulate into buffer for frame parsing
@@ -379,7 +377,6 @@ class BleManager {
     if (!this.connectedDeviceId) return;
     const hex = bytesToHex(data);
     console.log(`[BLE] TX: ${hex}`);
-    pushDebug('TX', hex);
     this.callbacks.onLog?.('TX', hex);
 
     try {

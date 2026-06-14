@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useDevice } from '../../context';
 import { TimerModal } from '../../components/TimerModal';
+import { pushDebug } from '../../debug/debugLog';
 import { useTranslation } from '../../i18n';
 import type { HeatingZoneKey } from '../../bluetooth/parser';
 import { HEATING_ZONE_ORDER } from '../../bluetooth/parser';
@@ -43,10 +44,13 @@ export function HeatingTab() {
   };
 
   const handleModeClick = (modeId: string) => {
+    pushDebug('HEAT-CLICK', `mode=${modeId} stMode=${state.heatingMode} stOn=${state.heatingOn} sel=[${state.heatingSelectedZones.join(',')}] sup=[${supportedZones.join(',')}]`);
     if (state.heatingMode === modeId && state.heatingOn) {
+      pushDebug('HEAT-CLICK', 'branch=OFF');
       updateState({ heatingOn: false });
       sendHeatingCommand(modeId, false);
     } else {
+      pushDebug('HEAT-CLICK', 'branch=ON');
       turnOffVentilationIfOn();
       const targetZones = state.heatingSelectedZones.length > 0 ? state.heatingSelectedZones : supportedZones;
       updateState({ heatingMode: modeId, heatingOn: true, heatingSelectedZones: targetZones });
@@ -56,15 +60,16 @@ export function HeatingTab() {
 
   const handleZoneToggle = (zone: HeatingZoneKey) => {
     const isSelected = state.heatingSelectedZones.includes(zone);
+    const effectiveMode = state.heatingMode || 'gentle';
     if (isSelected) {
       const nextSelected = state.heatingSelectedZones.filter((z) => z !== zone);
       updateState({ heatingSelectedZones: nextSelected });
-      sendHeatingCommand(state.heatingMode, false, [zone]);
+      sendHeatingCommand(effectiveMode, false, [zone]);
     } else {
       turnOffVentilationIfOn();
       const nextSelected = [...state.heatingSelectedZones, zone];
-      updateState({ heatingSelectedZones: nextSelected, heatingOn: true });
-      sendHeatingCommand(state.heatingMode, true, [zone]);
+      updateState({ heatingSelectedZones: nextSelected, heatingOn: true, heatingMode: effectiveMode });
+      sendHeatingCommand(effectiveMode, true, [zone]);
     }
   };
 
@@ -73,7 +78,7 @@ export function HeatingTab() {
       {/* Modes */}
       <div className="flex flex-wrap gap-4 mt-2 mb-4">
         {modes.map((mode) => {
-          const isActive = state.heatingMode === mode.id && state.heatingOn;
+          const isActive = state.heatingMode === mode.id;
           return (
             <button
               key={mode.id}

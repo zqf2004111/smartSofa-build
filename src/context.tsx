@@ -26,6 +26,7 @@ import {
   getDefaultMassageModeId,
   isMassageModeSupported,
 } from './massageConfig';
+import { useTranslation } from './i18n';
 import { pushDebug } from './debug/debugLog';
 
 interface SavedDevice {
@@ -88,14 +89,14 @@ const initialState: SofaState = {
   heatingLevel: 1,
   heatingTimer: 5,
   heatingOn: false,
-  heatingMode: 'gentle',
+  heatingMode: '',
   heatingSelectedZones: [],
   heatingZoneStates: {},
 
   ventilationLevel: 1,
   ventilationTimer: 5,
   ventilationOn: false,
-  ventilationMode: 'gentle',
+  ventilationMode: '',
   ventilationSelectedZones: [],
   ventilationZoneStates: {},
 
@@ -551,13 +552,16 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   };
 
   const sendHeatingCommand = (mode: string, on: boolean, zones?: HeatingZoneKey[]) => {
-    if (bleState !== 'connected') return;
+    pushDebug('HEAT-TX', `enter mode=${mode} on=${on} zones=${zones ? '['+zones.join(',')+']' : 'undef'} bleState=${bleState}`);
+    if (bleState !== 'connected') { pushDebug('HEAT-TX', 'ABORT bleState!=connected'); return; }
     const modeVal = on ? heatingModeToProtocol(mode) : HEATING_MODE.OFF;
     let targetZones = zones ?? state.heatingSelectedZones;
     if (targetZones.length === 0) {
       const supported = getSupportedHeatingZones(deviceConfigRef.current);
+      pushDebug('HEAT-TX', `no zones, supported=[${supported.join(',')}]`);
       if (supported.length === 0) {
         // 无配置时回退到全局模式命令，保证兼容
+        pushDebug('HEAT-TX', `fallback global modeVal=0x${modeVal.toString(16)}`);
         bleManager.send(buildHeatingModeCmd(modeVal));
         return;
       }
@@ -566,9 +570,11 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     // Arm pending suppression so incoming status frames during the BLE
     // round-trip don't stomp the optimistic UI back to OFF.
     heatingCmdPendingUntilRef.current = Date.now() + 3000;
-    pushDebug('HEAT-TX', `mode=${mode} on=${on} zones=${targetZones.join(',')} modeVal=0x${modeVal.toString(16)} pendingUntil=+3000ms`);
+    pushDebug('HEAT-TX', `dispatch modeVal=0x${modeVal.toString(16)} targetZones=[${targetZones.join(',')}]`);
     targetZones.forEach((zone) => {
-      bleManager.send(buildHeatingCmd(zone, modeVal));
+      const frame = buildHeatingCmd(zone, modeVal);
+      pushDebug('HEAT-TX', `  ${zone}: send ${frame.length}B`);
+      bleManager.send(frame).catch((e) => pushDebug('HEAT-TX', `  ${zone}: send ERR ${String(e)}`));
     });
     setState((prev) => {
       const nextZoneStates: SofaState['heatingZoneStates'] = { ...prev.heatingZoneStates };
@@ -599,7 +605,6 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       targetZones = supported;
     }
     ventilationCmdPendingUntilRef.current = Date.now() + 3000;
-    pushDebug('VENT-TX', `mode=${mode} on=${on} zones=${targetZones.join(',')} modeVal=0x${modeVal.toString(16)} pendingUntil=+3000ms`);
     targetZones.forEach((zone) => {
       bleManager.send(buildVentilationCmd(zone, modeVal));
     });
@@ -778,16 +783,13 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           }
         });
         const anyOn = onZones.length > 0;
-        const remainPending = heatingCmdPendingUntilRef.current - Date.now();
-        pushDebug('HEAT-RX',
-          `frames=${report.heating.length} anyOn=${anyOn} onZones=[${onZones.join(',')}] cmnMode=${commonMode} pending=${isHeatingPending ? remainPending + 'ms' : 'no'} prevOn=${prev.heatingOn} prevMode=${prev.heatingMode}`);
         // Skip overwriting optimistic UI state during the pending window;
         // still allow timer/remainingTime to update below.
         if (!isHeatingPending) {
           updates.heatingOn = anyOn;
           updates.heatingMode = anyOn
             ? (commonMode === HEATING_MODE.RAPID ? 'rapid' : commonMode === HEATING_MODE.GENTLE ? 'gentle' : prev.heatingMode)
-            : prev.heatingMode;
+            : '';
           updates.heatingZoneStates = zoneStates;
           if (anyOn) {
             updates.heatingSelectedZones = onZones;
@@ -827,14 +829,11 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           }
         });
         const anyOn = onZones.length > 0;
-        const remainPendingV = ventilationCmdPendingUntilRef.current - Date.now();
-        pushDebug('VENT-RX',
-          `frames=${report.ventilation.length} anyOn=${anyOn} onZones=[${onZones.join(',')}] cmnMode=${commonMode} pending=${isVentilationPending ? remainPendingV + 'ms' : 'no'} prevOn=${prev.ventilationOn} prevMode=${prev.ventilationMode}`);
         if (!isVentilationPending) {
           updates.ventilationOn = anyOn;
           updates.ventilationMode = anyOn
             ? (commonMode === VENTILATION_MODE.RAPID ? 'rapid' : commonMode === VENTILATION_MODE.GENTLE ? 'gentle' : prev.ventilationMode)
-            : prev.ventilationMode;
+            : '';
           updates.ventilationZoneStates = zoneStates;
           if (anyOn) {
             updates.ventilationSelectedZones = onZones;

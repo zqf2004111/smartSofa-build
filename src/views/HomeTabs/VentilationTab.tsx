@@ -56,15 +56,16 @@ export function VentilationTab() {
 
   const handleZoneToggle = (zone: VentilationZoneKey) => {
     const isSelected = state.ventilationSelectedZones.includes(zone);
+    const effectiveMode = state.ventilationMode || 'gentle';
     if (isSelected) {
       const nextSelected = state.ventilationSelectedZones.filter((z) => z !== zone);
       updateState({ ventilationSelectedZones: nextSelected });
-      sendVentilationCommand(state.ventilationMode, false, [zone]);
+      sendVentilationCommand(effectiveMode, false, [zone]);
     } else {
       turnOffHeatingIfOn();
       const nextSelected = [...state.ventilationSelectedZones, zone];
-      updateState({ ventilationSelectedZones: nextSelected, ventilationOn: true });
-      sendVentilationCommand(state.ventilationMode, true, [zone]);
+      updateState({ ventilationSelectedZones: nextSelected, ventilationOn: true, ventilationMode: effectiveMode });
+      sendVentilationCommand(effectiveMode, true, [zone]);
     }
   };
 
@@ -74,7 +75,7 @@ export function VentilationTab() {
         {/* Modes */}
         <div className="flex flex-wrap gap-4 mt-2 mb-4">
           {modes.map((mode) => {
-            const isActive = state.ventilationMode === mode.id && state.ventilationOn;
+            const isActive = state.ventilationMode === mode.id;
             return (
               <button
                 key={mode.id}

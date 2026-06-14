@@ -3,6 +3,44 @@
 // (e.g. bluetooth/ble.ts). Components subscribe via subscribe() and
 // trigger their own re-renders.
 
+// Optional remote sink: when set (e.g. "http://172.30.48.2:8765/log"),
+// every pushDebug() also POSTs to that URL. Useful on iOS where there is
+// no easy stdout / overlay-free console. Set via window.__remoteLog(url).
+let REMOTE_LOG_URL: string | null = null;
+try {
+  // Preserve across reloads — handy for native WebView.
+  const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('smartsofa.remoteLog') : null;
+  if (saved) REMOTE_LOG_URL = saved;
+} catch { /* ignore */ }
+
+// Default to project LAN dev box if nothing else has been configured.
+// Safe to leave on: if the host is unreachable the fetch silently fails.
+if (!REMOTE_LOG_URL) {
+  REMOTE_LOG_URL = 'http://172.30.48.2:8765/log';
+}
+
+export function setRemoteLog(url: string | null): void {
+  REMOTE_LOG_URL = url;
+  try {
+    if (url) localStorage.setItem('smartsofa.remoteLog', url);
+    else localStorage.removeItem('smartsofa.remoteLog');
+  } catch { /* ignore */ }
+}
+
+function sendRemote(tag: string, msg: string): void {
+  const url = REMOTE_LOG_URL;
+  if (!url) return;
+  try {
+    // Fire-and-forget. keepalive lets it survive page transitions.
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tag, msg, t: Date.now() }),
+      keepalive: true,
+    }).catch(() => { /* ignore */ });
+  } catch { /* ignore */ }
+}
+
 export type DebugEntry = {
   t: number;          // epoch ms
   tag: string;        // short category
@@ -21,6 +59,7 @@ export function pushDebug(tag: string, msg: string): void {
   listeners.forEach((cb) => {
     try { cb(); } catch { /* ignore */ }
   });
+  sendRemote(tag, msg);
 }
 
 export function getDebugEntries(): DebugEntry[] {
@@ -59,7 +98,10 @@ export function setDebugOverlayEnabled(on: boolean): void {
 
 // Globals for easy enable from Safari Web Inspector / on-device:
 // > __debugOn() / __debugOff()
+// > __remoteLog('http://192.168.x.x:8765/log') to override LAN sink
+// > __remoteLog(null) to disable
 if (typeof window !== 'undefined') {
   (window as any).__debugOn = () => { setDebugOverlayEnabled(true); window.location.reload(); };
   (window as any).__debugOff = () => { setDebugOverlayEnabled(false); window.location.reload(); };
+  (window as any).__remoteLog = (url: string | null) => setRemoteLog(url);
 }
