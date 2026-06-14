@@ -64,8 +64,8 @@ class BleManager {
   private reconnectAttempts = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private reconnectEnabled = true;
-  private reconnectBackoffMs = 2000;
-  private readonly maxReconnectBackoffMs = 5000;
+  private reconnectBackoffMs = 5000;
+  private readonly maxReconnectBackoffMs = 15000;
   private rxBuffer: number[] = [];
   // Serialized write queue (especially needed on iOS). Each enqueued write
   // resolves after the actual BLE write completes (with a small inter-write
@@ -114,7 +114,7 @@ class BleManager {
     if (this.state === 'reconnecting') {
       this.disableReconnect();
       this.reconnectAttempts = 0;
-      this.reconnectBackoffMs = 2000;
+      this.reconnectBackoffMs = 5000;
     }
     if (this.state === 'scanning') {
       console.log('[BLE] Already scanning, skip');
@@ -209,7 +209,7 @@ class BleManager {
       await BleClient.connect(deviceId, (disconnectedDeviceId) => this.handleConnectionStatus(disconnectedDeviceId));
       this.connectedDeviceId = deviceId;
       this.reconnectAttempts = 0;
-      this.reconnectBackoffMs = 2000;
+      this.reconnectBackoffMs = 5000;
       this.reconnectEnabled = true;
 
       // Start notifications
@@ -339,7 +339,7 @@ class BleManager {
       const ok = await this.connect(this.connectedDeviceId);
       if (ok) {
         // Reset backoff on success.
-        this.reconnectBackoffMs = 2000;
+        this.reconnectBackoffMs = 5000;
         return;
       }
       // Exponential backoff, capped at maxReconnectBackoffMs.
