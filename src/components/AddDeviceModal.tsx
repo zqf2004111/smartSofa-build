@@ -155,7 +155,7 @@ export const AddDeviceModal: React.FC<AddDeviceModalProps> = ({ isOpen, onClose,
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 transition-opacity pt-[max(0.5rem,env(safe-area-inset-top))]" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 transition-opacity" style={{ paddingTop: 'max(0.5rem, var(--safe-area-inset-top, env(safe-area-inset-top, 0px)))' }} onClick={onClose}>
       <div
         className="bg-[#FAFAFA] rounded-[24px] w-full max-w-md shadow-xl animate-in zoom-in-95 duration-200 relative flex flex-col max-h-[85vh]"
         onClick={(e) => e.stopPropagation()}

@@ -17,6 +17,8 @@ import java.nio.charset.StandardCharsets;
 import android.view.View;
 import android.view.WindowInsetsController;
 import android.webkit.WebView;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -50,6 +52,27 @@ public class MainActivity extends BridgeActivity {
             );
         }
         getWindow().setStatusBarColor(Color.TRANSPARENT);
+
+        // Inject system bar insets as CSS vars on the WebView so JS can use
+        // var(--safe-area-inset-top/bottom) (Android does not auto-populate env()).
+        final WebView webView = this.bridge != null ? this.bridge.getWebView() : null;
+        if (webView != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(webView, (v, insets) -> {
+                int top = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
+                int bottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
+                float density = getResources().getDisplayMetrics().density;
+                final float topDp = top / density;
+                final float bottomDp = bottom / density;
+                String js = String.format(java.util.Locale.US,
+                    "document.documentElement.style.setProperty('--safe-area-inset-top','%.2fpx');" +
+                    "document.documentElement.style.setProperty('--safe-area-inset-bottom','%.2fpx');",
+                    topDp, bottomDp);
+                webView.post(() -> webView.evaluateJavascript(js, null));
+                return insets;
+            });
+            // Request insets dispatch once view is attached.
+            webView.post(() -> ViewCompat.requestApplyInsets(webView));
+        }
     }
 
     @Override

@@ -15,9 +15,10 @@ try {
 
 // Default to project LAN dev box if nothing else has been configured.
 // Safe to leave on: if the host is unreachable the fetch silently fails.
-if (!REMOTE_LOG_URL) {
-  REMOTE_LOG_URL = 'http://172.30.48.2:8765/log';
-}
+// [Disabled] 默认远程回传暂时关闭，避免发布版本向 LAN 调试服务器发送日志。
+// if (!REMOTE_LOG_URL) {
+//   REMOTE_LOG_URL = 'http://172.30.48.2:8765/log';
+// }
 
 export function setRemoteLog(url: string | null): void {
   REMOTE_LOG_URL = url;
@@ -27,18 +28,20 @@ export function setRemoteLog(url: string | null): void {
   } catch { /* ignore */ }
 }
 
-function sendRemote(tag: string, msg: string): void {
-  const url = REMOTE_LOG_URL;
-  if (!url) return;
-  try {
-    // Fire-and-forget. keepalive lets it survive page transitions.
-    fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tag, msg, t: Date.now() }),
-      keepalive: true,
-    }).catch(() => { /* ignore */ });
-  } catch { /* ignore */ }
+function sendRemote(_tag: string, _msg: string): void {
+  // [Disabled] 暂时关闭日志回传，保留函数体以便后续恢复。
+  return;
+  // const url = REMOTE_LOG_URL;
+  // if (!url) return;
+  // try {
+  //   // Fire-and-forget. keepalive lets it survive page transitions.
+  //   fetch(url, {
+  //     method: 'POST',
+  //     headers: { 'Content-Type': 'application/json' },
+  //     body: JSON.stringify({ tag, msg, t: Date.now() }),
+  //     keepalive: true,
+  //   }).catch(() => { /* ignore */ });
+  // } catch { /* ignore */ }
 }
 
 export type DebugEntry = {

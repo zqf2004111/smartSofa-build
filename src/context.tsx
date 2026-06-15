@@ -646,6 +646,16 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     }
     pushDebug('TIMER', `sendTimer type=${type} minutes=${minutes}`);
     bleManager.send(buildTimerCmd(type, minutes));
+    // For timer-off, do NOT optimistically flip the UI; rely on the device
+    // status report. We only clear the heating/ventilation pending window so
+    // the next status frame is not suppressed by the mode-command guard.
+    if (minutes === 0) {
+      if (type === 'heating') {
+        heatingCmdPendingUntilRef.current = 0;
+      } else if (type === 'ventilation') {
+        ventilationCmdPendingUntilRef.current = 0;
+      }
+    }
   };
 
   const getSupportedHeatingZones = (config: DeviceConfig | null): HeatingZoneKey[] => {
@@ -897,7 +907,11 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           }
         }
         // 设备 remainingTime 驱动本地倒计时（同 massage）
-        const heatTimerTurnsOff = maxRemaining === 0 && prev.heatingTimerOn && !isHeatingPending;
+        // Timer-off should NOT be suppressed by the heating pending window:
+        // the pending guard exists to protect optimistic mode/zone state, but
+        // device-side timer expiry/cancel is independent and must be reflected
+        // promptly. (See ventilation block below for the same fix.)
+        const heatTimerTurnsOff = maxRemaining === 0 && prev.heatingTimerOn;
         pushDebug('HEAT-RX', `anyOn=${anyOn} maxRemaining=${maxRemaining} pending=${isHeatingPending} prevTimerOn=${prev.heatingTimerOn} -> setTimerOff=${heatTimerTurnsOff}`);
         if (maxRemaining > 0) {
           if (!prev.heatingTimerOn) {
@@ -906,7 +920,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
             updates.heatingTimerDuration = Math.max(1, Math.round(maxRemaining / 60));
             updates.heatingTimerStartAt = Date.now();
           }
-        } else if (prev.heatingTimerOn && !isHeatingPending) {
+        } else if (prev.heatingTimerOn) {
           updates.heatingTimerOn = false;
           updates.heatingTimerRemaining = 0;
         }
@@ -943,7 +957,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           }
         }
         // 设备 remainingTime 驱动本地倒计时（同 massage）
-        const ventTimerTurnsOff = maxRemaining === 0 && prev.ventilationTimerOn && !isVentilationPending;
+        const ventTimerTurnsOff = maxRemaining === 0 && prev.ventilationTimerOn;
         pushDebug('VENT-RX', `anyOn=${anyOn} maxRemaining=${maxRemaining} pending=${isVentilationPending} prevTimerOn=${prev.ventilationTimerOn} -> setTimerOff=${ventTimerTurnsOff}`);
         if (maxRemaining > 0) {
           if (!prev.ventilationTimerOn) {
@@ -952,7 +966,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
             updates.ventilationTimerDuration = Math.max(1, Math.round(maxRemaining / 60));
             updates.ventilationTimerStartAt = Date.now();
           }
-        } else if (prev.ventilationTimerOn && !isVentilationPending) {
+        } else if (prev.ventilationTimerOn) {
           updates.ventilationTimerOn = false;
           updates.ventilationTimerRemaining = 0;
         }

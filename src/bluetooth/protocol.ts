@@ -127,8 +127,8 @@ export const AUDIO_MODE = {
 export const POSITION_PRESET = {
   HOME: 0x00,
   TV: 0x01,
-  RECLINE: 0x02,
-  ZG: 0x03,
+  RECLINE: 0x03,
+  ZG: 0x02,
   HIGH_LEG: 0x04,
 } as const;
 

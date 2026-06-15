@@ -38,3 +38,12 @@ smartSofa.zip
 gitee.txt
 qiniu.txt
 github.txt
+
+# Local-only ad-hoc scripts / mirrors / temp artifacts
+.tmp_ipa/
+.tmp_mirror/
+scripts/debug-server.py
+scripts/wait_ipa.sh
+scripts/wait_ipa_sha.sh
+src/debug/InlineDebugPane.tsx
+~$*

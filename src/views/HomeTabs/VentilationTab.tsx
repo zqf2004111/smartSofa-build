@@ -44,29 +44,19 @@ export function VentilationTab() {
   };
 
   const handleModeClick = (modeId: string) => {
+    pushDebug('VENT-CLICK', `mode=${modeId} stMode=${state.ventilationMode} stOn=${state.ventilationOn} sup=[${supportedZones.join(',')}]`);
     if (state.ventilationMode === modeId && state.ventilationOn) {
+      pushDebug('VENT-CLICK', 'branch=OFF (all zones)');
       // 关闭命令只发送，不乐观更新 UI；等设备状态报告驱动关闭
-      sendVentilationCommand(modeId, false);
+      // 多部位时一次性关闭所有 supported zones
+      sendVentilationCommand(modeId, false, supportedZones);
     } else {
+      pushDebug('VENT-CLICK', 'branch=ON (all zones)');
       turnOffHeatingIfOn();
-      const targetZones = state.ventilationSelectedZones.length > 0 ? state.ventilationSelectedZones : supportedZones;
+      // 打开时所有 supported zones 一起打开
+      const targetZones = supportedZones;
       updateState({ ventilationMode: modeId, ventilationOn: true, ventilationSelectedZones: targetZones });
       sendVentilationCommand(modeId, true, targetZones);
-    }
-  };
-
-  const handleZoneToggle = (zone: VentilationZoneKey) => {
-    const isSelected = state.ventilationSelectedZones.includes(zone);
-    const effectiveMode = state.ventilationMode || 'gentle';
-    if (isSelected) {
-      const nextSelected = state.ventilationSelectedZones.filter((z) => z !== zone);
-      updateState({ ventilationSelectedZones: nextSelected });
-      sendVentilationCommand(effectiveMode, false, [zone]);
-    } else {
-      turnOffHeatingIfOn();
-      const nextSelected = [...state.ventilationSelectedZones, zone];
-      updateState({ ventilationSelectedZones: nextSelected, ventilationOn: true, ventilationMode: effectiveMode });
-      sendVentilationCommand(effectiveMode, true, [zone]);
     }
   };
 
@@ -94,30 +84,7 @@ export function VentilationTab() {
           })}
         </div>
 
-        {/* Zone selector (only when multiple zones are supported) */}
-        {supportedZones.length > 1 && (
-          <div className="flex flex-wrap gap-2 mb-6">
-            {supportedZones.map((zone) => {
-              const isSelected = state.ventilationSelectedZones.includes(zone);
-              const isOn = state.ventilationZoneStates[zone]?.on;
-              return (
-                <button
-                  key={zone}
-                  onClick={() => handleZoneToggle(zone)}
-                  className={`px-3 py-1.5 rounded-full text-[13px] font-medium border transition-colors ${
-                    isOn
-                      ? 'bg-[#0A5BC4] text-white border-[#0A5BC4]'
-                      : isSelected
-                      ? 'text-[#0A5BC4] border-[#0A5BC4] bg-blue-50'
-                      : 'text-gray-500 border-gray-200 bg-white'
-                  }`}
-                >
-                  {t(zone)}
-                </button>
-              );
-            })}
-          </div>
-        )}
+        {/* Zone selector removed: opening/closing a mode toggles ALL supported zones together. */}
 
         {/* Timer Toggle */}
         <div className="pt-6 border-t border-gray-50 mt-4 mb-2">

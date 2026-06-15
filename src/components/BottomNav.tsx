@@ -19,7 +19,10 @@ export function BottomNav({ currentTab, onTabChange }: BottomNavProps) {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-100 px-8 py-3 pb-5 flex justify-between items-center rounded-t-3xl shadow-[0_-8px_24px_rgba(0,0,0,0.03)] z-50">
+    <div
+      style={{ paddingBottom: 'max(1.25rem, calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 0.25rem))' }}
+      className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-100 px-8 pt-3 flex justify-between items-center rounded-t-3xl shadow-[0_-8px_24px_rgba(0,0,0,0.03)] z-50"
+    >
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = currentTab === tab.id;

@@ -4,6 +4,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
 import { DeviceProvider, useDevice } from './context';
 import { pushDebug } from './debug/debugLog';
 import { BottomNav } from './components/BottomNav';
@@ -33,6 +35,22 @@ function AppContent() {
     }
   }, [pairTarget]);
 
+  // Configure native status bar to overlay WebView on Capacitor platforms.
+  // Android: combined with MainActivity's WindowInsets listener that injects
+  //          --safe-area-inset-top/bottom CSS vars (env() is 0 on Android WebView).
+  // iOS: env(safe-area-inset-*) works natively.
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    (async () => {
+      try {
+        await StatusBar.setOverlaysWebView({ overlay: true });
+        await StatusBar.setStyle({ style: Style.Light });
+      } catch (e) {
+        try { pushDebug('STATUSBAR', `init err ${(e as Error)?.message}`); } catch {}
+      }
+    })();
+  }, []);
+
   const currentDevice = savedDevices.find(d => d.id === currentDeviceId) || savedDevices[0];
   const deviceName = currentDevice?.name || 'Recliner Plus';
 
@@ -59,7 +77,7 @@ function AppContent() {
         
         {!isAddDeviceModalOpen && <ConnectionBanner />}
         {/* Top Header */}
-        <div style={{ paddingTop: 'max(0.5rem, calc(env(safe-area-inset-top) + 0.15rem))' }} className={`px-5 pb-2 bg-white flex-shrink-0 z-40 flex items-center justify-between ${currentTab === 'media' ? '' : 'border-b border-gray-100/50 shadow-[0_4px_12px_rgba(0,0,0,0.02)]'}`}>
+        <div style={{ paddingTop: 'max(0.5rem, calc(var(--safe-area-inset-top, env(safe-area-inset-top, 0px)) + 0.15rem))' }} className={`px-5 pb-2 bg-white flex-shrink-0 z-40 flex items-center justify-between ${currentTab === 'media' ? '' : 'border-b border-gray-100/50 shadow-[0_4px_12px_rgba(0,0,0,0.02)]'}`}>
           <div 
             className="flex items-center space-x-1 cursor-pointer"
             onClick={() => setIsDeviceSwitchModalOpen(true)}
