@@ -370,6 +370,8 @@ export interface PairingState {
   ble: number;
   tv24g: number;
   mesh: number;
+  /** Currently playing audio source: 0x01 = BLE, 0x02 = 2.4G */
+  currentSource: number;
 }
 
 export interface FullDeviceState {
@@ -381,7 +383,7 @@ export interface FullDeviceState {
   waists: WaistState[];
   vibros: VibroState[];
   audios: AudioState[];
-  pairing: PairingState;
+  pairings: PairingState[];
   languages: number[];
 }
 
@@ -503,19 +505,35 @@ export function parseStatusReport(data: number[]): FullDeviceState | null {
         return {
           motors, massage, heating, ventilation, lights, waists, vibros,
           audios, // empty
-          pairing: { ble: 0, tv24g: 0, mesh: 0 },
+          pairings: [],
           languages: [],
         };
       }
     }
 
     // Pairing
-    const pairing: PairingState = {
-      ble: readUint16(data, idx),
-      tv24g: readUint16(data, idx + 2),
-      mesh: readUint16(data, idx + 4),
-    };
-    idx += 6;
+    // Per spec 20260615: 蓝牙搭配数(1B) + N x { ble(2B) + tv24g(2B) + mesh(2B) + currentSource(1B) }
+    // Bounds-check the count byte and the claimed payload before reading.
+    const pairings: PairingState[] = [];
+    const pairCountRaw = data[idx];
+    if (typeof pairCountRaw === 'number') {
+      idx++;
+      if (pairCountRaw > 0 && idx + pairCountRaw * 7 <= data.length) {
+        for (let i = 0; i < pairCountRaw; i++) {
+          pairings.push({
+            ble: readUint16(data, idx),
+            tv24g: readUint16(data, idx + 2),
+            mesh: readUint16(data, idx + 4),
+            currentSource: data[idx + 6],
+          });
+          idx += 7;
+        }
+      } else if (pairCountRaw > 0) {
+        console.warn(
+          `[BLE] Pairing block truncated: count=${pairCountRaw} but only ${data.length - idx} bytes left; skipping.`
+        );
+      }
+    }
 
     // Languages
     const langCount = data[idx++];
@@ -533,7 +551,7 @@ export function parseStatusReport(data: number[]): FullDeviceState | null {
       waists,
       vibros,
       audios,
-      pairing,
+      pairings,
       languages,
     };
 

@@ -51,6 +51,10 @@ export interface SofaState {
   treble: number;
   bass: number;
   audioProfile: string;
+  /** Currently selected audio source: 'ble' = Bluetooth, '24g' = 2.4G TV */
+  audioSource: 'ble' | '24g';
+  /** True while waiting for status report after sending 2.4G allow-pair. */
+  pending24GPair: boolean;
 
   // Light
   lightColor: string;

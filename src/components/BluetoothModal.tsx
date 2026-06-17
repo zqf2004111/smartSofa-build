@@ -9,12 +9,49 @@ interface BluetoothModalProps {
 }
 
 export const BluetoothModal: React.FC<BluetoothModalProps> = ({ isOpen, onClose }) => {
-  const [audioType, setAudioType] = useState<'BLE' | 'TV'>('BLE');
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const { language } = useDevice();
+  const {
+    state,
+    language,
+    sendAudioSourceCommand,
+    sendUnpairBleCommand,
+    send24GAllowPairCommand,
+  } = useDevice();
   const t = useTranslation(language);
 
   if (!isOpen) return null;
+
+  const audioSource = state.audioSource; // 'ble' | '24g'
+  const pending24G = state.pending24GPair;
+
+  const handleSelectBle = () => {
+    sendAudioSourceCommand('ble');
+  };
+
+  const handleSelectTv = () => {
+    sendAudioSourceCommand('24g');
+  };
+
+  const handleAdHocClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (audioSource === '24g') {
+      // 2.4G "Pair" button -> tell chair to allow pairing.
+      // Visual feedback (selected state) is driven by state.pending24GPair,
+      // which clears automatically on the next status report.
+      send24GAllowPairCommand();
+    } else {
+      // BLE "Search" button -> first ask the chair to release its current
+      // BLE bond, then open the classic-BT discovery modal.
+      sendUnpairBleCommand();
+      setIsSearchModalOpen(true);
+    }
+  };
+
+  const adHocLabel = audioSource === '24g' ? t('pair') : t('search');
+  const adHocSelected = audioSource === '24g' && pending24G;
+  const adHocClass = adHocSelected
+    ? 'bg-[#0A5BC4] text-white'
+    : 'bg-[#E5E7EB] text-[#0A5BC4]';
 
   return (
     <>
@@ -30,9 +67,9 @@ export const BluetoothModal: React.FC<BluetoothModalProps> = ({ isOpen, onClose 
               <span className="text-[14px] text-gray-800">{t('audio')}</span>
               <div className="flex space-x-2">
                 <button 
-                  onClick={() => setAudioType('BLE')}
+                  onClick={handleSelectBle}
                   className={`w-[72px] h-[32px] rounded-[12px] text-[13px] font-medium transition-colors ${
-                    audioType === 'BLE' 
+                    audioSource === 'ble' 
                       ? 'bg-[#0A5BC4] text-white' 
                       : 'bg-[#E5E7EB] text-[#0A5BC4]'
                   }`}
@@ -40,9 +77,9 @@ export const BluetoothModal: React.FC<BluetoothModalProps> = ({ isOpen, onClose 
                   BLE
                 </button>
                 <button 
-                  onClick={() => setAudioType('TV')}
+                  onClick={handleSelectTv}
                   className={`w-[72px] h-[32px] rounded-[12px] text-[13px] font-medium transition-colors ${
-                    audioType === 'TV' 
+                    audioSource === '24g' 
                       ? 'bg-[#0A5BC4] text-white' 
                       : 'bg-[#E5E7EB] text-[#0A5BC4]'
                   }`}
@@ -55,10 +92,10 @@ export const BluetoothModal: React.FC<BluetoothModalProps> = ({ isOpen, onClose 
             <div className="flex items-center justify-between">
               <span className="text-[14px] text-gray-800">{t('adHocNetwork')}</span>
               <button 
-                onClick={(e) => { e.stopPropagation(); setIsSearchModalOpen(true); }}
-                className="w-[152px] h-[32px] rounded-[12px] bg-[#E5E7EB] text-[#0A5BC4] text-[13px] font-medium"
+                onClick={handleAdHocClick}
+                className={`w-[152px] h-[32px] rounded-[12px] text-[13px] font-medium transition-colors ${adHocClass}`}
               >
-                {t('search')}
+                {adHocLabel}
               </button>
             </div>
           </div>

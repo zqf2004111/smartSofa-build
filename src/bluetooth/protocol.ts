@@ -63,6 +63,7 @@ export const CMD = {
   PAIR_BLE: [0x00, 0x90],
   PAIR_24G: [0x00, 0x91],
   PAIR_MESH: [0x00, 0x92],
+  AUDIO_SOURCE: [0x00, 0x93],
   LANGUAGE: [0x00, 0xA0],
   VERSION: [0x01, 0x20],
 } as const;
@@ -333,6 +334,29 @@ export function buildAudioBassCmd(value: number): Uint8Array {
 
 export function buildAudioVolumeCmd(value: number): Uint8Array {
   return buildFrame(CHAIR_LEFT, [0x00, 0x83, 0x00, 0x00, value & 0xFF]);
+}
+
+// ===== Audio source switching (0x00 0x93) =====
+// 0x00 = no change, 0x01 = BLE, 0x02 = 2.4G
+export const AUDIO_SOURCE = {
+  NO_CHANGE: 0x00,
+  BLE: 0x01,
+  RF24G: 0x02,
+} as const;
+
+export function buildAudioSourceCmd(src: number): Uint8Array {
+  return buildFrame(CHAIR_LEFT, [0x00, 0x93, 0x00, 0x00, src & 0xFF]);
+}
+
+// ===== Pairing commands =====
+// PAIR_BLE (0x00 0x90): 0x01 = allow pair, 0x02 = unpair
+export function buildPairBleCmd(action: number): Uint8Array {
+  return buildFrame(CHAIR_LEFT, [0x00, 0x90, 0x00, 0x00, action & 0xFF]);
+}
+
+// PAIR_24G (0x00 0x91): 0x01 = allow pair
+export function buildPair24GCmd(action: number): Uint8Array {
+  return buildFrame(CHAIR_LEFT, [0x00, 0x91, 0x00, 0x00, action & 0xFF]);
 }
 
 export function buildChildLockCmd(lock: boolean): Uint8Array {

@@ -12,6 +12,7 @@ import {
   buildVibroCmd, buildVibroIntensityCmd,
   buildLightCmd, buildLightColorCmd,
   buildAudioModeCmd, buildAudioVolumeCmd, buildAudioTrebleCmd, buildAudioBassCmd,
+  buildAudioSourceCmd, buildPairBleCmd, buildPair24GCmd, AUDIO_SOURCE,
   MOTOR_STOP, MOTOR_UP, MOTOR_DOWN,
   MASSAGE_MODE, POSITION_PRESET, HEATING_MODE, VENTILATION_MODE, LIGHT_MODE, AUDIO_MODE, VIBRO_MODE,
 } from './bluetooth/protocol';
@@ -66,6 +67,12 @@ interface DeviceContextType {
   sendVibroCommand: (mode: string, level: number) => void;
   sendAudioCommand: (profile: string, volume: number, treble: number, bass: number) => void;
   sendAudioModeCommand: (profile: string) => void;
+  /** Switch the chair's audio source. 'ble' -> 0x01, '24g' -> 0x02. Also updates UI state. */
+  sendAudioSourceCommand: (src: 'ble' | '24g') => void;
+  /** Tell the chair to unpair its currently bonded BLE phone (PAIR_BLE 0x02). */
+  sendUnpairBleCommand: () => void;
+  /** Allow 2.4G pairing on the chair (PAIR_24G 0x01). UI shows pending until status report. */
+  send24GAllowPairCommand: () => void;
   sendLightCommand: (mode: string) => void;
   sendLightColorCommand: (r: number, g: number, b: number) => void;
   // Media Bluetooth (A2DP)
@@ -109,6 +116,8 @@ const initialState: SofaState = {
   treble: 50,
   bass: 50,
   audioProfile: 'general',
+  audioSource: 'ble',
+  pending24GPair: false,
 
   lightColor: '#0066CC',
   lightMode: 'steady',
@@ -761,6 +770,29 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
     bleManager.send(buildAudioModeCmd(modeVal));
   };
 
+  const sendAudioSourceCommand = (src: 'ble' | '24g') => {
+    // Update UI immediately so the toggle feels responsive even before the
+    // status report echoes the new source back.
+    setState((prev) => (prev.audioSource === src ? prev : { ...prev, audioSource: src }));
+    if (bleState !== 'connected') return;
+    const val = src === 'ble' ? AUDIO_SOURCE.BLE : AUDIO_SOURCE.RF24G;
+    bleManager.send(buildAudioSourceCmd(val));
+  };
+
+  const sendUnpairBleCommand = () => {
+    if (bleState !== 'connected') return;
+    // 0x02 = unpair the currently bonded BLE phone.
+    bleManager.send(buildPairBleCmd(0x02));
+  };
+
+  const send24GAllowPairCommand = () => {
+    // Mark pending so the UI button shows selected state until the next
+    // status report clears it.
+    setState((prev) => (prev.pending24GPair ? prev : { ...prev, pending24GPair: true }));
+    if (bleState !== 'connected') return;
+    bleManager.send(buildPair24GCmd(0x01));
+  };
+
   const sendLightCommand = (mode: string) => {
     if (bleState !== 'connected') return;
     const modeVal = lightModeToProtocol(mode);
@@ -1048,6 +1080,21 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
           }, 0);
         }
       }
+      // Pairing / audio source
+      if (report.pairings.length > 0) {
+        const p = report.pairings[0];
+        // 0x01 = BLE, 0x02 = 2.4G. Anything else: leave the UI source alone.
+        if (p.currentSource === AUDIO_SOURCE.BLE) {
+          updates.audioSource = 'ble';
+        } else if (p.currentSource === AUDIO_SOURCE.RF24G) {
+          updates.audioSource = '24g';
+        }
+        // Any status report after we asked the chair to allow 2.4G pairing
+        // is treated as an ack -> clear the pending flag.
+        if (prev.pending24GPair) {
+          updates.pending24GPair = false;
+        }
+      }
       // Light
       if (report.lights.length > 0) {
         const l = report.lights[0];
@@ -1231,6 +1278,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
       discoveredDevices, bleState, startScan, stopScan, clearDiscoveredDevices, connectBleDevice, reconnectDevice,
       sendMassageCommand, sendTimerCommand, sendHeatingCommand, sendVentilationCommand,
       sendVibroCommand, sendAudioCommand, sendAudioModeCommand, sendLightCommand, sendLightColorCommand,
+      sendAudioSourceCommand, sendUnpairBleCommand, send24GAllowPairCommand,
       mediaState, sendMediaCommand, openNotificationSettings,
       pairTarget, clearPairTarget,
     }}>
